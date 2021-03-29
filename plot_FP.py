@@ -1,16 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 18 09:24:49 2021
-
-@author: apodgornik
-"""
-
-from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
-import time
-%matplotlib qt
+
+
 
 from PyQt5.QtWidgets import QFileDialog
 from datetime import timedelta, datetime

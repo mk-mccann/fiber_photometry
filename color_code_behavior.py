@@ -5,50 +5,10 @@ import numpy as np
 from datetime import timedelta, datetime
 from os.path import join
 # %matplotlib qt
+from functions_utils import find_nearest
+import functions_plotting as fp
 
 
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx, array[idx]
-
-
-def get_mpl_datetime(time):
-    """ Time comes in format min.sec"""
-    zero = datetime(2021, 1, 1)
-
-    split_time = str(time).split('.')
-    dt = timedelta(minutes=int(split_time[0]), seconds=int(split_time[1]))
-    return md.date2num(zero + dt)
-
-# Make sure that all of the times in the csv are in the "Text", rather than a "Number" format 
-# All the times must be in a two decimal format; always 15.50, never 15.5
-def mpl_datetime_from_seconds(time: float):
-    """ Takes either an integer or an array and converts it to mpl datetime format"""
-    zero = datetime(2021, 1, 1)
-
-    if isinstance(time, int):
-        return md.date2num(zero + timedelta(seconds=time))
-    else:
-        return [md.date2num(zero + timedelta(seconds=t)) for t in time]
-
-
-def plot_dff(time, f_trace, ax=None):
-    time_format = mpl_datetime_from_seconds(time)
-
-    if ax is None:
-        fig = plt.figure(figsize=(20, 10))
-        fig.add_subplot(111)
-        ax = plt.gca()
-
-    xfmt = md.DateFormatter('%H:%M:%S')
-    ax.xaxis.set_major_formatter(xfmt)
-    ax.xaxis_date()
-
-    ax.plot(time_format, f_trace)
-    ax.set_xlabel('Time')
-    ax.set_ylabel('DFF')
-    return ax
 
 
 def plot_episodes(time: np.array, f_trace: np.array, labels_df: pd.DataFrame, behavior="All"):
@@ -83,11 +43,11 @@ def plot_episodes(time: np.array, f_trace: np.array, labels_df: pd.DataFrame, be
     fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)
 
     # Get the dF/F plot
-    plot_dff(time, f_trace, ax=ax1)
+    fp.plot_fluorescence_min_sec(time, f_trace, ax=ax1)
     #ax1.xaxis.label.set_visible(False)
 
     # Convert seconds into HH:MM:SS format
-    time_HMS = mpl_datetime_from_seconds(time)
+    time_HMS = fp.mpl_datetime_from_seconds(time)
 
     if behavior == "All":
         behaviors_to_plot = behaviors
@@ -126,7 +86,7 @@ def plot_episodes(time: np.array, f_trace: np.array, labels_df: pd.DataFrame, be
 
 
     # Add a subplot containing the times in a certain zone
-    plot_dff(time, f_trace, ax=ax2)
+    fp.plot_fluorescence_min_sec(time, f_trace, ax=ax2)
     
     zone_vspan = []
     for zone in zones:
