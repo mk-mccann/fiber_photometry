@@ -30,25 +30,3 @@ def get_sec_from_min_sec(time: int):
     seconds = int(split_time[1])
     return 60 * minutes + seconds
 
-
-def decimate_csv(file_path, step=300):
-    # Load the csv
-    df = pd.read_csv(file_path, skiprows=1, header=0)
-
-    # The initial temporal offset is given roughly by this index.
-    # Not sure what exactly this is, but it matches the other files
-    initial_unit = 1048
-
-    # Drop these first indices and reset the index
-    df = df.drop(range(initial_unit)).reset_index(drop=True)
-
-    time_vector = df[['Time(s)']].to_numpy()[::step]
-    df2 = df.drop('Time(s)', axis=1)
-
-    # Get the means by step
-    mean_df = df2.groupby(df2.index // step).mean()
-
-    # Add time back
-    mean_df = mean_df.insert(0, 'Time(s)', time_vector).copy()
-
-    return mean_df

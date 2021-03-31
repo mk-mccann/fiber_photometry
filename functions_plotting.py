@@ -3,7 +3,7 @@ import matplotlib.dates as md
 from datetime import timedelta, datetime
 
 
-def get_mpl_datetime(time: str):
+def get_mpl_datetime(time: float):
     """ Time comes in format min.sec"""
     zero = datetime(2021, 1, 1)
 
@@ -14,11 +14,11 @@ def get_mpl_datetime(time: str):
 
 # Make sure that all of the times in the csv are in the "Text", rather than a "Number" format
 # All the times must be in a two decimal format; always 15.50, never 15.5
-def mpl_datetime_from_seconds(time: int):
+def mpl_datetime_from_seconds(time):
     """ Takes either an integer or an array and converts it to mpl datetime format"""
     zero = datetime(2021, 1, 1)
 
-    if isinstance(time, int):
+    if isinstance(time, int) or isinstance(time, float):
         return md.date2num(zero + timedelta(seconds=time))
     else:
         return [md.date2num(zero + timedelta(seconds=t)) for t in time]
