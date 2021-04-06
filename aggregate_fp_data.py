@@ -106,7 +106,7 @@ def perform_all_single_animal(animal_id):
 def aggregate(modeling_data_folder):
     accu = []
     for file in tqdm(os.listdir(modeling_data_folder)):
-        if file.endswith('.h5'):
+        if file.endswith('.h5') and not ('aggregate' in file):
             animal, day, ext = file.split('.')
             accu.append(pd.read_hdf(join(modeling_data_folder, file)))
             df = pd.concat(accu)
