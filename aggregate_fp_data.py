@@ -2,9 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 from os.path import join
-from FiberPhotometry.color_code_behavior import find_nearest
-from FiberPhotometry.mean_behavior_episodes import get_sec_from_min_sec
-from FiberPhotometry.mean_behavior_episodes import read_summary_file
+from fiber_photometry.color_code_behavior import find_nearest
+from fiber_photometry.mean_behavior_episodes import get_sec_from_min_sec
+from fiber_photometry.mean_behavior_episodes import read_summary_file
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
