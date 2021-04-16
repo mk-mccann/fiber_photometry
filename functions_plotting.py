@@ -3,6 +3,26 @@ import matplotlib.dates as md
 from datetime import timedelta, datetime
 
 
+# For a list of all MPL colors: https://matplotlib.org/stable/gallery/color/named_colors.html
+episode_colors = {'Eating': 'cyan',
+                  'Grooming': 'goldenrod',
+                  'Digging': 'lime',
+                  'Transfer': 'forestgreen',
+                  'WSW': 'indigo',
+                  'Squeezed MZ Edge': 'mediumblue',
+                  'Social Interaction': 'deeppink',
+                  'Ear Scratch': 'firebrick',
+                  'Switch': 'sienna',
+                  'Idle': 'silver',
+                  'Nibbling Floor': 'thistle',
+                  'Nibbling Tape': 'aquamarine',
+                  'Shock': 'red',
+                  'Eating Zone': 'b',
+                  'Marble Zone': 'g',
+                  'Nesting Zone': 'gray',
+                  }
+
+
 def get_mpl_datetime(time: float):
     """ Time comes in format min.sec"""
     zero = datetime(2021, 1, 1)
@@ -40,3 +60,20 @@ def plot_fluorescence_min_sec(time, trace, ax=None):
     ax.plot(time_format, trace)
     ax.set_xlabel('Time')
     return ax
+
+
+def overlay_episodes(epochs, label, ax):
+    """
+
+    :param epochs:
+    :param label:
+    :param ax:
+    :return:
+    """
+
+    for epoch in epochs:
+        labeled_section = ax.axvspan(mpl_datetime_from_seconds(epoch[0]), mpl_datetime_from_seconds(epoch[-1]),
+                                     facecolor=episode_colors[label],
+                                     alpha=0.5)
+
+    return labeled_section

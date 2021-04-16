@@ -7,51 +7,41 @@ from scipy.stats import sem
 import paths
 import functions_utils as f_util
 import functions_io as f_io
+from functions_plotting import episode_colors
 
 
-def find_episodes(time, f_trace, labels, key, period=(-5, 5), dwell_filter=0):
-    exp_episodes = []
-     
-    if "Zone" in key:
-        start_end = labels[[" ".join([key, "In"]), " ".join([key, "Out"])]].dropna().to_numpy()
-    else:
-        start_end = labels[[" ".join([key, "Start"]), " ".join([key, "End"])]].dropna().to_numpy()
+def episode_start_window(time, labels, key, period=(-5, 5), dwell_filter=0):
+    """
+    Wrapper function for functions_utils.find_episodes. Applies a filter to find valid episodes based on the dwell
+    time, and returns the window surrounding the start of an episode in both index and time units
 
-    if len(start_end) > 0:
-        vfunc = np.vectorize(f_util.get_sec_from_min_sec)
-        start_end = vfunc(start_end)
+    :param time:
+    :param labels:
+    :param key:
+    :param period:
+    :param dwell_filter:
+    :return: valid_episode_idxs, valid_episode_times
+    """
 
-        for episode in start_end:
+    valid_episode_idxs = []
+    valid_episode_times = []
 
-            dwell_time = episode[1] - episode[0]
+    # Get the starting and ending indexes and times of all episodes of a given type
+    _, times = f_util.find_episodes(time, labels, key)
 
-            if dwell_time <= dwell_filter:
-                start_idx, start_time = f_util.find_nearest(time, episode[0] + period[0])
-                end_idx, end_time = f_util.find_nearest(time, episode[0] + period[1])
-                 
-                exp_episodes.append([time[start_idx:end_idx], f_trace[start_idx:end_idx]])
+    # These now need to meet our criteria for being a valid episode
+    for t in times:
+        [start, end] = t
+        dwell_time = end - start
 
-    return exp_episodes
+        if dwell_time <= dwell_filter:
+            start_idx, start_time = f_util.find_nearest(time, start + period[0])
+            end_idx, end_time = f_util.find_nearest(time, start + period[1])
 
+            valid_episode_idxs.append([start_idx, end_idx])
+            valid_episode_times.append([start_time, end_time])
 
-def get_mean_episode(episodes):
-    f_traces = [e[1] for e in episodes]
-
-    trace_array = f_util.list_lists_to_array(f_traces)
-    
-    mean_trace = np.nanmean(trace_array, axis=0)
-    std_trace = np.nanstd(trace_array, axis=0)
-    
-    return trace_array, mean_trace, std_trace
-
-
-# norm.window here is a default; if you don't pass the parameter in the code lower down it will resort to -5
-def remove_baseline(time, traces, norm_window=-5):
-    idx, _ = f_util.find_nearest(time, 0)
-    wind_idx, _ = f_util.find_nearest(time, norm_window)
-    baseline = np.median(traces[:, wind_idx:idx], axis=1)
-    traces = traces - np.expand_dims(baseline, axis=1)
-    return traces
+    return valid_episode_idxs, valid_episode_times
 
 
 def plot_mean_episode(time, traces, plot_singles=False):
@@ -68,10 +58,9 @@ def plot_mean_episode(time, traces, plot_singles=False):
     plt.plot(time, mean_trace, c='k', linewidth=2)
     # plt.ylim([-0.25, 1.5])
     plt.axvline(0, color="orangered")
-    plt.text(-4.5, 0.3, "n = " + str(num_episodes), fontsize='large')
+    plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize='large', transform=plt.gca().transAxes)
 
     plt.xlabel('Time from Behavior Start (s)')
-    plt.title('Mean trace for {}'.format(key_to_plot))
 
     return fig
 
@@ -90,10 +79,14 @@ if __name__ == "__main__":
     #exps_to_run = all_exps.loc[all_exps["Day"] == 3]
 
     # Which behavior do you want to look at
-    key = 'Eating Zone'    # TODO If set to "ALL", generates means for all behaviors
+    key = 'ALL'    # TODO If set to "ALL", generates means for all behaviors
     period = (-5, 10)
     dfilt = 30
-    all_episodes = []
+
+    if key == "ALL":
+        all_episodes = {k: [] for k in episode_colors.keys()}
+    else:
+        all_episodes = {key: []}
 
     # Go row by row through the summary data
     for idx, row in exps_to_run.iterrows():
@@ -107,38 +100,38 @@ if __name__ == "__main__":
 
             dffzscore = medfilt(data['zscore'], kernel_size=51)
 
-            if key == "ALL":
-                keys_to_plot = [" ".join(col.split(" ")[0:-1]) for col in labels.columns if
-                                "Start" in col.split(" ")[-1]]
-            else:
-                keys_to_plot = [key]
-
-            exp_episodes = {}
-            for k in keys_to_plot:
-                exp_episodes[key] = find_episodes(data['time'], dffzscore, labels, k, period=period,
-                                             dwell_filter=dfilt)
-
-            all_episodes.append(exp_episodes)
+            for k in all_episodes.keys():
+                try:
+                    window_idxs, window_times = episode_start_window(data['time'], labels, k, period=period, dwell_filter=dfilt)
+                    exp_episodes = [dffzscore[start:end] for [start, end] in window_idxs]
+                    all_episodes[k].append(exp_episodes)
+                except KeyError:
+                    continue
         
         except FileNotFoundError as error:
             print(str(error))
 
-    # TODO get this to work for dict
-    all_episodes = f_util.flatten_list(all_episodes)
-    all_episodes = list(filter(None, all_episodes))
-    f_traces = [e[1] for e in all_episodes]
-    trace_array = f_util.list_lists_to_array(f_traces)
-    
-    num_episodes = trace_array.shape[0]
-    print("Number of {} trials = {}".format(key_to_plot, num_episodes))
-    
-    t = np.linspace(period[0], period[1], trace_array.shape[-1])
-    trace_array = remove_baseline(t, trace_array, norm_window=-5)
+    # Loop through all the conditions we pulled out before and plot them
+    for k in all_episodes.keys():
+        f_traces_of_key = all_episodes[k]
+        f_traces_of_key = f_util.flatten_list(f_traces_of_key)
+        #all_traces_of_key = list(filter(None, all_traces_of_key))
+        #f_traces = [e[1] for e in all_episodes]
 
-    fig = plot_mean_episode(t, trace_array)
-    plt.ylabel('$\Delta$F/F Z-score minus')
-    plt_name = "mean_{}_dff_zscore.png".format(key_to_plot.lower())
-    plt.savefig(join(save_directory, plt_name))
-    plt.show()
+        # TODO look at this
+        trace_array = f_util.list_lists_to_array(f_traces_of_key)
+
+        num_episodes = trace_array.shape[0]
+        print("Number of {} trials = {}".format(k, num_episodes))
+
+        t = np.linspace(period[0], period[1], trace_array.shape[-1])
+        trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
+
+        fig = plot_mean_episode(t, trace_array)
+        plt.ylabel('$\Delta$F/F Z-score minus')
+        plt.title('Mean trace for {}'.format(k))
+        plt_name = "mean_{}_dff_zscore.png".format(key.lower())
+        # plt.savefig(join(save_directory, plt_name))
+        plt.show()
     
 
