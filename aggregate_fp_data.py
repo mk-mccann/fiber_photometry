@@ -37,7 +37,7 @@ def find_zone_and_behavior_episodes(data, behavior_labels):
         zone_idxs, zone_times = find_episodes(ts, behavior_labels, zone)
 
         for idxs, times in zip(zone_idxs, zone_times):
-            zone_bouts.append([behav, idxs[0], times[0], idxs[1], times[1]])
+            zone_bouts.append([zone, idxs[0], times[0], idxs[1], times[1]])
         # start_end_zone = behavior_labels[[" ".join([zone, "In"]), " ".join([zone, "Out"])]].dropna().to_numpy()
         # if len(start_end_zone) > 0:
         #     for episode in start_end_zone:

@@ -97,7 +97,6 @@ if __name__ == "__main__":
 
         if len(f_traces_of_key) > 0:
             f_traces_of_key = f_util.flatten_list(f_traces_of_key)
-
             trace_array = f_util.list_lists_to_array(f_traces_of_key)
 
             num_episodes = trace_array.shape[0]
@@ -115,4 +114,3 @@ if __name__ == "__main__":
 
         else:
             print("No episodes of {} found!".format(k))
-    
