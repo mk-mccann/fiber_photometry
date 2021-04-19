@@ -54,7 +54,7 @@ if __name__ == "__main__":
     
     # remove certain days
     exps_to_run = all_exps
-    #exps_to_run = all_exps.loc[all_exps["Day"] == 3]
+    # exps_to_run = all_exps.loc[all_exps["Day"] == 3]
 
     # Which behavior do you want to look at
     key = 'ALL'    # If set to "ALL", generates means for all behaviors
@@ -116,4 +116,3 @@ if __name__ == "__main__":
         else:
             print("No episodes of {} found!".format(k))
     
-

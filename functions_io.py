@@ -28,8 +28,8 @@ def load_behavior_labels(animal_ID, base_directory=paths.behavior_scoring_direct
        containing the files as inputs."""
 
     label_filename = r"ID{}_Day{}.xlsx".format(*animal_ID.split('.'))
-    x = pd.ExcelFile(os.path.join(base_directory, label_filename))
-    behavior_labels = pd.read_excel(x, header=0, dtype=object)
+    x = pd.ExcelFile(os.path.join(base_directory, label_filename), engine='openpyxl')
+    behavior_labels = pd.read_excel(x, header=0, dtype=object, engine='openpyxl')
     return behavior_labels
 
 

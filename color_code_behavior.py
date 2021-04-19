@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from os.path import join
+from os import chdir
+
 # %matplotlib qt
 
 import paths
@@ -65,7 +67,7 @@ def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
     _ = highlight_episodes(time, labels_df, plot_key="all_zones", ax=ax2)
     #ax2.axhline(2, ls='--', c='gray')
     ax2.axhline(0, ls='--', c='gray')
-    #ax2.axhline(-2, ls='--', c='gray')
+    # ax2.axhline(-2, ls='--', c='gray')
     ax2.set_xlabel('Time')
 
     return fig
@@ -92,4 +94,3 @@ if __name__ == "__main__":
     plt.suptitle(" ".join((str(data['ani_id']), 'Z-Score DFF', 'behavior segmentation')))
     # plt.savefig(join(save_directory, " ".join((str(Ani_ID), 'Z-Score DFF', 'behavior segmentation')) + ".png"))
     plt.show()
-

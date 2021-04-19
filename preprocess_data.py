@@ -5,7 +5,7 @@ from scipy.signal import savgol_filter
 from tqdm import tqdm
 
 import paths
-import function_preprocessing as fpp
+import functions_preprocessing as fpp
 from functions_plotting import plot_fluorescence_min_sec
 from functions_io import read_summary_file, read_fiber_photometry_csv, check_dir_exists
 
