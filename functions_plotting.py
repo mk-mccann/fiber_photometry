@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 from datetime import timedelta, datetime
+from scipy.stats import sem
+from numpy import nanmean
 
 
 # For a list of all MPL colors: https://matplotlib.org/stable/gallery/color/named_colors.html
@@ -77,3 +79,29 @@ def overlay_episodes(epochs, label, ax):
                                      alpha=0.5)
 
     return labeled_section
+
+
+def plot_mean_episode(time, traces, plot_singles=False, ax=None):
+
+    if ax is None:
+        fig = plt.figure(figsize=(10, 10))
+        fig.add_subplot(111)
+        ax = plt.gca()
+
+    num_episodes = traces.shape[0]
+    mean_trace = nanmean(traces, axis=0)
+    sem_trace = sem(traces, axis=0, nan_policy='omit')
+
+    if plot_singles:
+        for trace in traces:
+            plt.plot(time, trace)
+
+    plt.fill_between(time, mean_trace - sem_trace, mean_trace + sem_trace, alpha=0.2)
+    plt.plot(time, mean_trace, c='k', linewidth=2)
+    # plt.ylim([-0.25, 1.5])
+    plt.axvline(0, color="orangered")
+    plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize='large', transform=plt.gca().transAxes)
+
+    plt.xlabel('Time from Behavior Start (s)')
+
+    return ax

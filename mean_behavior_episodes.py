@@ -2,12 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join
 from scipy.signal import medfilt
-from scipy.stats import sem
 
 import paths
 import functions_utils as f_util
 import functions_io as f_io
-from functions_plotting import episode_colors
+from functions_plotting import episode_colors, plot_mean_episode
 
 
 def episode_start_window(time, labels, key, period=(-5, 5), dwell_filter=0):
@@ -44,27 +43,6 @@ def episode_start_window(time, labels, key, period=(-5, 5), dwell_filter=0):
     return valid_episode_idxs, valid_episode_times
 
 
-def plot_mean_episode(time, traces, plot_singles=False):
-    fig = plt.figure(figsize=(10, 10))
-
-    mean_trace = np.nanmean(traces, axis=0)
-    sem_trace = sem(traces, axis=0, nan_policy='omit')
-
-    if plot_singles:
-        for trace in traces:
-            plt.plot(t, trace)
-
-    plt.fill_between(time, mean_trace - sem_trace, mean_trace + sem_trace, alpha=0.2)
-    plt.plot(time, mean_trace, c='k', linewidth=2)
-    # plt.ylim([-0.25, 1.5])
-    plt.axvline(0, color="orangered")
-    plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize='large', transform=plt.gca().transAxes)
-
-    plt.xlabel('Time from Behavior Start (s)')
-
-    return fig
-
-
 if __name__ == "__main__":
 
     summary_file_path = paths.summary_file    # Set this to wherever it is
@@ -79,7 +57,7 @@ if __name__ == "__main__":
     #exps_to_run = all_exps.loc[all_exps["Day"] == 3]
 
     # Which behavior do you want to look at
-    key = 'ALL'    # TODO If set to "ALL", generates means for all behaviors
+    key = 'ALL'    # If set to "ALL", generates means for all behaviors
     period = (-5, 10)
     dfilt = 30
 
@@ -98,12 +76,14 @@ if __name__ == "__main__":
             # labels = f_io.load_behavior_labels(str(row['Ani_ID']), base_directory=row['Behavior Labelling'])
             # data = f_io.load_preprocessed_data(str(row['Ani_ID']), base_directory=row['Preprocessed Data'])
 
-            dffzscore = medfilt(data['zscore'], kernel_size=51)
+            time = data['time']
+            f_trace = data['zscore']
+            f_trace = medfilt(f_trace, kernel_size=51)
 
             for k in all_episodes.keys():
                 try:
-                    window_idxs, window_times = episode_start_window(data['time'], labels, k, period=period, dwell_filter=dfilt)
-                    exp_episodes = [dffzscore[start:end] for [start, end] in window_idxs]
+                    window_idxs, window_times = episode_start_window(time, labels, k, period=period, dwell_filter=dfilt)
+                    exp_episodes = [f_trace[start:end] for [start, end] in window_idxs]
                     all_episodes[k].append(exp_episodes)
                 except KeyError:
                     continue
@@ -114,24 +94,26 @@ if __name__ == "__main__":
     # Loop through all the conditions we pulled out before and plot them
     for k in all_episodes.keys():
         f_traces_of_key = all_episodes[k]
-        f_traces_of_key = f_util.flatten_list(f_traces_of_key)
-        #all_traces_of_key = list(filter(None, all_traces_of_key))
-        #f_traces = [e[1] for e in all_episodes]
 
-        # TODO look at this
-        trace_array = f_util.list_lists_to_array(f_traces_of_key)
+        if len(f_traces_of_key) > 0:
+            f_traces_of_key = f_util.flatten_list(f_traces_of_key)
 
-        num_episodes = trace_array.shape[0]
-        print("Number of {} trials = {}".format(k, num_episodes))
+            trace_array = f_util.list_lists_to_array(f_traces_of_key)
 
-        t = np.linspace(period[0], period[1], trace_array.shape[-1])
-        trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
+            num_episodes = trace_array.shape[0]
+            print("Number of {} trials = {}".format(k, num_episodes))
 
-        fig = plot_mean_episode(t, trace_array)
-        plt.ylabel('$\Delta$F/F Z-score minus')
-        plt.title('Mean trace for {}'.format(k))
-        plt_name = "mean_{}_dff_zscore.png".format(key.lower())
-        # plt.savefig(join(save_directory, plt_name))
-        plt.show()
+            t = np.linspace(period[0], period[1], trace_array.shape[-1])
+            trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
+
+            fig = plot_mean_episode(t, trace_array)
+            plt.ylabel('$\Delta$F/F Z-score minus')
+            plt.title('Mean trace for {}'.format(k))
+            plt_name = "mean_{}_dff_zscore.png".format(key.lower())
+            plt.savefig(join(save_directory, plt_name))
+            plt.show()
+
+        else:
+            print("No episodes of {} found!".format(k))
     
 
