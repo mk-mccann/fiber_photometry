@@ -74,8 +74,7 @@ if __name__ == "__main__":
 
         # save dictionaries using numpy
         # File format is save_directory/Ani_ID.npy
-        # I would suggest using a different file format like hdf5, but this is
-        # fine for now.
+        # TODO change saving to h5 files
         np.save(join(output_directory, str(row['Ani_ID']) + '.npy'), data)
 
         ax = plot_fluorescence_min_sec(data['time'], data['zscore'])
