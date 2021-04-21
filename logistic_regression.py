@@ -27,39 +27,36 @@ scores = cross_val_score(estimator=pipe, X=X, y=y, groups=groups, cv=logo_cv,
 print('Logistic regression scores: %s' % scores)
 print('Avg: %s, Std: %s, Var: %s' % (scores.mean(), scores.std(), scores.var()))
 
-### Logistic regression with last 60 data points
+# Logistic regression with last 60 data points
 
 # Load the data
 data_path = r"J:\Alja Podgornik\FP_Alja\modeling_data\aggregated.h5"  # Path to aggregated.h5 file
 data = pd.read_hdf(data_path)  # Read in the data
 data = data.dropna(axis='columns')  # Drop columns containing na
-
-
-def add_features(df):
-    for i in range(0, 61):
-        df['feature_' + str(i)] = df['zscore'].shift(i)
-    return df
-
-
-# Add features to the data, remove NaN rows and shuffle
-expanded_data = add_features(data)
-expanded_data = expanded_data.dropna(axis='rows')
+data.loc[:, 'index'] = data.index
 
 # Prepare the pipeline
 classifier = LogisticRegression(verbose=1, random_state=10061991, max_iter=10000, tol=1e-6, n_jobs=-1)
 pipe = Pipeline([('scaler', StandardScaler()), ('lr_classifier', classifier)])
 
 # Prepare the data
-features = expanded_data.iloc[:, -61:].to_numpy()
-target = expanded_data['Eating'].to_numpy()
-groups = expanded_data['animal'].to_numpy()
+features = data.loc[:, ['index', 'ts', 'zscore', 'Eating', 'animal', 'day']].to_numpy()
+target = data['Eating'].to_numpy()
 X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.3, shuffle=True)
+
+clf_df = pd.DataFrame(X_test, columns=['index', 'ts', 'zscore', 'Eating', 'animal', 'day'])
+X_train = X_train[:, 2].reshape(-1, 1)
+X_test = clf_df.loc[:, 'zscore'].to_numpy().reshape(-1, 1)
 
 pipe.fit(X=X_train, y=y_train)
 
-cr = classification_report(y_true=y_test, y_pred=pipe.predict(X_test))
-score = accuracy_score(y_true=y_test, y_pred=pipe.predict(X_test))
-balanced_score = balanced_accuracy_score(y_true=y_test, y_pred=pipe.predict(X_test), adjusted=False)
+predictions = pipe.predict(X_test)
+clf_df['prediction'] = predictions
+clf_df.to_hdf(r"J:\Alja Podgornik\FP_Alja\modeling_data\classifier_df.h5", key='nokey')
+
+cr = classification_report(y_true=y_test, y_pred=predictions)
+score = accuracy_score(y_true=y_test, y_pred=predictions)
+balanced_score = balanced_accuracy_score(y_true=y_test, y_pred=predictions, adjusted=False)
 print(cr)
 print('score', score)
 print('balanced score', balanced_score)
