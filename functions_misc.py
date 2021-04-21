@@ -29,5 +29,6 @@ def tsplotSlice(corrData, shockStartTimepoints, windowPlusMinus):
         tempDf1.append(temp1)
 
         counter = counter + 1
+        # ToDo: ´counter´ is not used, wanna remove?
 
     return np.array(tempDf1)
