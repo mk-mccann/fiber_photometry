@@ -51,9 +51,31 @@ def highlight_episodes(time: np.array, labels: pd.DataFrame, tf_array=None, plot
     return ax
 
 
+def highlight_classifier(time: np.array, tf_array, ax=None):
+
+    if ax is None:
+        fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
+
+    # Create the highlighted episodes
+    vspans = []
+
+    sections = np.where(tf_array is True)
+
+    for episode_type in episodes_to_plot:
+
+        _, epochs = find_episodes(time, labels, episode_type)
+        if len(epochs) > 0:
+            label = fp.overlay_episodes(epochs, episode_type, ax)
+            vspans.append([label, episode_type])
+
+    vspans = np.array(vspans)
+    ax.legend(vspans[:, 0], vspans[:, 1], loc="upper right")
+
+    return ax
+
 def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
 
-    fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)
+    fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, figsize=(30, 15), sharex=False)
 
     # Get the dF/F plot
     fp.plot_fluorescence_min_sec(time, f_trace, ax=ax1)
@@ -68,6 +90,14 @@ def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
     ax2.axhline(0, ls='--', c='gray')
     # ax2.axhline(-2, ls='--', c='gray')
     ax2.set_xlabel('Time')
+
+    # Add a subplot containing the times in a certain zone
+    fp.plot_fluorescence_min_sec(time, f_trace, ax=ax3)
+    _ = highlight_episodes(time, labels_df, plot_key="all_zones", ax=ax3)
+    # ax2.axhline(2, ls='--', c='gray')
+    ax3.axhline(0, ls='--', c='gray')
+    # ax2.axhline(-2, ls='--', c='gray')
+    ax3.set_xlabel('Time')
 
     return fig
 
