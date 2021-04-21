@@ -1,8 +1,9 @@
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import LeaveOneGroupOut, cross_val_score
+from sklearn.model_selection import LeaveOneGroupOut, train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report, accuracy_score, balanced_accuracy_score
 
 # Load the data
 data_path = r"J:\Alja Podgornik\FP_Alja\modeling_data\aggregated.h5"  # Path to aggregated.h5 file
@@ -52,10 +53,6 @@ pipe = Pipeline([('scaler', StandardScaler()), ('lr_classifier', classifier)])
 features = expanded_data.iloc[:, -61:].to_numpy()
 target = expanded_data['Eating'].to_numpy()
 groups = expanded_data['animal'].to_numpy()
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score, balanced_accuracy_score
-
 X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.3, shuffle=True)
 
 pipe.fit(X=X_train, y=y_train)
