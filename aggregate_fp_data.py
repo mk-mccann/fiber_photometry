@@ -11,7 +11,7 @@ from functions_utils import find_episodes
 
 
 def find_zone_and_behavior_episodes(data, behavior_labels):
-    ts = data['time']
+    ts = data['ts']
     behaviors = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "Start" in col.split(" ")[-1]]
     zones = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "In" in col.split(" ")[-1]]
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     behavior_dir = join(main_dir, 'Multimaze scoring')
     dff_dir = join(main_dir, 'FP_processed data')
     modeling_data_folder = join(main_dir, 'modeling_data')
-    summary_file_path = r'Multimaze sheet summary.xlsx'
+    summary_file_path = join(main_dir, 'Multimaze sheet summary.xlsx')
     all_exps = f_io.read_summary_file(summary_file_path)
 
     Parallel(n_jobs=32, verbose=100)(delayed(perform_all_single_animal)(animal_id)
