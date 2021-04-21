@@ -1,15 +1,13 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from os.path import join
-from os import chdir
 
 # %matplotlib qt
 
 import paths
 import functions_plotting as fp
-from functions_utils import find_episodes
 import functions_io as f_io
+from functions_utils import find_episodes
 
 
 def highlight_episodes(time: np.array, labels: pd.DataFrame, plot_key="all_behaviors", ax=None):
@@ -21,6 +19,7 @@ def highlight_episodes(time: np.array, labels: pd.DataFrame, plot_key="all_behav
     :param ax:
     :return:
     """
+
     # TODO scratching
     # for other in others:
     #     start_instance = labels_df[[other]].dropna().to_numpy()

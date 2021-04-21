@@ -3,6 +3,7 @@ from functions_utils import find_nearest
 
 
 def subtract_baseline_median(time_trace, f_trace, start_time=None, end_time=None):
+    # TODO maybe unused, check if can be removed or not
     if start_time is not None:
         start_idx, _ = find_nearest(time_trace, start_time)
     else:

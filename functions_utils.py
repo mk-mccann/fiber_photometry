@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 
 def find_nearest(array: np.array, value: float):
@@ -71,6 +70,7 @@ def get_mean_episode(episodes):
     :param episodes:
     :return:
     """
+
     f_traces = [e[1] for e in episodes]
 
     trace_array = list_lists_to_array(f_traces)
@@ -85,6 +85,6 @@ def get_mean_episode(episodes):
 def remove_baseline(time, traces, norm_window=-5):
     idx, _ = find_nearest(time, 0)
     wind_idx, _ = find_nearest(time, norm_window)
-    baseline = np.median(traces[:, wind_idx:idx], axis=1)
+    baseline = np.median(traces[:, wind_idx:idx], axis=-1)
     traces = traces - np.expand_dims(baseline, axis=1)
     return traces
