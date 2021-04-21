@@ -8,12 +8,12 @@ import paths
 def read_summary_file(file_path):
     """Reads the Excel file containing paths for all experimental data and the correct columns to read FP data"""
 
-    summary_file = pd.ExcelFile(file_path)
+    summary_file = pd.ExcelFile(file_path, engine='openpyxl')
     sheets = list(summary_file.sheet_names)
     sheet_dfs = []
 
     for sheet in sheets:
-        df = pd.read_excel(summary_file, header=0, sheet_name=sheet, dtype=object)
+        df = pd.read_excel(summary_file, header=0, sheet_name=sheet, dtype=object, engine='openpyxl')
         day = int(sheet[-1])
         df['Day'] = [day for i in range(len(df))]
         sheet_dfs.append(df)
@@ -27,7 +27,7 @@ def load_behavior_labels(animal_ID, base_directory=paths.behavior_scoring_direct
     """Loads the Excel file with the behavior labels. Takes the animal ID and directory
        containing the files as inputs."""
 
-    label_filename = r"ID{}_Day{}.xlsx".format(*animal_ID.split('.'))
+    label_filename = r"ID{}_Day{}.xlsx".format(*str(animal_ID).split('.'))
     x = pd.ExcelFile(os.path.join(base_directory, label_filename), engine='openpyxl')
     behavior_labels = pd.read_excel(x, header=0, dtype=object, engine='openpyxl')
     return behavior_labels
