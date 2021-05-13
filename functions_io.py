@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import h5py
 
 import paths
 
@@ -49,6 +50,12 @@ def read_fiber_photometry_csv(file_path, metadata):
     gcamp = df.values[:, metadata['gcamp column']].astype(float)
 
     return time, autofluorescence, gcamp
+
+
+def load_glm_h5(file_path, key):
+    data = h5py.File(file_path, 'r')
+    glm_trace = data[key]
+    return glm_trace
 
 
 def check_dir_exists(path):

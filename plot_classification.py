@@ -73,6 +73,9 @@ def highlight_classifier(time: np.array, tf_array, ax=None):
 
     return ax
 
+
+
+
 def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
 
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, figsize=(30, 15), sharex=False)
