@@ -4,8 +4,12 @@ from datetime import timedelta, datetime
 from scipy.stats import sem
 from numpy import nanmean
 
+from functions_utils import find_episodes
+
 
 # For a list of all MPL colors: https://matplotlib.org/stable/gallery/color/named_colors.html
+
+
 episode_colors = {'Eating': 'cyan',
                   'Grooming': 'goldenrod',
                   'Digging': 'lime',
@@ -64,7 +68,7 @@ def plot_fluorescence_min_sec(time, trace, ax=None):
     return ax
 
 
-def overlay_episodes(epochs, label, ax):
+def overlay_manual_episodes(epochs, label, ax):
     """
 
     :param epochs:
@@ -79,6 +83,17 @@ def overlay_episodes(epochs, label, ax):
                                      alpha=0.5)
 
     return labeled_section
+
+
+def overlay_glm_epidsodes(x, bool_array, label, ax):
+
+    labeled_section = ax.fill_between(x, 0, 1, where=bool_array,
+                    facecolor=episode_colors[label],
+                    alpha=0.5,
+                    transform=ax.get_xaxis_transform())
+
+    return labeled_section
+
 
 
 def plot_mean_episode(time, traces, plot_singles=False, ax=None):

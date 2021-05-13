@@ -6,4 +6,6 @@ behavior_scoring_directory = r"C:\Users\mmccann\repos\fiber_photometry\data\Mult
 
 processed_data_directory = r"C:\Users\mmccann\repos\fiber_photometry\data\FP_processed data"
 
+modeling_data_directory = r"C:\Users\mmccann\repos\fiber_photometry\data\modeling_data"
+
 figure_directory = r"C:\Users\mmccann\repos\fiber_photometry\data\plots"
