@@ -54,17 +54,17 @@ def highlight_manual_episodes(time: np.array, labels: pd.DataFrame, plot_key="al
     return ax
 
 
-def highlight_glm_episodes(time: np.array, glm_labels: pd.DataFrame, ax=None):
+def highlight_glm_episodes(time: np.array, glm_predictions: pd.DataFrame, glm_keys, ax=None):
 
     if ax is None:
         fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
 
     # Create the highlighted episodes
     vspans = []
-    for col in glm_labels.columns:
+    for col, key in zip(glm_predictions.columns, glm_keys):
 
-        label = fp.overlay_glm_epidsodes(fp.mpl_datetime_from_seconds(time), glm_labels[col].to_numpy(), col, ax)
-        vspans.append([label, col])
+        label = fp.overlay_glm_epidsodes(fp.mpl_datetime_from_seconds(time), glm_predictions[col].to_numpy(), key, ax)
+        vspans.append([label, key])
 
     vspans = np.array(vspans)
     ax.legend(vspans[:, 0], vspans[:, 1], loc="upper right")
@@ -72,7 +72,7 @@ def highlight_glm_episodes(time: np.array, glm_labels: pd.DataFrame, ax=None):
     return ax
 
 
-def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame, glm_labels: pd.DataFrame):
+def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame, glm_predictions: pd.DataFrame, glm_keys):
 
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, figsize=(30, 15), sharex=False)
 
@@ -92,16 +92,21 @@ def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame, glm_labels:
 
     # Add a subplot containing the GLM
     fp.plot_fluorescence_min_sec(time, f_trace, ax=ax3)
-    _ = highlight_glm_episodes(time, glm_labels, ax=ax3)
+    _ = highlight_glm_episodes(time, glm_predictions, glm_keys, ax=ax3)
     ax3.set_xlabel('Time')
 
     return fig
 
 
 def extract_glm_predictions(glm_data, mouse_id, day):
+    predict_cols = [col for col in glm_data.columns if 'prediction' in col]
+
     animal_exp = glm_data.loc[(glm_data['animal'] == mouse_id) & (glm_data['day'] == day)]
     animal_exp.sort_values(['index'], inplace=True)
-    return animal_exp
+
+    predictions = animal_exp[predict_cols]
+
+    return animal_exp['ts'].to_numpy(), animal_exp['zscore'].to_numpy(), predictions
 
 
 if __name__ == "__main__":
@@ -110,7 +115,7 @@ if __name__ == "__main__":
     mouse_ID = 4
     day = 1
     id = "{}.{}".format(mouse_ID, day)
-    glm_prediction_key = 'Eating'
+    glm_prediction_key = ['Eating']
 
     behavior_dir = paths.behavior_scoring_directory
     dff_dir = paths.processed_data_directory
@@ -121,11 +126,11 @@ if __name__ == "__main__":
     manual_behavior_labels = f_io.load_behavior_labels(id)
     data = f_io.load_preprocessed_data(id)
     glm = f_io.load_glm_h5('classifier_df.h5')
-    exp_predict = extract_glm_predictions(glm, mouse_ID, day)
+    time, zscore, exp_predict = extract_glm_predictions(glm, mouse_ID, day)
     # behavior_labels = f_io.load_behavior_labels(id, base_directory=row['Behavior Labelling'])
     # data = f_io.load_preprocessed_data(id, base_directory=row['Preprocessed Data'])
 
-    fig = main(data['time'], data['zscore'], manual_behavior_labels, exp_predict)
+    fig = main(time, zscore, manual_behavior_labels, exp_predict, glm_prediction_key)
     plt.suptitle(" ".join((id, 'Z-Score DFF', 'behavior segmentation with GLM predictions')))
     plt.savefig(join(save_directory, " ".join((str(id), 'Z-Score DFF', 'behavior segmentation+GLM')) + ".png"))
     plt.show()
