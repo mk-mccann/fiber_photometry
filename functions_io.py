@@ -23,19 +23,19 @@ def read_summary_file(file_path):
     return all_data
 
 
-def load_behavior_labels(animal_ID, base_directory=paths.behavior_scoring_directory):
+def load_behavior_labels(animal_id, base_directory=paths.behavior_scoring_directory):
     """Loads the Excel file with the behavior labels. Takes the animal ID and directory
        containing the files as inputs."""
 
-    label_filename = r"ID{}_Day{}.xlsx".format(*str(animal_ID).split('.'))
+    label_filename = r"ID{}_Day{}.xlsx".format(*str(animal_id).split('.'))
     x = pd.ExcelFile(os.path.join(base_directory, label_filename), engine='openpyxl')
     behavior_labels = pd.read_excel(x, header=0, dtype=object, engine='openpyxl')
     return behavior_labels
 
 
-def load_preprocessed_data(animal_ID, base_directory=paths.processed_data_directory):
+def load_preprocessed_data(animal_id, base_directory=paths.processed_data_directory):
     preprocessed_data_path = base_directory
-    preprocessed_filename = r"{}.npy".format(animal_ID)
+    preprocessed_filename = r"{}.npy".format(animal_id)
     preproc_data = np.load(os.path.join(preprocessed_data_path, preprocessed_filename), allow_pickle=True)
     return preproc_data.item()
 
@@ -49,6 +49,12 @@ def read_fiber_photometry_csv(file_path, metadata):
     gcamp = df.values[:, metadata['gcamp column']].astype(float)
 
     return time, autofluorescence, gcamp
+
+
+def load_glm_h5(filename, key='nokey', base_directory=paths.modeling_data_directory):
+    # filename = r"{}.h5".format(animal_id)
+    data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
+    return data
 
 
 def check_dir_exists(path):

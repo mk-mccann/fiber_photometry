@@ -42,7 +42,7 @@ def highlight_episodes(time: np.array, labels: pd.DataFrame, tf_array=None, plot
 
         _, epochs = find_episodes(time, labels, episode_type)
         if len(epochs) > 0:
-            label = fp.overlay_episodes(epochs, episode_type, ax)
+            label = fp.overlay_manual_episodes(epochs, episode_type, ax)
             vspans.append([label, episode_type])
 
     vspans = np.array(vspans)
