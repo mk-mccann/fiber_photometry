@@ -15,11 +15,11 @@ from functions_io import read_summary_file, read_fiber_photometry_csv, check_dir
 
 def preprocess_fluorescence(gcamp, auto):
 
-    # replace NaN's with closest non-NaN
+    # replace NaN's with closest (interpolated) non-NaN
     gcamp = fpp.remove_nans(gcamp)
     auto = fpp.remove_nans(auto)
 
-    # replace large jumps with the median
+    # replace large jumps with the overall median
     auto = fpp.median_large_jumps(auto)
     gcamp = fpp.median_large_jumps(gcamp)
 

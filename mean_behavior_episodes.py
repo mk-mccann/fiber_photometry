@@ -33,7 +33,8 @@ def episode_start_window(time, labels, key, period=(-5, 5), dwell_filter=0):
         [start, end] = t
         dwell_time = end - start
 
-        if dwell_time <= dwell_filter:
+        # Dwell filter: animal must spend at least this much time doing a behavior
+        if dwell_time >= dwell_filter:
             start_idx, start_time = f_util.find_nearest(time, start + period[0])
             end_idx, end_time = f_util.find_nearest(time, start + period[1])
 
@@ -59,7 +60,6 @@ if __name__ == "__main__":
     # Which behavior do you want to look at
     key = 'ALL'    # If set to "ALL", generates means for all behaviors
     period = (-5, 10)
-    dfilt = 30
 
     if key == "ALL":
         all_episodes = {k: [] for k in episode_colors.keys()}
@@ -76,13 +76,19 @@ if __name__ == "__main__":
             # labels = f_io.load_behavior_labels(str(row['Ani_ID']), base_directory=row['Behavior Labelling'])
             # data = f_io.load_preprocessed_data(str(row['Ani_ID']), base_directory=row['Preprocessed Data'])
 
-            time = data['time']
+            time = data['ts']
             f_trace = data['zscore']
             f_trace = medfilt(f_trace, kernel_size=51)
 
             for k in all_episodes.keys():
+                if 'Eating' in k:
+                    # Dwell time filter can only be applied for eating!
+                    dwell_filt = 30  # Dwell time filter: minimum time animal must stay in zone
+                else:
+                    dwell_filt = 0
+
                 try:
-                    window_idxs, window_times = episode_start_window(time, labels, k, period=period, dwell_filter=dfilt)
+                    window_idxs, window_times = episode_start_window(time, labels, k, period=period, dwell_filter=dwell_filt)
                     exp_episodes = [f_trace[start:end] for [start, end] in window_idxs]
                     all_episodes[k].append(exp_episodes)
                 except KeyError:
@@ -105,10 +111,10 @@ if __name__ == "__main__":
             t = np.linspace(period[0], period[1], trace_array.shape[-1])
             trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
 
-            fig = plot_mean_episode(t, trace_array)
+            fig = plot_mean_episode(t, trace_array, plot_singles=True)
             plt.ylabel('$\Delta$F/F Z-score minus')
             plt.title('Mean trace for {}'.format(k))
-            plt_name = "mean_{}_dff_zscore.png".format(key.lower())
+            plt_name = "mean_{}_dff_zscore.png".format(k.lower())
             plt.savefig(join(save_directory, plt_name))
             plt.show()
 

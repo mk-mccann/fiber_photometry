@@ -81,7 +81,7 @@ def get_mean_episode(episodes):
     return trace_array, mean_trace, std_trace
 
 
-# norm.window here is a default; if you don't pass the parameter in the code lower down it will resort to -5
+# norm.window here is a default; if you don't pass the parameter in the code it will resort to -5
 def remove_baseline(time, traces, norm_window=-5):
     idx, _ = find_nearest(time, 0)
     wind_idx, _ = find_nearest(time, norm_window)

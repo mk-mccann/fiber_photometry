@@ -19,10 +19,17 @@ def subtract_baseline_median(time_trace, f_trace, start_time=None, end_time=None
 
 
 def median_large_jumps(trace, percentile=0.95):
+    """
+    Filters large jumps in fluorescence signal and replaces them with the
+    overall median
+    """
+
+
     filtered_trace = trace.copy()
 
-    med = np.median(trace)
-    mask = np.argwhere((trace < percentile * med))
+    # TODO: interpolate points where jumps occur instead of using overall median
+    med = np.median(trace)    # Take median of whole fluor trace
+    mask = np.argwhere((trace < percentile * med))   # Find where trace less than some fraction of median
     filtered_trace[mask] = med
 
     return filtered_trace
