@@ -76,7 +76,7 @@ def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
 if __name__ == "__main__":
     "Code to test that the plotting works"
 
-    mouse_ID = 4
+    mouse_ID = 2
     day = 1
     id = "{}.{}".format(mouse_ID, day)
 
@@ -92,5 +92,5 @@ if __name__ == "__main__":
 
     fig = main(data['ts'], data['zscore'], behavior_labels)
     plt.suptitle(" ".join((str(data['ani_id']), 'Z-Score DFF', 'behavior segmentation')))
-    plt.savefig(join(save_directory, " ".join((str(id), 'Z-Score DFF', 'behavior segmentation')) + ".png"))
+    #plt.savefig(join(save_directory, " ".join((str(id), 'Z-Score DFF', 'behavior segmentation')) + ".png"))
     plt.show()
