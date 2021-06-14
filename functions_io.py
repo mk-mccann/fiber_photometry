@@ -40,15 +40,22 @@ def load_preprocessed_data(animal_id, base_directory=paths.processed_data_direct
     return preproc_data.item()
 
 
-def read_fiber_photometry_csv(file_path, metadata):
+def read_fiber_photometry_csv(file_path, file_metadata, column_names=None):
     """Reads the CSV containing fiber photometry data"""
 
-    df = pd.read_csv(file_path, skiprows=2)  # , skiprows = (0), skipfooter =(10))
-    time = df.values[:, metadata['ts']]
-    autofluorescence = df.values[:, metadata['auto column']].astype(float)
-    gcamp = df.values[:, metadata['gcamp column']].astype(float)
+    # We assume that we are only creating a dataframe to hold a single channel 
+    # of fluorescence data (time, gcamp, auto), so here the columns names are 
+    # set to a default. If you have more channels in one recording, this function 
+    # will need to be updated
+    if column_names is None:
+        column_names = ['time', 'gcamp', 'auto']
 
-    return time, autofluorescence, gcamp
+    fluor_df = pd.read_csv(file_path, skiprows=2, names=column_names, 
+    usecols=[file_metadata['ts'], file_metadata['gcamp column'], file_metadata['auto column']],
+    dtype=float
+    )
+
+    return fluor_df
 
 
 def load_glm_h5(filename, key='nokey', base_directory=paths.modeling_data_directory):

@@ -5,5 +5,3 @@
 - DF for fluorescence data and behavior data combined
 - Saving in H5 files instead of npy files
 - Look at interpolation of large jumps
-
-- ALJA WAS HERE YA SUCKERRRSSSSS BOOOOOO

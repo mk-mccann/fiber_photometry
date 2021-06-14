@@ -13,11 +13,11 @@ from functions_io import read_summary_file, read_fiber_photometry_csv, check_dir
 """load and process data for fiber photometry experiments"""
 
 
-def preprocess_fluorescence(gcamp, auto):
+def preprocess_fluorescence(df):
 
     # replace NaN's with closest (interpolated) non-NaN
-    gcamp = fpp.remove_nans(gcamp)
-    auto = fpp.remove_nans(auto)
+    gcamp = fpp.remove_nans(df['gcamp'])
+    auto = fpp.remove_nans(df['auto'])
 
     # replace large jumps with the overall median
     auto = fpp.median_large_jumps(auto)
@@ -42,7 +42,10 @@ def preprocess_fluorescence(gcamp, auto):
     # dff_rem_base = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
     # dff_rem_base = dff_rem_base * 100
 
-    return auto, gcamp, dff, dffzscore
+    df['dff'] = dff
+    df['zscore'] = dffzscore
+
+    return df
 
 
 if __name__ == "__main__":
@@ -59,9 +62,8 @@ if __name__ == "__main__":
         data = {}
 
         # load the raw data from 1 rec at a time
-        # fp_file = join(row['Raw Data Folder'], row['FP file'] + '.csv')
         fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
-        time, auto, gcamp = read_fiber_photometry_csv(fp_file, row)
+        fluor_df = read_fiber_photometry_csv(fp_file, row)
 
         auto, gcamp, dff, dffzscore, = preprocess_fluorescence(auto, gcamp)
 
