@@ -86,11 +86,9 @@ if __name__ == "__main__":
     f_io.check_dir_exists(save_directory)
 
     behavior_labels = f_io.load_behavior_labels(id)
-    data = f_io.load_preprocessed_data(id)
-    # behavior_labels = f_io.load_behavior_labels(id, base_directory=row['Behavior Labelling'])
-    # data = f_io.load_preprocessed_data(id, base_directory=row['Preprocessed Data'])
+    data = f_io.load_preprocessed_data(mouse_ID, day)
 
-    fig = main(data['ts'], data['zscore'], behavior_labels)
+    fig = main(data['time'], data['zscore'], behavior_labels)
     plt.suptitle(" ".join((str(data['ani_id']), 'Z-Score DFF', 'behavior segmentation')))
     #plt.savefig(join(save_directory, " ".join((str(id), 'Z-Score DFF', 'behavior segmentation')) + ".png"))
     plt.show()

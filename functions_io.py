@@ -15,7 +15,7 @@ def read_summary_file(file_path):
     for sheet in sheets:
         df = pd.read_excel(summary_file, header=0, sheet_name=sheet, dtype=object, engine='openpyxl')
         day = int(sheet[-1])
-        df['Day'] = [day for i in range(len(df))]
+        df['Day'] = day
         sheet_dfs.append(df)
 
     all_data = pd.concat(sheet_dfs)
@@ -23,21 +23,21 @@ def read_summary_file(file_path):
     return all_data
 
 
-def load_behavior_labels(animal_id, base_directory=paths.behavior_scoring_directory):
+def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_directory):
     """Loads the Excel file with the behavior labels. Takes the animal ID and directory
        containing the files as inputs."""
 
-    label_filename = r"ID{}_Day{}.xlsx".format(*str(animal_id).split('.'))
+    label_filename = r"ID{}_Day{}.xlsx".format(animal, day)
     x = pd.ExcelFile(os.path.join(base_directory, label_filename), engine='openpyxl')
     behavior_labels = pd.read_excel(x, header=0, dtype=object, engine='openpyxl')
     return behavior_labels
 
 
-def load_preprocessed_data(animal_id, base_directory=paths.processed_data_directory):
-    preprocessed_data_path = base_directory
-    preprocessed_filename = r"{}.npy".format(animal_id)
-    preproc_data = np.load(os.path.join(preprocessed_data_path, preprocessed_filename), allow_pickle=True)
-    return preproc_data.item()
+def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
+    data_path = base_directory
+    filename = 'Animal{}_Day{}_preprocessed.h5'.format(animal, day)
+    preproc_data = pd.read_hdf(os.path.join(data_path, filename), key=key)
+    return preproc_data
 
 
 def read_fiber_photometry_csv(file_path, file_metadata, column_names=None):
@@ -59,7 +59,6 @@ def read_fiber_photometry_csv(file_path, file_metadata, column_names=None):
 
 
 def load_glm_h5(filename, key='nokey', base_directory=paths.modeling_data_directory):
-    # filename = r"{}.h5".format(animal_id)
     data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
     return data
 
