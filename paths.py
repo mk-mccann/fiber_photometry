@@ -1,6 +1,6 @@
 from os.path import join
 
-fp_data_root_dir = r"C:\Users\mmccann\repos\fiber_photometry\data"
+fp_data_root_dir = r"/home/matt/repos/fiber_photometry/data"
 
 summary_file = join(fp_data_root_dir, "Multimaze sheet summary.xlsx")
 
