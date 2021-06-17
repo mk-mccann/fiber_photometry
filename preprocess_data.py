@@ -13,7 +13,7 @@ from functions_io import read_summary_file, read_fiber_photometry_csv, check_dir
 """load and process data for fiber photometry experiments"""
 
 
-def preprocess_fluorescence(time, gcamp, auto):
+def preprocess_fluorescence(gcamp, auto):
 
     # replace NaN's with closest (interpolated) non-NaN
     gcamp = fpp.remove_nans(gcamp)
