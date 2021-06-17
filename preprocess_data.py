@@ -63,11 +63,7 @@ if __name__ == "__main__":
         fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
         time, auto, gcamp = read_fiber_photometry_csv(fp_file, row)
 
-<<<<<<< Updated upstream
         auto, gcamp, dff, dffzscore, = preprocess_fluorescence(gcamp, auto)
-=======
-        auto, gcamp, dff, dffzscore, = preprocess_fluorescence(time, auto, gcamp)
->>>>>>> Stashed changes
 
         data['ani_id'] = row['Ani_ID']
         data['time'] = time

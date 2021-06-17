@@ -43,18 +43,10 @@ def load_preprocessed_data(animal_id, base_directory=paths.processed_data_direct
 def read_fiber_photometry_csv(file_path, metadata):
     """Reads the CSV containing fiber photometry data"""
 
-<<<<<<< Updated upstream
     df = pd.read_csv(file_path, skiprows=1)  # , skiprows = (0), skipfooter =(10))
     time = df.iloc[:, metadata['ts']].to_numpy()
     autofluorescence = df.iloc[:, metadata['auto column']].to_numpy()
     gcamp = df.iloc[:, metadata['gcamp column']].to_numpy()
-=======
-    df = pd.read_csv(file_path, skiprows=2)  # , skiprows = (0), skipfooter =(10))
-    print(metadata['ts'], metadata['auto column'], metadata['gcamp column'], metadata['Ani_ID'])
-    time = df.values[:, metadata['ts']]
-    autofluorescence = df.values[:, metadata['auto column']].astype(float)
-    gcamp = df.values[:, metadata['gcamp column']].astype(float)
->>>>>>> Stashed changes
 
     return time, autofluorescence, gcamp
 
