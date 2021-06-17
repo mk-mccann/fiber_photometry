@@ -74,7 +74,6 @@ def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
 
 
 if __name__ == "__main__":
-    "Code to test that the plotting works"
 
     mouse_ID = 2
     day = 1
