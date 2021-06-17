@@ -80,7 +80,7 @@ def overlay_manual_episodes(epochs, label, ax):
     for epoch in epochs:
         labeled_section = ax.axvspan(mpl_datetime_from_seconds(epoch[0]), mpl_datetime_from_seconds(epoch[-1]),
                                      facecolor=episode_colors[label],
-                                     alpha=0.5)
+                                     alpha=0.3)
 
     return labeled_section
 

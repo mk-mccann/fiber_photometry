@@ -13,7 +13,7 @@ from functions_io import read_summary_file, read_fiber_photometry_csv, check_dir
 """load and process data for fiber photometry experiments"""
 
 
-def preprocess_fluorescence(gcamp, auto):
+def preprocess_fluorescence(time, gcamp, auto):
 
     # replace NaN's with closest (interpolated) non-NaN
     gcamp = fpp.remove_nans(gcamp)
@@ -63,7 +63,11 @@ if __name__ == "__main__":
         fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
         time, auto, gcamp = read_fiber_photometry_csv(fp_file, row)
 
+<<<<<<< Updated upstream
         auto, gcamp, dff, dffzscore, = preprocess_fluorescence(gcamp, auto)
+=======
+        auto, gcamp, dff, dffzscore, = preprocess_fluorescence(time, auto, gcamp)
+>>>>>>> Stashed changes
 
         data['ani_id'] = row['Ani_ID']
         data['time'] = time
@@ -77,7 +81,10 @@ if __name__ == "__main__":
         # TODO change saving to h5 files
         np.save(join(output_directory, str(row['Ani_ID']) + '.npy'), data)
 
-        ax = plot_fluorescence_min_sec(data['time'], data['zscore'])
+        fig, axes = plt.subplots(3, 1)
+        ax = plot_fluorescence_min_sec(data['time'], data['zscore'], ax=axes[0])
+        ax1 = plot_fluorescence_min_sec(data['time'], data['dff'], ax=axes[1])
+        ax2 = plot_fluorescence_min_sec(data['time'], data['gcamp'] - data['auto'], ax=axes[2])
         ax.set_title(str(row['Ani_ID']) + " Z-Score DFF")
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Z-Score DFF')

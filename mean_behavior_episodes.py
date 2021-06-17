@@ -55,10 +55,10 @@ def extract_episodes(data_df, analysis_period, output_dict):
 
             time = data['time']
             f_trace = data['zscore']
-            f_trace = medfilt(f_trace, kernel_size=51)
+            f_trace = medfilt(f_trace, kernel_size=35)
 
             for k in all_episodes.keys():
-                if 'Eating' in k:
+                if 'Eating Zone' in k:
                     # Dwell time filter can only be applied for eating!
                     dwell_filt = 30  # Dwell time filter: minimum time animal must stay in zone
                 else:
