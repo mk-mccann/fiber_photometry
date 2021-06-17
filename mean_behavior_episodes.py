@@ -123,7 +123,7 @@ def plot_multiple_behaviors(data, keys_to_plot, plot_singles=False):
             t = np.linspace(period[0], period[1], trace_array.shape[-1])
 
             # Remove the baseline using the 5 seconds before behavior onset
-            trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
+            trace_array = f_util.remove_baseline(t, trace_array, norm_start=-13, norm_end=-10)
 
             collected_traces.append(trace_array)
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # If set to "ALL", generates means for all behaviors.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', ...]
     keys = 'ALL'
-    period = (-5, 10)
+    period = (-13, 10)
 
     # Create a dictionary to hold the output traces
     if keys == "ALL":
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # If you set key = 'ALL' initially, and want to just look at a subset of behaviors,
     # then you need change multi_behav_plot with a list of the behaviors you want
     # to see
-    multi_behav_plot = list(all_episodes.keys())
+    multi_behav_plot = [key for key in list(all_episodes.keys()) if 'Zone' not in key]
     plot_multiple_behaviors(all_episodes, multi_behav_plot)
 
     plt.show()
