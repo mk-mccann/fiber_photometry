@@ -88,3 +88,10 @@ def remove_baseline(time, traces, norm_window=-5):
     baseline = np.median(traces[:, wind_idx:idx], axis=-1)
     traces = traces - np.expand_dims(baseline, axis=1)
     return traces
+
+
+def median_of_time_window(time, trace, t_start, t_end):
+    # time is assumed to be in seconds
+
+    time_mask = (time >= t_start) & (time <= t_end)
+    return np.median(trace[time_mask])
