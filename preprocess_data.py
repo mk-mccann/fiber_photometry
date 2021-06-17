@@ -8,6 +8,7 @@ from tqdm import tqdm
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
+from functions_utils import find_episodes
 from functions_plotting import plot_fluorescence_min_sec
 
 
@@ -53,14 +54,14 @@ def preprocess_fluorescence(data_df):
 
 
 def find_zone_and_behavior_episodes(data_df, behavior_labels):
-    ts = data_df['time']
+    ts = data_df['time'].to_numpy()
     behaviors = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "Start" in col.split(" ")[-1]]
     zones = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "In" in col.split(" ")[-1]]
 
     behav_bouts = []
     for behav in behaviors:
 
-        behav_idxs, behav_times = f_io.find_episodes(ts, behavior_labels, behav)
+        behav_idxs, behav_times = find_episodes(ts, behavior_labels, behav)
 
         for idxs, times in zip(behav_idxs, behav_times):
             behav_bouts.append([behav, idxs[0], times[0], idxs[1], times[1]])
@@ -69,7 +70,7 @@ def find_zone_and_behavior_episodes(data_df, behavior_labels):
 
     zone_bouts = []
     for zone in zones:
-        zone_idxs, zone_times = f_io.find_episodes(ts, behavior_labels, zone)
+        zone_idxs, zone_times = find_episodes(ts, behavior_labels, zone)
 
         for idxs, times in zip(zone_idxs, zone_times):
             zone_bouts.append([zone, idxs[0], times[0], idxs[1], times[1]])
@@ -80,24 +81,26 @@ def find_zone_and_behavior_episodes(data_df, behavior_labels):
 
 
 def add_episode_data(data_df, behav_bouts, zone_bouts):
-    behaviors = np.unique(behav_bouts.T[0])
-    zones = np.unique(np.unique(zone_bouts.T[0]))
+    behaviors = np.unique(behav_bouts[:, 0])
+    zones = np.unique(zone_bouts[:, 0])
 
     for zone in zones:
-        bool_array = np.array([False] * len(data_df))
-        data_df[zone] = bool_array
+        data_df[zone] = np.array([''] * len(data_df))
 
-    zones = pd.DataFrame(zone_bouts, columns=['zone', 'start_idx', 'start_time', 'end_idx', 'end_time'])
-    for i, val in zones.iterrows():
-        data_df.loc[val['start_idx']:val['end_idx'], val['zone']] = True
+    zone_df = pd.DataFrame(zone_bouts, columns=['zone', 'start_idx', 'start_time', 'end_idx', 'end_time'])
+    for i, val in zone_df.iterrows():
+        data_df.loc[val['start_idx']:val['end_idx'], val['zone']] = val['zone']
+
+    data_df['zone'] = data_df[list(zones)].sum(axis=1)
 
     for behavior in behaviors:
-        bool_array = np.array([False] * len(data_df))
-        data_df[behavior] = bool_array
+        data_df[behavior] = np.array([''] * len(data_df))
 
-    behaviors = pd.DataFrame(behav_bouts, columns=['behavior', 'start_idx', 'start_time', 'end_idx', 'end_time'])
-    for i, val in behaviors.iterrows():
-        data_df.loc[val['start_idx']:val['end_idx'], val['behavior']] = True
+    behavior_df = pd.DataFrame(behav_bouts, columns=['behavior', 'start_idx', 'start_time', 'end_idx', 'end_time'])
+    for i, val in behavior_df.iterrows():
+        data_df.loc[val['start_idx']:val['end_idx'], val['behavior']] = val['behavior']
+
+    data_df['behavior'] = data_df[list(behaviors)].sum(axis=1)
 
     return data_df
 
@@ -126,6 +129,9 @@ if __name__ == "__main__":
         # try to load the manual video scoring file, if it exists
         try:
             behavior_labels = f_io.load_behavior_labels(animal, day)
+            behavior_bouts, zone_bouts = find_zone_and_behavior_episodes(data, behavior_labels)
+            data = add_episode_data(data, behavior_bouts, zone_bouts)
+
         except FileNotFoundError:
             continue
 
