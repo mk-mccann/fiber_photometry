@@ -44,6 +44,103 @@ def episode_start_window(time, labels, key, period=(-5, 5), dwell_filter=0):
     return valid_episode_idxs, valid_episode_times
 
 
+def extract_episodes(data_df, analysis_period, output_dict):
+    # Go row by row through the summary data
+    for idx, row in data_df.iterrows():
+
+        try:
+            # load the raw data from 1 rec at a time
+            labels = f_io.load_behavior_labels(str(row['Ani_ID']))
+            data = f_io.load_preprocessed_data(str(row['Ani_ID']))
+
+            time = data['time']
+            f_trace = data['zscore']
+            f_trace = medfilt(f_trace, kernel_size=35)
+
+            for k in all_episodes.keys():
+                if 'Eating Zone' in k:
+                    # Dwell time filter can only be applied for eating!
+                    dwell_filt = 30  # Dwell time filter: minimum time animal must stay in zone
+                else:
+                    dwell_filt = 0
+
+                try:
+                    window_idxs, window_times = episode_start_window(time, labels, k, period=analysis_period,
+                                                                     dwell_filter=dwell_filt)
+                    exp_episodes = [f_trace[start:end] for [start, end] in window_idxs]
+                    output_dict[k].append(exp_episodes)
+                except KeyError:
+                    continue
+
+        except FileNotFoundError as error:
+            print(str(error))
+
+    return all_episodes
+
+
+def plot_individual_behaviors(data, plot_singles=False):
+    # Loop through all the conditions we pulled out before and plot them
+    for k in data.keys():
+        f_traces_of_key = data[k]
+
+        if len(f_traces_of_key) > 0:
+            f_traces_of_key = f_util.flatten_list(f_traces_of_key)
+            trace_array = f_util.list_lists_to_array(f_traces_of_key)
+
+            num_episodes = trace_array.shape[0]
+            print("Number of {} trials = {}".format(k, num_episodes))
+
+            t = np.linspace(period[0], period[1], trace_array.shape[-1])
+
+            # Remove the baseline using the 5 seconds before behavior onset
+            trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
+
+            # Plot the mean episode
+            fig = plot_mean_episode(t, trace_array, plot_singles=plot_singles)
+            plt.ylabel('$\Delta$F/F Z-score minus')
+            plt.title('Mean trace for {}'.format(k))
+            plt_name = "mean_{}_dff_zscore.png".format(k.lower())
+            plt.savefig(join(save_directory, plt_name))
+            return fig
+
+        else:
+            print("No episodes of {} found!".format(k))
+
+
+def plot_multiple_behaviors(data, keys_to_plot, plot_singles=False):
+    collected_traces = []
+
+    for k in keys_to_plot:
+        f_traces_of_key = data[k]
+
+        if len(f_traces_of_key) > 0:
+            f_traces_of_key = f_util.flatten_list(f_traces_of_key)
+            trace_array = f_util.list_lists_to_array(f_traces_of_key)
+
+            num_episodes = trace_array.shape[0]
+            print("Number of {} trials = {}".format(k, num_episodes))
+
+            t = np.linspace(period[0], period[1], trace_array.shape[-1])
+
+            # Remove the baseline using the 5 seconds before behavior onset
+            trace_array = f_util.remove_baseline(t, trace_array, norm_start=-13, norm_end=-10)
+
+            collected_traces.append(trace_array)
+
+        else:
+            print("No episodes of {} found!".format(k))
+
+    collected_traces = np.vstack(collected_traces)
+    # Plot the mean episode
+    fig = plot_mean_episode(t, collected_traces, plot_singles=plot_singles)
+    plt.ylabel('$\Delta$F/F Z-score')
+    plt.title('Mean trace for {}'.format(', '.join(keys_to_plot)))
+    plt_name = "mean_{}_dff_zscore.png".format('_'.join(keys_to_plot))
+    # plt.savefig(join(save_directory, plt_name))
+    return fig
+
+
+
 if __name__ == "__main__":
 
     summary_file_path = paths.summary_file    # Set this to wherever it is
@@ -57,66 +154,29 @@ if __name__ == "__main__":
     exps_to_run = all_exps
     # exps_to_run = all_exps.loc[all_exps["Day"] == 3]
 
-    # Which behavior do you want to look at
-    key = 'ALL'    # If set to "ALL", generates means for all behaviors
-    period = (-5, 10)
+    # Which behavior(s) do you want to look at?
+    # If set to "ALL", generates means for all behaviors.
+    # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', ...]
+    keys = 'ALL'
+    period = (-13, 10)
 
-    if key == "ALL":
+    # Create a dictionary to hold the output traces
+    if keys == "ALL":
         all_episodes = {k: [] for k in episode_colors.keys()}
     else:
-        all_episodes = {key: []}
+        all_episodes = {k: [] for k in keys}
 
-    # Go row by row through the summary data
-    for idx, row in exps_to_run.iterrows():
+    all_episodes = extract_episodes(exps_to_run, period, all_episodes)
 
-        try:
-            # load the raw data from 1 rec at a time
-            labels = f_io.load_behavior_labels(str(row['Ani_ID']))
-            data = f_io.load_preprocessed_data(str(row['Ani_ID']))
-            # labels = f_io.load_behavior_labels(str(row['Ani_ID']), base_directory=row['Behavior Labelling'])
-            # data = f_io.load_preprocessed_data(str(row['Ani_ID']), base_directory=row['Preprocessed Data'])
+    # Plot means for the individual behaviors (as selected in key)
+    # plot_individual_behaviors(all_episodes)
 
-            time = data['ts']
-            f_trace = data['zscore']
-            f_trace = medfilt(f_trace, kernel_size=51)
+    # Plot means across all or some of the behaviors
+    # If you set key = 'ALL' initially, and want to just look at a subset of behaviors,
+    # then you need change multi_behav_plot with a list of the behaviors you want
+    # to see
+    multi_behav_plot = [key for key in list(all_episodes.keys()) if 'Zone' not in key]
+    plot_multiple_behaviors(all_episodes, multi_behav_plot)
 
-            for k in all_episodes.keys():
-                if 'Eating' in k:
-                    # Dwell time filter can only be applied for eating!
-                    dwell_filt = 30  # Dwell time filter: minimum time animal must stay in zone
-                else:
-                    dwell_filt = 0
+    plt.show()
 
-                try:
-                    window_idxs, window_times = episode_start_window(time, labels, k, period=period, dwell_filter=dwell_filt)
-                    exp_episodes = [f_trace[start:end] for [start, end] in window_idxs]
-                    all_episodes[k].append(exp_episodes)
-                except KeyError:
-                    continue
-        
-        except FileNotFoundError as error:
-            print(str(error))
-
-    # Loop through all the conditions we pulled out before and plot them
-    for k in all_episodes.keys():
-        f_traces_of_key = all_episodes[k]
-
-        if len(f_traces_of_key) > 0:
-            f_traces_of_key = f_util.flatten_list(f_traces_of_key)
-            trace_array = f_util.list_lists_to_array(f_traces_of_key)
-
-            num_episodes = trace_array.shape[0]
-            print("Number of {} trials = {}".format(k, num_episodes))
-
-            t = np.linspace(period[0], period[1], trace_array.shape[-1])
-            trace_array = f_util.remove_baseline(t, trace_array, norm_window=-5)
-
-            fig = plot_mean_episode(t, trace_array, plot_singles=True)
-            plt.ylabel('$\Delta$F/F Z-score minus')
-            plt.title('Mean trace for {}'.format(k))
-            plt_name = "mean_{}_dff_zscore.png".format(k.lower())
-            plt.savefig(join(save_directory, plt_name))
-            plt.show()
-
-        else:
-            print("No episodes of {} found!".format(k))
