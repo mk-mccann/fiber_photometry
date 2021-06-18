@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 from os.path import join
 
-# %matplotlib qt
-
 import paths
 import functions_plotting as fp
 import functions_io as f_io
@@ -75,8 +73,8 @@ def main(time: np.array, f_trace: np.array, labels_df: pd.DataFrame):
 
 if __name__ == "__main__":
 
-    mouse_ID = 2
-    day = 1
+    mouse_ID = 5
+    day = 3
     id = "{}.{}".format(mouse_ID, day)
 
     behavior_dir = paths.behavior_scoring_directory
