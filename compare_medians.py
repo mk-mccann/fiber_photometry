@@ -1,6 +1,3 @@
-import matplotlib.pyplot as plt
-
-import paths
 import functions_io as f_io
 from functions_utils import median_of_time_window
 

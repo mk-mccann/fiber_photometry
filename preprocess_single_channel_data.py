@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
         # load the raw fluorescence data from a given experiment
         fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
-        data = f_io.read_fiber_photometry_csv(fp_file, row)
+        data = f_io.read_1_channel_fiber_photometry_csv(fp_file, row)
 
         # Add the identifying information to the dataframe
         data['animal'] = animal

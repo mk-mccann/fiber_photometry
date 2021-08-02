@@ -100,7 +100,7 @@ def plot_individual_behaviors(data, plot_singles=False):
             plt.ylabel('Z-dF/F')
             plt.title('Mean trace for {}'.format(k))
             plt_name = "mean_{}_dff_zscore.png".format(k.lower())
-            plt.savefig(join(save_directory, plt_name))
+            plt.savefig(join(paths.figure_directory, plt_name))
             return fig
 
         else:

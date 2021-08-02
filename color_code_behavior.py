@@ -9,17 +9,47 @@ import functions_io as f_io
 import functions_utils as fu
 
 
-def main(data: pd.DataFrame):
+def main(data: pd.DataFrame, channel_key=None):
+    """
+    Plots a 2-panel figure for the z-scored dF/F trace for a given recording site
+    and overlays the manually-scored behavior and zone-occupation periods. Time is
+    scales to HH:mm format for readability.
+
+    :param data: A pandas dataframe containing fluorescence traces and behavior labels
+    :param channel_key: An optional argument for specifying which fluorescence channel to use.
+                        Only used in dual-fiber recordings.
+
+    Example usage for a single fiber recording:
+    fig = main(data)
+
+    Example usage for dual fiber recording:
+    fig = main(data, 'anterior')
+    fig = main(data, 'posterior')
+    """
+
+    # Select the time data
     time = data['time']
-    f_trace = data['zscore']
 
-    fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)
+    # Select the fluorescence trace of interest. It's the z-scored dF/F by default,
+    # but could be changed to 'dff' in the lines below for the normal df?f trace.
+    # One could even try just 'gcamp' or 'auto' to visualize those channels.
+    if channel_key is None:
+        f_trace = data['zscore']
+    else:
+        f_trace = data['zscore_' + channel_key]
 
-    # Get the dF/F plot
+    # Generate a figure with 2 panels in a single column
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 15), sharex=False)
+
+    # Get the dF/F plot and highlight the times performing labeled behaviors
+    # Plot the fluorescence trace on the first panel (ax1)
     fp.plot_fluorescence_min_sec(time, f_trace, ax=ax1)
     # ax1.xaxis.label.set_visible(False))
+    # Extract the labeled behaviors
     found_behaviors = np.unique(data['behavior'][data['behavior'] != ''])
+    # Highlight the labelled behaviors on the first panel.
     _ = fp.highlight_episodes(data, 'behavior', found_behaviors, ax=ax1)
+    # Draw a dashed line at y=0
     ax1.axhline(0, ls='--', c='gray')
 
     # Add a subplot containing the times in a certain zone

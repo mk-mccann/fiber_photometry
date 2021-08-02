@@ -20,10 +20,12 @@ def subtract_baseline_median(time_trace, f_trace, start_time=None, end_time=None
 
 def median_large_jumps(trace, percentile=0.95):
     """
-    Filters large jumps in fluorescence signal and replaces them with the
-    overall median
-    """
+    Filters large jumps in fluorescence signal and replaces them with the overall median
 
+    :param trace:
+    :param percentile:
+    :return:
+    """
 
     filtered_trace = trace.copy()
 
@@ -36,6 +38,14 @@ def median_large_jumps(trace, percentile=0.95):
 
 
 def downsample(ts, signal, ds_factor):
+    """
+
+    :param ts:
+    :param signal:
+    :param ds_factor:
+    :return:
+    """
+
     signal_ds = np.mean(np.resize(signal, (int(np.floor(signal.size / ds_factor)), ds_factor)), 1)
     ds_ts = ts[np.arange(int(np.round(ds_factor / 2)), ts.size, ds_factor)]
 
@@ -45,12 +55,25 @@ def downsample(ts, signal, ds_factor):
 
 
 def remove_nans(trace):
+    """
+
+    :param trace:
+    :return:
+    """
+
     mask = np.isnan(trace)
     trace[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), trace[~mask])
     return trace
 
 
 def zscore_median(trace):
+    """
+    Takes the Z-score of a time series trace, using the median of the trace instead of the mean
+
+    :param trace: (np.array) Fluorescence trace
+    :return: (np.array) Z-scored fluorescence trace
+    """
+
     return (trace - np.median(trace)) / np.std(trace)
 
 

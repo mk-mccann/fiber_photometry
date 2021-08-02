@@ -92,9 +92,6 @@ if __name__ == "__main__":
 
         data = f_io.read_2_channel_fiber_photometry_csv(file.resolve())
 
-        # Add the identifying information to the dataframe
-        data['test'] = int(test_number)
-
         # Preprocess the fluorescence with the given channels
         data = preprocess_fluorescence(data, 'anterior')
         data = preprocess_fluorescence(data, 'posterior')
@@ -110,9 +107,12 @@ if __name__ == "__main__":
         #     print("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
         #     continue
 
+        # Add the identifying information to the dataframe
+        data['test'] = int(test_number)
+
         # save the data as an .h5 file
         filename = 'test{}_dual_rec_preprocessed.h5'.format(test_number)
-        # data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
+        data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
 
         # Make a plot of the zdffs and save it.
         fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)
@@ -128,8 +128,8 @@ if __name__ == "__main__":
         ax2.set_xlabel('Time (s)')
         ax2.set_title('Posterior')
 
-        fig.suptitle('Test {} dual channel Z-dF/Fs'.format(test_number))
+        fig.suptitle('Test {} dual channel Z-dF/F'.format(test_number))
 
-        #plt.savefig(join(paths.figure_directory, 'test{}_dual_rec_gcamp_zscore.png'.format(test_number)), format="png")
+        plt.savefig(join(paths.figure_directory, 'test{}_dual_rec_gcamp_zscore.png'.format(test_number)), format="png")
         plt.show()
 
