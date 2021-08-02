@@ -35,7 +35,7 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
 
 def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
     data_path = base_directory
-    filename = 'Animal{}_Day{}_preprocessed.h5'.format(animal, day)
+    filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
     preproc_data = pd.read_hdf(os.path.join(data_path, filename), key=key)
     return preproc_data
 
@@ -52,6 +52,20 @@ def read_fiber_photometry_csv(file_path, file_metadata, column_names=None):
 
     fluor_df = pd.read_csv(file_path, skiprows=2, names=column_names, 
     usecols=[file_metadata['ts'], file_metadata['gcamp column'], file_metadata['auto column']],
+    dtype=float
+    )
+
+    return fluor_df
+
+
+def read_2_channel_fiber_photometry_csv(file_path, column_names=None):
+    """Reads the CSV containing fiber photometry data, but for two simultaneous recordings in a single animal"""
+
+    if column_names is None:
+        column_names = ['time', 'auto_anterior', 'gcamp_anterior', 'auto_posterior', 'gcamp_posterior']
+
+    fluor_df = pd.read_csv(file_path, skiprows=2, names=column_names,
+    usecols=[0, 1, 2, 4, 5],
     dtype=float
     )
 
