@@ -15,8 +15,7 @@ from functions_plotting import plot_fluorescence_min_sec
 """load and process data for fiber photometry experiments"""
 
 
-def preprocess_fluorescence(data_df, auto_channel_key, gcamp_channel_key):
-
+def preprocess_fluorescence(data_df, channel_key=None):
     """
     Performs preprocessing on raw fiber photometry time series data.
     The user must specify which key defines the gcamp and autofluorescence channels
@@ -24,16 +23,20 @@ def preprocess_fluorescence(data_df, auto_channel_key, gcamp_channel_key):
     auto/gcamp channels
     .
     Example usage for a single fiber recording:
-    data = preprocess_fluorescence(data, 'auto', 'gcamp')
+    data = preprocess_fluorescence(data)
 
     Example usage for dual fiber recording:
-    data = preprocess_fluorescence(data, 'auto_anterior', 'gcamp_anterior')
-    data = preprocess_fluorescence(data, 'auto_posterior', 'gcamp_posterior')
+    data = preprocess_fluorescence(data, 'anterior')
+    data = preprocess_fluorescence(data, 'posterior')
     """
 
-    # Define the gcamp and autofluorescence channels.
-    auto_channel = data_df[auto_channel_key]
-    gcamp_channel = data_df[gcamp_channel_key]
+    # Define the gcamp and autofluorescence channels
+    if channel_key is None:
+        auto_channel = data_df['auto']
+        gcamp_channel = data_df['gcamp']
+    else:
+        auto_channel = data_df['auto_' + channel_key]
+        gcamp_channel = data_df['gcamp_' + channel_key]
 
     # replace NaN's with closest (interpolated) non-NaN
     gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
@@ -50,22 +53,29 @@ def preprocess_fluorescence(data_df, auto_channel_key, gcamp_channel_key):
     # fitting like in LERNER paper
     controlFit = fpp.lernerFit(auto, gcamp)
     # dff = (gcamp - controlFit) / controlFit
-    
+
     # Compute DFF
     dff = (gcamp - auto) / auto
     dff = dff * 100
-    
+
     # zscore whole data set with overall median
     zdff = fpp.zscore_median(dff)
-    
+
     # Remove homecage period baseline
     # dff_rem_base = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
     # dff_rem_base = dff_rem_base * 100
 
-    data_df[gcamp_channel_key] = gcamp
-    data_df[auto_channel_key] = auto
-    data_df['dff'] = dff
-    data_df['zscore'] = zdff
+    # Save the data
+    if channel_key is None:
+        data_df['gcamp'] = gcamp
+        data_df['auto'] = auto
+        data_df['dff'] = dff
+        data_df['zscore'] = zdff
+    else:
+        data_df['gcamp_' + channel_key] = gcamp
+        data_df['auto_' + channel_key] = auto
+        data_df['dff_' + channel_key] = dff
+        data_df['zscore_' + channel_key] = zdff
 
     return data_df
 
