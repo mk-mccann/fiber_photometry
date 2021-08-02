@@ -103,7 +103,7 @@ if __name__ == "__main__":
         data['day'] = day
 
         # Preprocess the fluorescence with the given channels
-        data = preprocess_fluorescence(data, 'auto', 'gcamp')
+        data = preprocess_fluorescence(data)
 
         # Try to load the manual video scoring file, if it exists.
         # If so, process it. Raise a warning if not.
