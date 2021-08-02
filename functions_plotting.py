@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as md
 from datetime import timedelta, datetime
 from scipy.stats import sem
-from numpy import nanmean
+import numpy as np
+import pandas as pd
 
 from functions_utils import find_episodes
 
@@ -85,7 +86,45 @@ def overlay_manual_episodes(epochs, label, ax):
     return labeled_section
 
 
-def overlay_glm_epidsodes(x, bool_array, label, ax):
+def highlight_episodes(data: pd.DataFrame, column, keys, ax=None):
+
+    if ax is None:
+        fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
+
+    time = data['time']
+    data_col = data[column].to_numpy()
+
+    # Create the highlighted episodes
+    vspans = []
+    for key in keys:
+        episodes_to_plot = data_col == key
+        label = color_overlay(mpl_datetime_from_seconds(time), episodes_to_plot, key, ax)
+        vspans.append([label, key])
+
+    vspans = np.array(vspans)
+    ax.legend(vspans[:, 0], vspans[:, 1], loc="upper right")
+
+    return ax
+
+def highlight_glm_episodes(time: np.array, glm_predictions: pd.DataFrame, glm_keys, ax=None):
+
+    if ax is None:
+        fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
+
+    # Create the highlighted episodes
+    vspans = []
+    for col, key in zip(glm_predictions.columns, glm_keys):
+
+        label = color_overlay(mpl_datetime_from_seconds(time), glm_predictions[col].to_numpy(), key, ax)
+        vspans.append([label, key])
+
+    vspans = np.array(vspans)
+    ax.legend(vspans[:, 0], vspans[:, 1], loc="upper right")
+
+    return ax
+
+
+def color_overlay(x, bool_array, label, ax):
 
     labeled_section = ax.fill_between(x, 0, 1, where=bool_array,
                     facecolor=episode_colors[label],
@@ -104,7 +143,7 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None):
         ax = plt.gca()
 
     num_episodes = traces.shape[0]
-    mean_trace = nanmean(traces, axis=0)
+    mean_trace = np.nanmean(traces, axis=0)
     sem_trace = sem(traces, axis=0, nan_policy='omit')
 
     if plot_singles:
