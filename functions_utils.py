@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 def find_nearest(array: np.array, value: float):
@@ -62,6 +63,62 @@ def find_episodes(time, labels, key):
             epidode_times.append([start_time, end_time])
 
     return epidsode_idxs, epidode_times
+
+
+def find_zone_and_behavior_episodes(data_df, behavior_labels):
+    ts = data_df['time'].to_numpy()
+    behaviors = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "Start" in col.split(" ")[-1]]
+    zones = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "In" in col.split(" ")[-1]]
+
+    behav_bouts = []
+    for behav in behaviors:
+
+        behav_idxs, behav_times = find_episodes(ts, behavior_labels, behav)
+
+        for idxs, times in zip(behav_idxs, behav_times):
+            behav_bouts.append([behav, idxs[0], times[0], idxs[1], times[1]])
+
+    behav_bouts = np.array(behav_bouts)
+
+    zone_bouts = []
+    for zone in zones:
+        zone_idxs, zone_times = find_episodes(ts, behavior_labels, zone)
+
+        for idxs, times in zip(zone_idxs, zone_times):
+            zone_bouts.append([zone, idxs[0], times[0], idxs[1], times[1]])
+
+    zone_bouts = np.array(zone_bouts)
+
+    return behav_bouts, zone_bouts
+
+
+def add_episode_data(data_df, behavior_bouts, zone_bouts):
+    behaviors = np.unique(behavior_bouts[:, 0])
+    zones = np.unique(zone_bouts[:, 0])
+
+    # Create columns to hold the labels for all behaviors and zone occupations
+    data_df['behavior'] = np.array([''] * len(data_df))
+    data_df['zone'] = np.array([''] * len(data_df))
+
+    # Process the instances of each labelled behavior
+    for behavior in behaviors:
+        data_df[behavior] = np.array([''] * len(data_df))
+
+    behavior_df = pd.DataFrame(behavior_bouts, columns=['behavior', 'start_idx', 'start_time', 'end_idx', 'end_time'])
+    for i, val in behavior_df.iterrows():
+        data_df.loc[val['start_idx']:val['end_idx'], val['behavior']] = val['behavior']
+        data_df.loc[val['start_idx']:val['end_idx'], 'behavior'] = val['behavior']
+
+    # Process the time spent in each zone
+    for zone in zones:
+        data_df[zone] = np.array([''] * len(data_df))
+
+    zone_df = pd.DataFrame(zone_bouts, columns=['zone', 'start_idx', 'start_time', 'end_idx', 'end_time'])
+    for i, val in zone_df.iterrows():
+        data_df.loc[val['start_idx']:val['end_idx'], val['zone']] = val['zone']
+        data_df.loc[val['start_idx']:val['end_idx'], 'zone'] = val['zone']
+
+    return data_df
 
 
 def get_mean_episode(episodes):
