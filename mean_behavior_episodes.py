@@ -97,7 +97,7 @@ def plot_individual_behaviors(data, plot_singles=False):
 
             # Plot the mean episode
             fig = plot_mean_episode(t, trace_array, plot_singles=plot_singles)
-            plt.ylabel('$\Delta$F/F Z-score minus')
+            plt.ylabel('Z-dF/F')
             plt.title('Mean trace for {}'.format(k))
             plt_name = "mean_{}_dff_zscore.png".format(k.lower())
             plt.savefig(join(save_directory, plt_name))
@@ -133,7 +133,7 @@ def plot_multiple_behaviors(data, keys_to_plot, plot_singles=False):
     collected_traces = np.vstack(collected_traces)
     # Plot the mean episode
     fig = plot_mean_episode(t, collected_traces, plot_singles=plot_singles)
-    plt.ylabel('$\Delta$F/F Z-score')
+    plt.ylabel('Z-dF/F')
     plt.title('Mean trace for {}'.format(', '.join(keys_to_plot)))
     plt_name = "mean_{}_dff_zscore.png".format('_'.join(keys_to_plot))
     # plt.savefig(join(save_directory, plt_name))
@@ -143,12 +143,10 @@ def plot_multiple_behaviors(data, keys_to_plot, plot_singles=False):
 
 if __name__ == "__main__":
 
-    summary_file_path = paths.summary_file    # Set this to wherever it is
-    save_directory = paths.figure_directory   # Set this to wherever you want
-    f_io.check_dir_exists(save_directory)
+    f_io.check_dir_exists(paths.figure_directory)
 
     # Read the summary file as a pandas dataframe
-    all_exps = f_io.read_summary_file(summary_file_path)
+    all_exps = f_io.read_summary_file(paths.summary_file)
     
     # remove certain days
     exps_to_run = all_exps
