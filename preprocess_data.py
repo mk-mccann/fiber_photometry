@@ -8,19 +8,36 @@ from tqdm import tqdm
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
-from functions_utils import find_episodes
+from functions_utils import find_zone_and_behavior_episodes, add_episode_data
 from functions_plotting import plot_fluorescence_min_sec
-
 
 
 """load and process data for fiber photometry experiments"""
 
 
-def preprocess_fluorescence(data_df):
+def preprocess_fluorescence(data_df, auto_channel_key, gcamp_channel_key):
+
+    """
+    Performs preprocessing on raw fiber photometry time series data.
+    The user must specify which key defines the gcamp and autofluorescence channels
+    to be processed from the dataframe. This lets the function handle multiple
+    auto/gcamp channels
+    .
+    Example usage for a single fiber recording:
+    data = preprocess_fluorescence(data, 'auto', 'gcamp')
+
+    Example usage for dual fiber recording:
+    data = preprocess_fluorescence(data, 'auto_anterior', 'gcamp_anterior')
+    data = preprocess_fluorescence(data, 'auto_posterior', 'gcamp_posterior')
+    """
+
+    # Define the gcamp and autofluorescence channels.
+    auto_channel = data_df[auto_channel_key]
+    gcamp_channel = data_df[gcamp_channel_key]
 
     # replace NaN's with closest (interpolated) non-NaN
-    gcamp = fpp.remove_nans(data_df['gcamp'].to_numpy())
-    auto = fpp.remove_nans(data_df['auto'].to_numpy())
+    gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
+    auto = fpp.remove_nans(auto_channel.to_numpy())
 
     # replace large jumps with the overall median
     auto = fpp.median_large_jumps(auto)
@@ -39,76 +56,23 @@ def preprocess_fluorescence(data_df):
     dff = dff * 100
     
     # zscore whole data set with overall median
-    dffzscore = fpp.zscore_median(dff)
+    zdff = fpp.zscore_median(dff)
     
     # Remove homecage period baseline
     # dff_rem_base = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
     # dff_rem_base = dff_rem_base * 100
 
-    data_df['gcamp'] = gcamp
-    data_df['auto'] = auto
+    data_df[gcamp_channel_key] = gcamp
+    data_df[auto_channel_key] = auto
     data_df['dff'] = dff
-    data_df['zscore'] = dffzscore
-
-    return data_df
-
-
-def find_zone_and_behavior_episodes(data_df, behavior_labels):
-    ts = data_df['time'].to_numpy()
-    behaviors = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "Start" in col.split(" ")[-1]]
-    zones = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "In" in col.split(" ")[-1]]
-
-    behav_bouts = []
-    for behav in behaviors:
-
-        behav_idxs, behav_times = find_episodes(ts, behavior_labels, behav)
-
-        for idxs, times in zip(behav_idxs, behav_times):
-            behav_bouts.append([behav, idxs[0], times[0], idxs[1], times[1]])
-
-    behav_bouts = np.array(behav_bouts)
-
-    zone_bouts = []
-    for zone in zones:
-        zone_idxs, zone_times = find_episodes(ts, behavior_labels, zone)
-
-        for idxs, times in zip(zone_idxs, zone_times):
-            zone_bouts.append([zone, idxs[0], times[0], idxs[1], times[1]])
-
-    zone_bouts = np.array(zone_bouts)
-
-    return behav_bouts, zone_bouts
-
-
-def add_episode_data(data_df, behav_bouts, zone_bouts):
-    behaviors = np.unique(behav_bouts[:, 0])
-    zones = np.unique(zone_bouts[:, 0])
-
-    for zone in zones:
-        data_df[zone] = np.array([''] * len(data_df))
-
-    zone_df = pd.DataFrame(zone_bouts, columns=['zone', 'start_idx', 'start_time', 'end_idx', 'end_time'])
-    for i, val in zone_df.iterrows():
-        data_df.loc[val['start_idx']:val['end_idx'], val['zone']] = val['zone']
-
-    data_df['zone'] = data_df[list(zones)].sum(axis=1)
-
-    for behavior in behaviors:
-        data_df[behavior] = np.array([''] * len(data_df))
-
-    behavior_df = pd.DataFrame(behav_bouts, columns=['behavior', 'start_idx', 'start_time', 'end_idx', 'end_time'])
-    for i, val in behavior_df.iterrows():
-        data_df.loc[val['start_idx']:val['end_idx'], val['behavior']] = val['behavior']
-
-    data_df['behavior'] = data_df[list(behaviors)].sum(axis=1)
+    data_df['zscore'] = zdff
 
     return data_df
 
 
 if __name__ == "__main__":
     summary_file_path = paths.summary_file  # Set this to wherever it is
-    output_directory = paths.processed_data_directory  # Set this to wherever you want
-    f_io.check_dir_exists(output_directory)
+    f_io.check_dir_exists(paths.processed_data_directory)
 
     # Read the summary file as a pandas dataframe
     summary = f_io.read_summary_file(summary_file_path)
@@ -117,32 +81,40 @@ if __name__ == "__main__":
     # tqdm only creates a progress bar for the loop
     for idx, row in tqdm(summary.iterrows(), total=len(summary)):
 
+        # Get identifying info about the experiment
+        animal, day = str(row['Ani_ID']).split(".")
+
         # load the raw fluorescence data from a given experiment
         fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
         data = f_io.read_fiber_photometry_csv(fp_file, row)
-        data = preprocess_fluorescence(data)
 
-        animal, day = str(row['Ani_ID']).split(".")
+        # Add the identifying information to the dataframe
         data['animal'] = animal
         data['day'] = day
 
-        # try to load the manual video scoring file, if it exists
+        # Preprocess the fluorescence with the given channels
+        data = preprocess_fluorescence(data, 'auto', 'gcamp')
+
+        # Try to load the manual video scoring file, if it exists.
+        # If so, process it. Raise a warning if not.
         try:
             behavior_labels = f_io.load_behavior_labels(animal, day)
             behavior_bouts, zone_bouts = find_zone_and_behavior_episodes(data, behavior_labels)
             data = add_episode_data(data, behavior_bouts, zone_bouts)
 
         except FileNotFoundError:
+            print("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
             continue
 
-        # save the data as a .h5 file
-        filename = 'Animal{}_Day{}_preprocessed.h5'.format(animal, day)
-        data.to_hdf(join(output_directory, filename), key='preprocessed', mode='w')
+        # save the data as an .h5 file
+        filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
+        data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
 
+        # Make a plo of the zdff and save it.
         ax = plot_fluorescence_min_sec(data['time'], data['zscore'])
-        ax.set_title('Animal {} Day {} Z-Score DFF'.format(animal, day))
+        ax.set_title('Animal {} Day {} Z-dF/F'.format(animal, day))
         ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Z-Score DFF')
-        plt.savefig(join(output_directory, 'Animal{}_Day{}_gcamp_zscore.png'.format(animal, day)), format="png")
+        ax.set_ylabel('Z-dF/F')
+        plt.savefig(join(paths.figure_directory, 'animal{}_day{}_gcamp_zscore.png'.format(animal, day)), format="png")
         # plt.show()
 
