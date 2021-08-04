@@ -37,6 +37,16 @@ def median_large_jumps(trace, percentile=0.95):
     return filtered_trace
 
 
+def interpolate_large_jumps(trace, percentile=0.95):
+    filtered_trace = trace.copy()
+
+    # TODO: interpolate points where jumps occur instead of using overall median
+    med = np.median(trace)  # Take median of whole trace
+    mask = np.argwhere((trace < percentile * med))  # Find where trace less than some fraction of median
+    filtered_trace[mask] = med
+
+    return filtered_trace
+
 def downsample(ts, signal, ds_factor):
     """
 

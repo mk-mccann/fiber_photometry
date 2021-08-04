@@ -6,3 +6,4 @@
     - need to look at Onur's code for generating binary df for behaviors and zones
 - (DONE) Saving in H5 files instead of npy files
 - Look at interpolation of large jumps
+- Naming convention for files
