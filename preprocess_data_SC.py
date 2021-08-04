@@ -113,14 +113,14 @@ if __name__ == "__main__":
             data = add_episode_data(data, behavior_bouts, zone_bouts)
 
         except FileNotFoundError:
-            print("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
+            tqdm.write("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
             continue
 
         # save the data as an .h5 file
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
         data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
 
-        # Make a plo of the zdff and save it.
+        # Make a plot of the zdff and save it.
         ax = plot_fluorescence_min_sec(data['time'], data['zscore'])
         ax.set_title('Animal {} Day {} Z-dF/F'.format(animal, day))
         ax.set_xlabel('Time (s)')

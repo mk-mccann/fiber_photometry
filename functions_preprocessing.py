@@ -56,9 +56,10 @@ def downsample(ts, signal, ds_factor):
 
 def remove_nans(trace):
     """
+    Removes NaNs from an input array by interpolation
 
-    :param trace:
-    :return:
+    :param trace: (np.array) Input fluorescence trace
+    :return: Interpolated fluorescence trace with nan removed
     """
 
     mask = np.isnan(trace)

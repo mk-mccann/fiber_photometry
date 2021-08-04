@@ -73,10 +73,7 @@ def add_episode_data(data, behav_bouts, zone_bouts):
     return df
 
 
-def save_as_hdf(df, subfolder_name='modeling_data'):
-    subfolder_path = join(main_dir, subfolder_name)
-    if not os.path.isdir(subfolder_path):
-        os.mkdir(subfolder_path)
+def save_as_hdf(df):
 
     animal_id = str(df.loc[0, 'ani_id'])
     animal, day = animal_id.split('.')
@@ -85,7 +82,8 @@ def save_as_hdf(df, subfolder_name='modeling_data'):
     del df['ani_id']
     df = df.astype({"animal": int, "day": int})
 
-    df.to_hdf(join(subfolder_path, animal_id + '.h5'), key='nokey')
+    f_io.check_dir_exists(paths.modeling_data_directory)
+    df.to_hdf(join(paths.modeling_data_directory, animal_id + '.h5'), key='nokey')
 
 
 def perform_all_single_animal(animal_id):

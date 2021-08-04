@@ -1,7 +1,8 @@
-- Want to have a function that grabs the first n episodes of a given behavior in an experiment and plot the mean + sem
-- Want to have e.g. eating zone episodes only when animal was actually eating vs EZ with not eating
+- (DONE) Want to have a function that grabs the first n episodes of a given behavior in an experiment and plot the mean
++ sem
+- (DONE) Want to have e.g. eating zone episodes only when animal was actually eating vs EZ with not eating
     - Dwell filter can only be used for eating
+- (DONE) DF for fluorescence data and behavior data combined
     - need to look at Onur's code for generating binary df for behaviors and zones
-- DF for fluorescence data and behavior data combined
-- Saving in H5 files instead of npy files
+- (DONE) Saving in H5 files instead of npy files
 - Look at interpolation of large jumps

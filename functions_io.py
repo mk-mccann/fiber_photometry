@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import os
 
 import paths
@@ -30,8 +29,9 @@ def read_summary_file(file_path):
 
 def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_directory):
     """
-    Loads the Excel file with the behavior labels. Takes the animal ID and directory
-    containing the files as inputs.
+    Loads the Excel file with the behavior labels.
+
+    Takes the animal ID and directory containing the files as inputs.
 
     :param animal: (int) Animal ID number
     :param day: (int) Experimental day number
@@ -47,7 +47,9 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
 
 def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
     """
-    Loads the .h5 file of the preprocessed data. Assumes the naming convention for the files follows the
+    Loads the .h5 file of the preprocessed data.
+
+    Assumes the naming convention for the files follows the
     animal#_day# format. Returns loaded data as a pandas DataFrame.
 
     :param animal: (int) Animal ID number
@@ -104,6 +106,15 @@ def read_2_channel_fiber_photometry_csv(file_path, column_names=None):
 
 
 def load_glm_h5(filename, key='nokey', base_directory=paths.modeling_data_directory):
+    """
+    Loads the .h5 file containing the GLM predictions
+
+    :param filename: (str) Filename of the GLM .h5 file
+    :param key: (str) Key to access the data in the .h5 file. Default is 'nokey'.
+    :param base_directory: (str) Path to the modeling data directory
+    :return: (pd.DataFrame) Loaded GLM predition dataframe
+    """
+
     data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
     return data
 
@@ -114,7 +125,7 @@ def check_dir_exists(path):
 
     :param path: (str) The path to check
     """
-    
+
     if not os.path.exists(path):
         print('Creating directory: {}'.format(path))
         os.mkdir(path)

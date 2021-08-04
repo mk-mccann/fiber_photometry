@@ -106,23 +106,6 @@ def highlight_episodes(data: pd.DataFrame, column, keys, ax=None):
 
     return ax
 
-def highlight_glm_episodes(time: np.array, glm_predictions: pd.DataFrame, glm_keys, ax=None):
-
-    if ax is None:
-        fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
-
-    # Create the highlighted episodes
-    vspans = []
-    for col, key in zip(glm_predictions.columns, glm_keys):
-
-        label = color_overlay(mpl_datetime_from_seconds(time), glm_predictions[col].to_numpy(), key, ax)
-        vspans.append([label, key])
-
-    vspans = np.array(vspans)
-    ax.legend(vspans[:, 0], vspans[:, 1], loc="upper right")
-
-    return ax
-
 
 def color_overlay(x, bool_array, label, ax):
 
@@ -132,7 +115,6 @@ def color_overlay(x, bool_array, label, ax):
                     transform=ax.get_xaxis_transform())
 
     return labeled_section
-
 
 
 def plot_mean_episode(time, traces, plot_singles=False, ax=None):

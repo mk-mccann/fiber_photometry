@@ -5,6 +5,12 @@ from paths import csv_directory
 
 
 def decimate_csv(file_path, step=300):
+    """
+
+    :param file_path:
+    :param step:
+    :return:
+    """
     # Load the csv
     df = read_csv(file_path, skiprows=1, header=0)
 
