@@ -1,10 +1,13 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.dates as md
+import pandas as pd
+import sys
 
+import functions_io as f_io
+import paths
 
+from functions_plotting import plot_fluorescence_min_sec
 
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QApplication
 from datetime import timedelta, datetime
 
 
@@ -13,43 +16,19 @@ def mouse_move(event):
     print(x, y)
 
 
-
 if __name__ == '__main__':
 
+    app = QApplication(sys.argv)
     filePath, _ = QFileDialog.getOpenFileName()
     print("Loaded: " + filePath)
-    
-    # animal = 1.1
-    # filePath = join("J:\Alja Podgornik\FP_Alja\FP_processed data", str(animal) + ".npy")
-    
-    data = np.load(filePath, allow_pickle=True)
-    data = data.item()
-    
-    ani_ID = data['ani_id']
-    fp_times = data['ts']
-    auto = data['auto']
-    gcamp = data['gcamp']
-    dff = data['dff']
-    dffzscore = data['zscore']
-    
-    time_format = []
-    zero = datetime(2021,1,1)
-    for t in fp_times:
-        dt = timedelta(seconds=t)
-        time = zero + dt
-        mp_dt = md.date2num(time)
-        time_format.append(mp_dt)
-    
-    
-    fig = plt.figure(figsize=(20,10))
 
-    xfmt = md.DateFormatter('%H:%M:%S')
-    plt.gca().xaxis.set_major_formatter(xfmt)
-    plt.gca().xaxis_date()
-    
-    plt.plot(time_format, gcamp)
-    plt.xlabel('Time')
-    plt.ylabel('DFF')
-    plt.title(str(ani_ID) + ' DFF')
-    
+    # Check that the figure directory exists
+    f_io.check_dir_exists(paths.figure_directory)
+
+    # Load the preprocesed data
+    data = pd.read_hdf(filePath, key='preprocessed')
+
+    fig = plt.figure(figsize=(20, 10))
+    plot_fluorescence_min_sec(data['time'], data['dff'])
+    plt.ylabel('dF/F')
     plt.show()
