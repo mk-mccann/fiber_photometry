@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # Load the preprocesed data
     data = f_io.load_preprocessed_data(mouse, day)
 
-    # Test if the preprocessed data has the behavior labels
+    # Test if the processed data has the behavior labels
     if 'behavior' in data.columns:
         fig = main(data)
     else:

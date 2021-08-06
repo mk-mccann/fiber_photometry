@@ -35,7 +35,7 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
 
     :param animal: (int) Animal ID number
     :param day: (int) Experimental day number
-    :param base_directory: (str) Path where preprocessed data is located
+    :param base_directory: (str) Path where processed data is located
     :return: Pandas DataFrame of the manually labelled behaviors
     """
 
@@ -47,7 +47,7 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
 
 def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
     """
-    Loads the .h5 file of the preprocessed data.
+    Loads the .h5 file of the processed data.
 
     Assumes the naming convention for the files follows the
     animal#_day# format. Returns loaded data as a pandas DataFrame.
@@ -55,8 +55,8 @@ def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths
     :param animal: (int) Animal ID number
     :param day: (int) Experimental day number
     :param key: (str) Key to open h5 file. Currently set ot "preprocessed"
-    :param base_directory: (str) Path where preprocessed data is located
-    :return: Pandas DataFrame of the preprocessed data
+    :param base_directory: (str) Path where processed data is located
+    :return: Pandas DataFrame of the processed data
     """
 
     filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)

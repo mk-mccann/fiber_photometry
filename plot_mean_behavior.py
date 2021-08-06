@@ -145,7 +145,7 @@ def load_all_experiments():
         animal, day = str(row['Ani_ID']).split(".")
 
         try:
-            # load the preprocessed data from one experiment at a time
+            # load the processed data from one experiment at a time
             exp = f_io.load_preprocessed_data(animal, day)
 
             # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
