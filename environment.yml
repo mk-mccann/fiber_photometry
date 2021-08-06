@@ -3,9 +3,10 @@ channels:
   - defaults
 dependencies:
   - h5py=2.10
+  - ipywidgets=7.6
   - joblib=1.0
+  - jupyter=1.0
   - matplotlib=3.3
-  - matplotlib-base=3.3
   - numpy=1.19
   - openpyxl=3.0
   - pandas=1.2
