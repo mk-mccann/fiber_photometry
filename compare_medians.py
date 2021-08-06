@@ -1,22 +1,13 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
-import paths
 import functions_io as f_io
 from functions_utils import median_of_time_window
 
 
 if __name__ == "__main__":
 
-    mouse_ID = 2
+    mouse = 2
     day = 1
-    id = "{}.{}".format(mouse_ID, day)
 
-    dff_dir = paths.processed_data_directory
-    save_directory = paths.figure_directory
-    f_io.check_dir_exists(save_directory)
-
-    data = f_io.load_preprocessed_data(id)
+    data = f_io.load_preprocessed_data(mouse, day)
 
     # time window is assumed to be in seconds
     # the last two values are the start and end times you want to take the median from

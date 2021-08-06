@@ -7,6 +7,7 @@ from joblib import Parallel, delayed
 
 import functions_io as f_io
 from functions_utils import find_episodes
+import paths
 
 
 def find_zone_and_behavior_episodes(data, behavior_labels):
@@ -72,10 +73,7 @@ def add_episode_data(data, behav_bouts, zone_bouts):
     return df
 
 
-def save_as_hdf(df, subfolder_name='modeling_data'):
-    subfolder_path = join(main_dir, subfolder_name)
-    if not os.path.isdir(subfolder_path):
-        os.mkdir(subfolder_path)
+def save_as_hdf(df):
 
     animal_id = str(df.loc[0, 'ani_id'])
     animal, day = animal_id.split('.')
@@ -84,7 +82,8 @@ def save_as_hdf(df, subfolder_name='modeling_data'):
     del df['ani_id']
     df = df.astype({"animal": int, "day": int})
 
-    df.to_hdf(join(subfolder_path, animal_id + '.h5'), key='nokey')
+    f_io.check_dir_exists(paths.modeling_data_directory)
+    df.to_hdf(join(paths.modeling_data_directory, animal_id + '.h5'), key='nokey')
 
 
 def perform_all_single_animal(animal_id):
@@ -109,11 +108,9 @@ def aggregate(modeling_data_folder):
 
 
 if __name__ == "__main__":
-    main_dir = r"J:\Alja Podgornik\FP_Alja"
-    behavior_dir = join(main_dir, 'Multimaze scoring')
-    dff_dir = join(main_dir, 'FP_processed data')
-    modeling_data_folder = join(main_dir, 'modeling_data')
-    summary_file_path = join(main_dir, 'Multimaze sheet summary.xlsx')
+    dff_dir = paths.processed_data_directory
+    modeling_data_folder = paths.modeling_data_directory
+    summary_file_path = paths.summary_file
     all_exps = f_io.read_summary_file(summary_file_path)
 
     Parallel(n_jobs=32, verbose=100)(delayed(perform_all_single_animal)(animal_id)
@@ -126,4 +123,4 @@ if __name__ == "__main__":
     #         print(str(err))
 
     accu = aggregate(modeling_data_folder)
-    accu.to_hdf(join(main_dir, 'modeling_data', 'aggregated.h5'), key='nokey')
+    accu.to_hdf(join(paths.modeling_data_directory, 'aggregated.h5'), key='nokey')

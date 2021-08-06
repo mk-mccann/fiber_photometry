@@ -1,8 +1,11 @@
+import numpy as np
+import pandas as pd
+import pathlib
 import matplotlib.pyplot as plt
 from os.path import join
 from scipy.signal import savgol_filter
 from tqdm import tqdm
-import pathlib
+
 
 import paths
 import functions_preprocessing as fpp
@@ -76,52 +79,9 @@ def preprocess_fluorescence(data_df, channel_key=None):
     return data_df
 
 
-def plot_single_channel(data):
-    animal = data['animal'].unique()
-    day = data['day'].unique()
-
-    ax = plot_fluorescence_min_sec(data['time'], data['zscore'])
-
-    ax.set_title('Animal {} Day {} Z-dF/F'.format(animal, day))
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel('Z-dF/F')
-
-    plt.savefig(join(paths.figure_directory, 'animal{}_day{}_gcamp_zscore.png'.format(animal, day)), format="png")
-    return ax
-
-
-def plot_dual_channel(data):
-    test_number = data['test'].unique()
-
-    # Make a plot of the zdffs and save it.
-    fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15))
-
-    # Plot the anterior recording
-    ax1 = plot_fluorescence_min_sec(data['time'], data['zscore_anterior'], ax=ax1)
-    ax1.set_ylabel('Z-dF/F')
-    ax1.set_title('Anterior')
-
-    # Plot the posterior recording
-    ax2 = plot_fluorescence_min_sec(data['time'], data['zscore_posterior'], ax=ax2)
-    ax2.set_ylabel('Z-dF/F')
-    ax2.set_xlabel('Time (s)')
-    ax2.set_title('Posterior')
-
-    fig.suptitle('Test {} dual channel Z-dF/F'.format(test_number))
-
-    # Save the figure
-    plt.savefig(join(paths.figure_directory, 'test{}_dual_rec_gcamp_zscore.png'.format(test_number)), format="png")
-    return fig
-
-
 if __name__ == "__main__":
-    # TODO: This script is incomplete. Needs a standardized file naming convention before it can be done
-
-    # Check to see if the processed data and figure directories exist
     f_io.check_dir_exists(paths.processed_data_directory)
-    f_io.check_dir_exists(paths.figure_directory)
 
-    # Get the list of files to preprocess, or link to the summary file sheet
     files = list(pathlib.Path(paths.dual_recording_csv_directory).glob('*.csv'))
 
     # Go row by row through the summary data
@@ -172,3 +132,4 @@ if __name__ == "__main__":
 
         plt.savefig(join(paths.figure_directory, 'test{}_dual_rec_gcamp_zscore.png'.format(test_number)), format="png")
         plt.show()
+

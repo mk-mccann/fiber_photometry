@@ -1,17 +1,38 @@
 import numpy as np
+import pandas as pd
 
 
 def find_nearest(array: np.array, value: float):
+    """
+    Find the closest-matching value to the input in the array.
+
+    :param array: (array-like) Array to search
+    :param value: (float) Value to match
+    :return: The index of the closest match and the value
+    """
+
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx, array[idx]
 
 
 def flatten_list(list_of_lists):
+    """
+    Flattens a list of lists
+
+    :param list_of_lists:
+    :return: (list) flattened list
+    """
     return [item for sublist in list_of_lists for item in sublist]
 
 
 def list_lists_to_array(list_of_lists):
+    """
+    Converts a list of lists into a 2D array
+
+    :param list_of_lists:
+    :return: (np.array) Array where each row was an entry in the list of lists
+    """
     max_length = max([len(sublist) for sublist in list_of_lists])
     new_array = np.empty((len(list_of_lists), max_length))
     new_array[:] = np.NaN
@@ -23,7 +44,12 @@ def list_lists_to_array(list_of_lists):
 
 
 def get_sec_from_min_sec(time: int):
-    """Converts a float representing time in min.sec to seconds"""
+    """
+    Converts a float representing time in min.sec to seconds
+
+    :param time:
+    :return:
+    """
     split_time = str(time).split('.')
     minutes = int(split_time[0])
     seconds = int(split_time[1])
@@ -33,6 +59,7 @@ def get_sec_from_min_sec(time: int):
 def find_episodes(time, labels, key):
     """
     Find the start and end times of all episodes of a behavior or sequence referenced to the fluorescence time series.
+
     :param time:
     :param labels:
     :param key:
@@ -64,6 +91,77 @@ def find_episodes(time, labels, key):
     return epidsode_idxs, epidode_times
 
 
+def find_zone_and_behavior_episodes(data_df, behavior_labels):
+    """
+
+    :param data_df:
+    :param behavior_labels:
+    :return:
+    """
+
+    ts = data_df['time'].to_numpy()
+    behaviors = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "Start" in col.split(" ")[-1]]
+    zones = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "In" in col.split(" ")[-1]]
+
+    behav_bouts = []
+    for behav in behaviors:
+
+        behav_idxs, behav_times = find_episodes(ts, behavior_labels, behav)
+
+        for idxs, times in zip(behav_idxs, behav_times):
+            behav_bouts.append([behav, idxs[0], times[0], idxs[1], times[1]])
+
+    behav_bouts = np.array(behav_bouts)
+
+    zone_bouts = []
+    for zone in zones:
+        zone_idxs, zone_times = find_episodes(ts, behavior_labels, zone)
+
+        for idxs, times in zip(zone_idxs, zone_times):
+            zone_bouts.append([zone, idxs[0], times[0], idxs[1], times[1]])
+
+    zone_bouts = np.array(zone_bouts)
+
+    return behav_bouts, zone_bouts
+
+
+def add_episode_data(data_df, behavior_bouts, zone_bouts):
+    """
+
+    :param data_df:
+    :param behavior_bouts:
+    :param zone_bouts:
+    :return:
+    """
+
+    behaviors = np.unique(behavior_bouts[:, 0])
+    zones = np.unique(zone_bouts[:, 0])
+
+    # Create columns to hold the labels for all behaviors and zone occupations
+    data_df['behavior'] = np.array([''] * len(data_df))
+    data_df['zone'] = np.array([''] * len(data_df))
+
+    # Process the instances of each labelled behavior
+    for behavior in behaviors:
+        data_df[behavior] = np.array([''] * len(data_df))
+
+    behavior_df = pd.DataFrame(behavior_bouts, columns=['behavior', 'start_idx', 'start_time', 'end_idx', 'end_time'])
+    for i, val in behavior_df.iterrows():
+        data_df.loc[val['start_idx']:val['end_idx'], val['behavior']] = val['behavior']
+        data_df.loc[val['start_idx']:val['end_idx'], 'behavior'] = val['behavior']
+
+    # Process the time spent in each zone
+    for zone in zones:
+        data_df[zone] = np.array([''] * len(data_df))
+
+    zone_df = pd.DataFrame(zone_bouts, columns=['zone', 'start_idx', 'start_time', 'end_idx', 'end_time'])
+    for i, val in zone_df.iterrows():
+        data_df.loc[val['start_idx']:val['end_idx'], val['zone']] = val['zone']
+        data_df.loc[val['start_idx']:val['end_idx'], 'zone'] = val['zone']
+
+    return data_df
+
+
 def get_mean_episode(episodes):
     """
 
@@ -81,8 +179,16 @@ def get_mean_episode(episodes):
     return trace_array, mean_trace, std_trace
 
 
-# norm.window here is a default; if you don't pass the parameter in the code it will resort to -5
 def remove_baseline(time, traces, norm_start=-5, norm_end=0):
+    """
+
+    :param time:
+    :param traces:
+    :param norm_start:
+    :param norm_end:
+    :return:
+    """
+
     start_idx, _ = find_nearest(time, norm_start)
     end_idx, _ = find_nearest(time, norm_end)
     baseline = np.median(traces[:, start_idx:end_idx], axis=-1)
@@ -90,7 +196,16 @@ def remove_baseline(time, traces, norm_start=-5, norm_end=0):
     return traces
 
 
-def median_of_time_window(time, trace, t_start, t_end):
+def median_of_time_window(time: float, trace, t_start, t_end):
+    """
+
+    :param time:
+    :param trace:
+    :param t_start:
+    :param t_end:
+    :return:
+    """
+
     # time is assumed to be in seconds
 
     time_mask = (time >= t_start) & (time <= t_end)
