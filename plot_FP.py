@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
+from os.path import join
 
 import functions_io as f_io
 import paths
@@ -28,7 +29,20 @@ if __name__ == '__main__':
     # Load the preprocesed data
     data = pd.read_hdf(filePath, key='preprocessed')
 
-    fig = plt.figure(figsize=(20, 10))
-    plot_fluorescence_min_sec(data['time'], data['dff'])
-    plt.ylabel('dF/F')
-    plt.show()
+    # fig = plt.figure(figsize=(20, 10))
+    # plot_fluorescence_min_sec(data['time'], data['dff'])
+    # plt.ylabel('dF/F')
+
+    fig, axes = plt.subplots(nrows=2, ncols=2, sharex=True)
+    axes[0][0].plot(data.time, data.gcamp_anterior)
+    axes[0][0].set_title('Anterior GCaMP')
+    axes[0][1].plot(data.time, data.gcamp_posterior)
+    axes[0][1].set_title('Posterior GCaMP')
+    axes[1][0].plot(data.time, data.auto_anterior)
+    axes[1][0].set_title('Anterior Auto')
+    axes[1][1].plot(data.time, data.auto_posterior)
+    axes[1][1].set_title('Posterior Auto')
+
+    plt.savefig(join(paths.figure_directory, 'test{}_dual_rec_raw.png'.format(filePath.split('test')[1][0])),
+                format="png")
+    # plt.show()

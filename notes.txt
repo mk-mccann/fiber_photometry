@@ -7,3 +7,8 @@
 - (DONE) Saving in H5 files instead of npy files
 - Look at interpolation of large jumps
 - Naming convention for files
+
+DATA
+____
+- Dual-channel recordings: Animals 2,4 no expression posterior (?)
+- Animal 1 some sort of artifact around 40 min.

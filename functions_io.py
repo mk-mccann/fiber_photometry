@@ -64,12 +64,12 @@ def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths
     return preproc_data
 
 
-def read_1_channel_fiber_photometry_csv(file_path, file_metadata, column_names=None):
+def read_1_channel_fiber_photometry_csv(file_path, file_metadata=None, column_names=None):
     """
     Reads the CSV containing fiber photometry data
 
     :param file_path: (str) Path to the raw data .csv
-    :param file_metadata: (pd.DataFrame) A row from a pandas DataFrame with the relevant columns to extract
+    :param file_metadata: (pd.Da    taFrame) A row from a pandas DataFrame with the relevant columns to extract
     :param column_names: (list) A list of strings with column names. Default is a NoneType.
     :return: Pandas DataFrame with of the time-series fluorescence data.
     """
@@ -80,8 +80,13 @@ def read_1_channel_fiber_photometry_csv(file_path, file_metadata, column_names=N
     if column_names is None:
         column_names = ['time', 'gcamp', 'auto']
 
+    if file_metadata is None:
+        columns_to_use = [0, 3, 1]
+    else:
+        columns_to_use = [file_metadata['ts'], file_metadata['gcamp column'], file_metadata['auto column']]
+
     fluor_df = pd.read_csv(file_path, skiprows=2, names=column_names, 
-    usecols=[file_metadata['ts'], file_metadata['gcamp column'], file_metadata['auto column']],
+    usecols=columns_to_use,
     dtype=float
     )
 
