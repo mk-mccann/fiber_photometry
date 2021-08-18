@@ -3,7 +3,7 @@ import pandas as pd
 import pathlib
 import matplotlib.pyplot as plt
 from os.path import join
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, filtfilt
 from tqdm import tqdm
 
 
@@ -29,25 +29,48 @@ def preprocess_fluorescence(data_df, channel_key=None):
     data = preprocess_fluorescence(data, 'posterior')
     """
 
-    # Define the gcamp and autofluorescence channels
+    # Define the gcamp and autofluorescence channels and save a copy of the raw
+    # data in a new column
     if channel_key is None:
         auto_channel = data_df['auto']
         gcamp_channel = data_df['gcamp']
+
+        data_df['auto_raw'] = auto_channel.copy()
+        data_df['auto_raw'] = gcamp_channel.copy()
+
     else:
         auto_channel = data_df['auto_' + channel_key]
         gcamp_channel = data_df['gcamp_' + channel_key]
+
+        data_df['auto_' + channel_key + '_raw'] = auto_channel.copy()
+        data_df['gcamp_' + channel_key + '_raw'] = gcamp_channel.copy()
 
     # replace NaN's with closest (interpolated) non-NaN
     gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
     auto = fpp.remove_nans(auto_channel.to_numpy())
 
-    # replace large jumps with the overall median
-    auto = fpp.median_large_jumps(auto)
-    gcamp = fpp.median_large_jumps(gcamp)
+    # identify where signal is lost -  we remove this from later traces
+    gcamp_d0 = fpp.find_lost_signal(gcamp)
+    auto_d0 = fpp.find_lost_signal(auto)
+    shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0)))
+
+    # remove slow decay with a high pass filter
+    cutoff = 0.1    # Hz
+    order = 3
+    fs = 40         # Hz
+    b, a = fpp.butter_highpass(cutoff, order, fs)
+    gcamp = filtfilt(b, a, gcamp)
+    auto = filtfilt(b, a, auto)
+
+    # smooth data and remove noise with a low pass filter
+    cutoff = 19    # Hz
+    d, c = fpp.butter_lowpass(cutoff, order, fs)
+    gcamp = filtfilt(d, c, gcamp)
+    auto = filtfilt(d, c, auto)
 
     # smoothing the data by applying filter
-    auto = savgol_filter(auto, 21, 2)
     gcamp = savgol_filter(gcamp, 21, 2)
+    auto = savgol_filter(auto, 21, 2)
 
     # fitting like in LERNER paper
     controlFit = fpp.lernerFit(auto, gcamp)
@@ -57,12 +80,18 @@ def preprocess_fluorescence(data_df, channel_key=None):
     dff = (gcamp - auto) / auto
     dff = dff * 100
 
-    # zscore whole data set with overall median
+    # z-score whole data set with overall median
     zdff = fpp.zscore_median(dff)
 
     # Remove homecage period baseline
     # dff_rem_base = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
     # dff_rem_base = dff_rem_base * 100
+
+    # Remove sections where the signal is lost
+    gcamp[shared_zero] = np.NaN
+    auto[shared_zero] = np.NaN
+    dff[shared_zero] = np.NaN
+    zdff[shared_zero] = np.NaN
 
     # Save the data
     if channel_key is None:
@@ -105,7 +134,7 @@ if __name__ == "__main__":
         #
         # except FileNotFoundError:
         #     print("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
-        #     continue
+        #     pass
 
         # Add the identifying information to the dataframe
         data['test'] = int(test_number)
