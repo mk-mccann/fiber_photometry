@@ -66,6 +66,10 @@ def preprocess_fluorescence(data_df, channel_key=None):
     d, c = fpp.butter_lowpass(cutoff, order, fs)
     gcamp = filtfilt(d, c, gcamp)
     auto = filtfilt(d, c, auto)
+    
+    # remove large jumps by replacing with the median
+    gcamp = fpp.median_large_jumps(gcamp)
+    auto = fpp.median_large_jumps(auto)
 
     # smoothing the data by applying filter
     gcamp = savgol_filter(gcamp, 21, 2)
@@ -110,13 +114,14 @@ def preprocess_fluorescence(data_df, channel_key=None):
 if __name__ == "__main__":
     f_io.check_dir_exists(paths.processed_data_directory)
 
-    files = list(pathlib.Path(paths.dual_recording_csv_directory).glob('*.csv'))
+    files = list(pathlib.Path(paths.csv_directory).glob('*.csv'))
 
     # Go row by row through the summary data
     # tqdm only creates a progress bar for the loop
     for file in tqdm(files):
 
-        test_number = int(file.stem[-1])
+        animal = str(file.stem.split('_')[-1])
+        day = int(file.stem.split('_')[0][-1])
 
         data = f_io.read_2_channel_fiber_photometry_csv(file.resolve())
 
@@ -136,10 +141,11 @@ if __name__ == "__main__":
         #     pass
 
         # Add the identifying information to the dataframe
-        data['test'] = int(test_number)
+        data['animal'] = animal
+        data['day'] = day
 
         # save the data as an .h5 file
-        filename = 'test{}_dual_rec_preprocessed.h5'.format(test_number)
+        filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
         data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
 
         # Make a plot of the zdffs and save it.
@@ -156,8 +162,8 @@ if __name__ == "__main__":
         ax2.set_xlabel('Time (s)')
         ax2.set_title('Posterior')
 
-        fig.suptitle('Test {} dual channel Z-dF/F'.format(test_number))
+        fig.suptitle('Animal {} Day {} dual channel Z-dF/F'.format(test_number))
 
-        plt.savefig(join(paths.figure_directory, 'test{}_dual_rec_gcamp_zscore.png'.format(test_number)), format="png")
-        plt.show()
+        plt.savefig(join(paths.figure_directory, 'animal{}_day{}_gcamp_zscore.png'.format(animal, day)), format="png")
+        # plt.show()
 

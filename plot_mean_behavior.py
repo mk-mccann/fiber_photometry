@@ -238,7 +238,7 @@ def plot_multiple_behaviors(data_dict, keys_to_plot, f_trace='zscore', plot_sing
     return fig
 
 
-def extract_episodes(data_df, analysis_period, episodes_to_analyze, extract_first_n=-1):
+def extract_episodes(data_df, analysis_period, episodes_to_analyze, dwell_time=0, extract_first_n=-1):
 
     # Create a dictionary to hold the output traces
     if episodes_to_analyze == "ALL":
@@ -258,7 +258,7 @@ def extract_episodes(data_df, analysis_period, episodes_to_analyze, extract_firs
         # This is a check if there are episodes for a given behavior. If there are, it adds them to the output dict
         if len(episodes_by_idx) > 0:
             # Check the duration of each episode, and throw out any that are too short. Default is to keep everything.
-            episodes_by_duration = check_episode_duration(data_df, episodes_by_idx)
+            episodes_by_duration = check_episode_duration(data_df, episodes_by_idx, min_dwell_time=dwell_time)
             # Extracts a window surrounding the start of an episode, as given by the variable window_period
             ep_start_windows = get_episode_start_window(data_df, episodes_by_duration, window_period=analysis_period)
             # Take first n episodes of a behavior from each experiment. Default is to keep all
@@ -284,7 +284,11 @@ if __name__ == "__main__":
     # If set to "ALL", generates means for all behaviors.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', ...]
     behaviors_to_analyze = 'ALL'
-    period = (-13, 10)
+    period = (-13, 10)    # In seconds
+    
+    # What is the minimum time an animal needs to spend performing a behavior or
+    # being in a zone for it to be considered valid?
+    dwell_time = 0    # In seconds
 
     # The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use
@@ -292,12 +296,14 @@ if __name__ == "__main__":
     first_n_eps = -1
 
     # Run the main function
-    all_episodes = extract_episodes(exps_to_run, period, behaviors_to_analyze, extract_first_n=first_n_eps)
+    all_episodes = extract_episodes(exps_to_run, period, behaviors_to_analyze, dwell_time=dwell_time, extract_first_n=first_n_eps)
 
     # Check if the figure-saving directory exists
     f_io.check_dir_exists(paths.figure_directory)
 
     # Plot means for the individual behaviors (as selected in behaviors_to_analyze)
+    # If you wanted to plot for a DC experiment, it would look like
+    # plot_individual_behaviors(all_episodes, f_trace='zscore_anterior')
     plot_individual_behaviors(all_episodes)
 
     # Plot means across all or some of the behaviors
@@ -306,4 +312,7 @@ if __name__ == "__main__":
     # to see. The example below plots all behaviors, but no zone occupancies
     multi_behav_plot = [key for key in list(all_episodes.keys()) if 'Zone' not in key]
     plot_multiple_behaviors(all_episodes, multi_behav_plot)
-    plt.show()
+    # If you wanted to plot for a DC experiment, it would look like
+    # plot_multiple_behaviors(all_episodes, multi_behav_plot, f_trace='zscore_anterior')
+    
+    # plt.show()

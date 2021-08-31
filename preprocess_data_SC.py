@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pathlib
 from os.path import join
 from scipy.signal import savgol_filter, filtfilt
 from tqdm import tqdm
 
+# Import custom written functions
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
@@ -11,7 +13,12 @@ from functions_utils import find_zone_and_behavior_episodes, add_episode_data
 from functions_plotting import plot_fluorescence_min_sec
 
 
-"""load and process data for fiber photometry experiments"""
+"""
+load and process data for fiber photometry experiments. Saves preprocessed
+fluorescence data as an .h5 file. Tries to load manual video scoring if 
+available. If it is present, adds the scoring labels to the fluorescence 
+dataframe and saves it. If not, only saves the fluorescence data.
+"""
 
 
 def preprocess_fluorescence(data_df, channel_key=None):
@@ -22,7 +29,7 @@ def preprocess_fluorescence(data_df, channel_key=None):
     auto/gcamp channels
     .
     Example usage for a single fiber recording:
-    data = preprocess_fluorescence(data)
+    data = preprocess_fluorescence(data) - no need to specify channel_key
 
     Example usage for dual fiber recording:
     data = preprocess_fluorescence(data, 'anterior')
@@ -36,7 +43,7 @@ def preprocess_fluorescence(data_df, channel_key=None):
         gcamp_channel = data_df['gcamp']
 
         data_df['auto_raw'] = auto_channel.copy()
-        data_df['auto_raw'] = gcamp_channel.copy()
+        data_df['gcamp_raw'] = gcamp_channel.copy()
 
     else:
         auto_channel = data_df['auto_' + channel_key]
@@ -52,7 +59,7 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # identify where signal is lost -  we remove this from later traces
     gcamp_d0 = fpp.find_lost_signal(gcamp)
     auto_d0 = fpp.find_lost_signal(auto)
-    shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0)))
+    shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0))) # identifies the indices if signal is lost in at least one channel
 
     # remove slow decay with a high pass filter
     cutoff = 0.1    # Hz
@@ -67,25 +74,32 @@ def preprocess_fluorescence(data_df, channel_key=None):
     d, c = fpp.butter_lowpass(cutoff, order, fs)
     gcamp = filtfilt(d, c, gcamp)
     auto = filtfilt(d, c, auto)
+    
+    # remove large jumps by replacing with the median
+    gcamp = fpp.median_large_jumps(gcamp)
+    auto = fpp.median_large_jumps(auto)
 
     # smoothing the data by applying filter
     gcamp = savgol_filter(gcamp, 21, 2)
     auto = savgol_filter(auto, 21, 2)
 
-    # fitting like in LERNER paper
+    # fitting like in LERNER paper (calcuated but not used)
     controlFit = fpp.lernerFit(auto, gcamp)
-    # dff = (gcamp - controlFit) / controlFit
+    # dff_LERNER = (gcamp - controlFit) / controlFit
+    # If you want to use the LERNER fit, you need to write code to calculate the 
+    # z-score from this variable
 
     # Compute DFF
     dff = (gcamp - auto) / auto
     dff = dff * 100
 
+    # Remove homecage period baseline
+    # If you want to use this, comment out the dff calculation above
+    # dff = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
+    # dff = dff * 100
+
     # z-score whole data set with overall median
     zdff = fpp.zscore_median(dff)
-
-    # Remove homecage period baseline
-    # dff_rem_base = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
-    # dff_rem_base = dff_rem_base * 100
 
     # Remove sections where the signal is lost
     gcamp[shared_zero] = np.NaN
@@ -109,22 +123,28 @@ def preprocess_fluorescence(data_df, channel_key=None):
 
 
 if __name__ == "__main__":
-    summary_file_path = paths.summary_file  # Set this to wherever it is
+    # summary_file_path = paths.summary_file  # Set this to wherever it is
     f_io.check_dir_exists(paths.processed_data_directory)
+    f_io.check_dir_exists(paths.figure_directory)
 
     # Read the summary file as a pandas dataframe
-    summary = f_io.read_summary_file(summary_file_path)
+    # summary = f_io.read_summary_file(summary_file_path)
+
+    files = list(pathlib.Path(paths.csv_directory).glob('*.csv'))
 
     # Go row by row through the summary data
     # tqdm only creates a progress bar for the loop
-    for idx, row in tqdm(summary.iterrows(), total=len(summary)):
+    #for idx, row in tqdm(summary.iterrows(), total=len(summary)):
+    for file in tqdm(files):
 
         # Get identifying info about the experiment
-        animal, day = str(row['Ani_ID']).split(".")
+        #animal, day = str(row['Ani_ID']).split(".")s
+        animal = str(file.stem.split('_')[-1])
+        day = int(file.stem.split('_')[0][-1])
 
         # load the raw fluorescence data from a given experiment
-        fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
-        data = f_io.read_1_channel_fiber_photometry_csv(fp_file, row)
+        #fp_file = join(paths.csv_directory, row['FP file'] + '.csv')
+        data = f_io.read_1_channel_fiber_photometry_csv(file.resolve())
 
         # Add the identifying information to the dataframe
         data['animal'] = animal

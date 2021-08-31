@@ -13,7 +13,7 @@ def main(data, channel_key=None):
     """
     Plots a 2-panel figure for the z-scored dF/F trace for a given recording site
     and overlays the manually-scored behavior and zone-occupation periods. Time is
-    scales to HH:mm format for readability.
+    scaled to HH:mm format for readability.
 
     :param data: (pd.DataFrame) A dataframe containing fluorescence traces and behavior labels
     :param channel_key: (str) An optional argument for specifying which fluorescence channel to use.

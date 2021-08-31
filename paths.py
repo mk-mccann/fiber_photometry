@@ -1,18 +1,18 @@
 from os.path import join
 
 
-fp_data_root_dir = r"/home/matt/repos/fiber_photometry/data"
+fp_data_root_dir = r"J:\Alja Podgornik\FP_Alja\January '21 WILD TYPE\Multimaze"
 
-summary_file = join(fp_data_root_dir, "Multimaze sheet summary.xlsx")
+csv_directory = join(fp_data_root_dir, "raw_data")
 
-csv_directory = join(fp_data_root_dir, "Multimaze", "Multimaze_Jan21_FPdata_csvs")
-
-dual_recording_csv_directory = join(fp_data_root_dir, "FP_data_dual_recordings")
-
-behavior_scoring_directory = join(fp_data_root_dir, "Multimaze scoring")
+behavior_scoring_directory = join(fp_data_root_dir, "behavior_scoring")
 
 processed_data_directory = join(fp_data_root_dir, "preprocessed_data")
 
 modeling_data_directory = join(fp_data_root_dir, "modeling_data")
 
-figure_directory = join(fp_data_root_dir, "plots")
+figure_directory = join(fp_data_root_dir, "figures")
+
+
+summary_file = join(fp_data_root_dir, "Multimaze sheet summary.xlsx")
+dual_recording_csv_directory = join(fp_data_root_dir, "FP_data_dual_recordings")

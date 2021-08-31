@@ -69,7 +69,7 @@ def read_1_channel_fiber_photometry_csv(file_path, file_metadata=None, column_na
     Reads the CSV containing fiber photometry data
 
     :param file_path: (str) Path to the raw data .csv
-    :param file_metadata: (pd.Da    taFrame) A row from a pandas DataFrame with the relevant columns to extract
+    :param file_metadata: (pd.DataFrame) A row from a pandas DataFrame with the relevant columns to extract
     :param column_names: (list) A list of strings with column names. Default is a NoneType.
     :return: Pandas DataFrame with of the time-series fluorescence data.
     """
@@ -78,10 +78,10 @@ def read_1_channel_fiber_photometry_csv(file_path, file_metadata=None, column_na
     # of fluorescence data (time, gcamp, auto), so here the columns names are 
     # set to a default.
     if column_names is None:
-        column_names = ['time', 'gcamp', 'auto']
+        column_names = ['time', 'auto', 'gcamp']
 
     if file_metadata is None:
-        columns_to_use = [0, 3, 1]
+        columns_to_use = [0, 1, 3]
     else:
         columns_to_use = [file_metadata['ts'], file_metadata['gcamp column'], file_metadata['auto column']]
 
