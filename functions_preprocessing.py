@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.signal as sig
 from functions_utils import find_nearest
 
 
@@ -85,7 +86,7 @@ def zscore_median(trace):
     :return: (np.array) Z-scored fluorescence trace
     """
 
-    return (trace - np.median(trace)) / np.std(trace)
+    return (trace - np.nanmedian(trace)) / np.nanstd(trace)
 
 
 def lernerFit(auto, gcamp, power=1):
@@ -96,3 +97,46 @@ def lernerFit(auto, gcamp, power=1):
     b = reg[1]
     controlFit = a * auto + b
     return controlFit
+
+
+def butter_highpass(cutoff, order, fs):
+    """
+    Calculates the coefficients for a Butterworth high pass filter
+
+    :param cutoff: the cutoff frequency in Hz
+    :param order: filter order
+    :param fs: sampling frequency in Hz
+    """
+
+    nyq = 0.5 * fs
+    high_cut = cutoff / nyq
+    b, a = sig.butter(order, high_cut, btype='highpass')
+    return b, a
+
+
+def butter_lowpass(cutoff, order, fs):
+    """
+    Calculates the coefficients for a Butterworth low pass filter
+
+    :param cutoff: the cutoff frequency in Hz
+    :param order: filter order
+    :param fs: sampling frequency in Hz
+    """
+
+    nyq = 0.5 * fs
+    low_cut = cutoff / nyq
+    b, a = sig.butter(order, low_cut, btype='lowpass')
+    return b, a
+
+
+def find_lost_signal(trace):
+    """
+    Identifies when a signal was lost by searching for locations where the
+    signal derivative is zero
+
+    :param trace: [np.array] Signal to be processed
+    """
+
+    d_trace = np.r_[0, np.abs(np.diff(trace))]
+    d0 = np.where(d_trace == 0)[0]
+    return d0
