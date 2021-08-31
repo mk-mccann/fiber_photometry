@@ -6,7 +6,6 @@ from os.path import join
 from scipy.signal import savgol_filter, filtfilt
 from tqdm import tqdm
 
-
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
