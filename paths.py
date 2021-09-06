@@ -1,7 +1,7 @@
 from os.path import join
 
 
-fp_data_root_dir = r"J:\Alja Podgornik\FP_Alja\January '21 WILD TYPE\Multimaze"
+fp_data_root_dir = r"J:\Alja Podgornik\FP_Alja\August '21 GENSAT\Multimaze"
 
 csv_directory = join(fp_data_root_dir, "raw_data")
 

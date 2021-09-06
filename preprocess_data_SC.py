@@ -61,24 +61,24 @@ def preprocess_fluorescence(data_df, channel_key=None):
     auto_d0 = fpp.find_lost_signal(auto)
     shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0))) # identifies the indices if signal is lost in at least one channel
 
-    # remove slow decay with a high pass filter
-    cutoff = 0.1    # Hz
-    order = 3
-    fs = 40         # Hz
-    b, a = fpp.butter_highpass(cutoff, order, fs)
-    gcamp = filtfilt(b, a, gcamp)
-    auto = filtfilt(b, a, auto)
-
-    # smooth data and remove noise with a low pass filter
-    cutoff = 19    # Hz
-    d, c = fpp.butter_lowpass(cutoff, order, fs)
-    gcamp = filtfilt(d, c, gcamp)
-    auto = filtfilt(d, c, auto)
+    # # remove slow decay with a high pass filter
+    # cutoff = 0.1    # Hz
+    # order = 3
+    # fs = 40         # Hz
+    # b, a = fpp.butter_highpass(cutoff, order, fs)
+    # gcamp = filtfilt(b, a, gcamp)
+    # auto = filtfilt(b, a, auto)
     
-    # remove large jumps by replacing with the median
-    gcamp = fpp.median_large_jumps(gcamp)
-    auto = fpp.median_large_jumps(auto)
-
+    # # smooth data and remove noise with a low pass filter
+    # cutoff = 19    # Hz
+    # d, c = fpp.butter_lowpass(cutoff, order, fs)
+    # gcamp = filtfilt(d, c, gcamp)
+    # auto = filtfilt(d, c, auto)
+    
+    # # remove large jumps by replacing with the median
+    # gcamp = fpp.median_large_jumps(gcamp)
+    # auto = fpp.median_large_jumps(auto)
+    
     # smoothing the data by applying filter
     gcamp = savgol_filter(gcamp, 21, 2)
     auto = savgol_filter(auto, 21, 2)
@@ -155,14 +155,14 @@ if __name__ == "__main__":
 
         # Try to load the manual video scoring file, if it exists.
         # If so, process it. Raise a warning if not.
-        try:
-            behavior_labels = f_io.load_behavior_labels(animal, day)
-            behavior_bouts, zone_bouts = find_zone_and_behavior_episodes(data, behavior_labels)
-            data = add_episode_data(data, behavior_bouts, zone_bouts)
+        # try:
+        #     behavior_labels = f_io.load_behavior_labels(animal, day)
+        #     behavior_bouts, zone_bouts = find_zone_and_behavior_episodes(data, behavior_labels)
+        #     data = add_episode_data(data, behavior_bouts, zone_bouts)
 
-        except FileNotFoundError:
-            tqdm.write("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
-            pass
+        # except FileNotFoundError:
+        #     tqdm.write("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
+        #     pass
 
         # save the data as an .h5 file
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)

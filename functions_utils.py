@@ -43,7 +43,7 @@ def list_lists_to_array(list_of_lists):
     return new_array
 
 
-def get_sec_from_min_sec(time: int):
+def get_sec_from_min_sec(time: float):
     """
     Converts a float representing time in min.sec to seconds
 
@@ -147,8 +147,9 @@ def add_episode_data(data_df, behavior_bouts, zone_bouts):
 
     behavior_df = pd.DataFrame(behavior_bouts, columns=['behavior', 'start_idx', 'start_time', 'end_idx', 'end_time'])
     for i, val in behavior_df.iterrows():
-        data_df.loc[val['start_idx']:val['end_idx'], val['behavior']] = val['behavior']
-        data_df.loc[val['start_idx']:val['end_idx'], 'behavior'] = val['behavior']
+        index_range = np.arange(int(val['start_idx']), int(val['end_idx']))
+        data_df.loc[index_range, val['behavior']] = val['behavior']
+        data_df.loc[index_range, 'behavior'] = val['behavior']
 
     # Process the time spent in each zone
     for zone in zones:
@@ -156,8 +157,9 @@ def add_episode_data(data_df, behavior_bouts, zone_bouts):
 
     zone_df = pd.DataFrame(zone_bouts, columns=['zone', 'start_idx', 'start_time', 'end_idx', 'end_time'])
     for i, val in zone_df.iterrows():
-        data_df.loc[val['start_idx']:val['end_idx'], val['zone']] = val['zone']
-        data_df.loc[val['start_idx']:val['end_idx'], 'zone'] = val['zone']
+        index_range = np.arange(int(val['start_idx']), int(val['end_idx']))
+        data_df.loc[index_range, val['zone']] = val['zone']
+        data_df.loc[index_range, 'zone'] = val['zone']
 
     return data_df
 

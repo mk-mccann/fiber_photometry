@@ -21,12 +21,14 @@ episode_colors = {'Eating': 'cyan',
                   'Ear Scratch': 'firebrick',
                   'Switch': 'sienna',
                   'Idle': 'silver',
+                  'Nesting': 'papayawhip',
                   'Nibbling Floor': 'thistle',
                   'Nibbling Tape': 'aquamarine',
                   'Shock': 'red',
                   'Eating Zone': 'b',
                   'Marble Zone': 'g',
                   'Nesting Zone': 'gray',
+                  'Social Interaction Zone': 'teal'
                   }
 
 

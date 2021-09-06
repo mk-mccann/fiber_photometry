@@ -39,7 +39,7 @@ def main(data, channel_key=None):
         f_trace = data['zscore_' + channel_key]
 
     # Generate a figure with 2 panels in a single column
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 15), sharex=False)
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 15), sharex=True)
 
     # Get the dF/F plot and highlight the times performing labeled behaviors
     # Plot the fluorescence trace on the first panel (ax1)
@@ -67,7 +67,7 @@ def main(data, channel_key=None):
 
 if __name__ == "__main__":
 
-    mouse = 5
+    mouse = 1
     day = 1
 
     # Check that the figure directory exists

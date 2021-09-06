@@ -12,3 +12,9 @@ DATA
 ____
 - Dual-channel recordings: Animals 2,4 no expression posterior (?)
 - Animal 1 some sort of artifact around 40 min.
+
+ANALYSIS ISSUES
+__________
+
+Index out of range - one of the numbers is not in mm.ss format
+"['Nesting End'] not in index" - there is a space after the "End" word that needs to get deleted

@@ -32,7 +32,16 @@ def median_large_jumps(trace, percentile=0.95):
 
     # TODO: interpolate points where jumps occur instead of using overall median
     med = np.median(trace)    # Take median of whole fluor trace
-    mask = np.argwhere((trace < percentile * med))   # Find where trace less than some fraction of median
+    
+    mask = np.argwhere((trace < med*percentile)) 
+    
+    std = np.std(trace)
+    # # Find where trace is greater than num_std standard deviations above the 
+    # num_std=2
+    # mask_plus = np.argwhere((trace >= med + num_std*std))   
+    # mask_minus = np.argwhere((trace <= med - num_std*std))  
+    # mask = np.unique(np.concatenate((mask_plus, mask_minus)))
+    
     filtered_trace[mask] = med
 
     return filtered_trace
