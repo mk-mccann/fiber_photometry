@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pathlib
 from os.path import join
 import warnings
 from scipy.signal import medfilt
@@ -126,8 +127,9 @@ def take_first_n_episodes(episodes, n_to_keep=-1):
     return episodes_to_keep
 
 
-def load_all_experiments():
+def load_all_experiments_old():
     """
+    DEPRECIATED
     Loads all experiments that have been scored and preprocessed into a giant dataframe
 
     :return: (pd.DataFrame) DataFrame of all experiments
@@ -143,6 +145,52 @@ def load_all_experiments():
     for idx, row in all_exps.iterrows():
         # Get identifying info about the experiment
         animal, day = str(row['Ani_ID']).split(".")
+
+        try:
+            # load the processed data from one experiment at a time
+            exp = f_io.load_preprocessed_data(animal, day)
+
+            # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
+            if 'behavior' not in exp.columns:
+                warnings.warn('Behavior labeling not present in DataFrame. Trying to load now.')
+                try:
+                    behavior_labels = f_io.load_behavior_labels(animal, day)
+                    behavior_bouts, zone_bouts = f_util.find_zone_and_behavior_episodes(exp, behavior_labels)
+                    exp = f_util.add_episode_data(exp, behavior_bouts, zone_bouts)
+                except FileNotFoundError as err:
+                    print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
+                        animal, day, err))
+                    continue
+
+        except FileNotFoundError as error:
+            print(str(error))
+            continue
+
+        # If the selected dataframe is good, add it to the list
+        df_list.append(exp)
+
+    # Now create a giant dataframe from all of the experiments
+    return pd.concat(df_list).reset_index(drop=True)
+
+
+def load_all_experiments():
+    """
+    Loads all experiments that have been scored and preprocessed into a giant dataframe
+
+    :return: (pd.DataFrame) DataFrame of all experiments
+    """
+
+    # Read the summary file as a pandas dataframe
+    all_exps = list(pathlib.Path(paths.csv_directory).glob('*.csv'))
+
+    df_list = []
+
+    # Go row by row through the summary data to create a GIANT dataframe with all experiments that are preprocessed and
+    # are scored
+    for file in all_exps:
+        # Get identifying info about the experiment
+        animal = str(file.stem.split('_')[-1])
+        day = int(file.stem.split('_')[0][-1])
 
         try:
             # load the processed data from one experiment at a time
@@ -221,7 +269,7 @@ def plot_multiple_behaviors(data_dict, keys_to_plot, f_trace='zscore', plot_sing
             t = np.linspace(period[0], period[1], trace_array.shape[-1])
 
             # Remove the baseline using the 5 seconds before behavior onset
-            trace_array = f_util.remove_baseline(t, trace_array, norm_start=-13, norm_end=-10)
+            trace_array = f_util.remove_baseline(t, trace_array, norm_start=-5, norm_end=0)
 
             collected_traces.append(trace_array)
 
@@ -281,9 +329,10 @@ if __name__ == "__main__":
     exps_to_run = all_exps
 
     # Which behavior(s) do you want to look at?
-    # If set to "ALL", generates means for all behaviors.
+    # If set to 'ALL', generates means for all behaviors.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', ...]
-    behaviors_to_analyze = 'ALL'
+    # This is true for single behaviors also!
+    behaviors_to_analyze = ['Eating']
     period = (-13, 10)    # In seconds
     
     # What is the minimum time an animal needs to spend performing a behavior or
@@ -315,4 +364,4 @@ if __name__ == "__main__":
     # If you wanted to plot for a DC experiment, it would look like
     # plot_multiple_behaviors(all_episodes, multi_behav_plot, f_trace='zscore_anterior')
     
-    # plt.show()
+    plt.show()
