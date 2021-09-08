@@ -1,7 +1,7 @@
 from os.path import join
 from pandas import read_csv
 
-from paths import csv_directory
+from paths import raw_data_directory
 
 
 def decimate_csv(file_path, step=300):
@@ -41,5 +41,5 @@ if __name__ == "__main__":
     save_filename = r"Day{}_{}.csv".format(day, mouse_ID)
 
     # Decimate and save as csv
-    decimated = decimate_csv(join(csv_directory, filename))
-    decimated.to_csv(join(csv_directory, save_filename), index=False)
+    decimated = decimate_csv(join(raw_data_directory, filename))
+    decimated.to_csv(join(raw_data_directory, save_filename), index=False)

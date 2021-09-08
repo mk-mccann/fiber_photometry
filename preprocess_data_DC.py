@@ -1,16 +1,21 @@
-import numpy as np
-import pandas as pd
-import pathlib
 import matplotlib.pyplot as plt
+import pathlib
 from os.path import join
-from scipy.signal import savgol_filter, filtfilt
+from scipy.signal import savgol_filter
+from scipy.ndimage import percentile_filter
 from tqdm import tqdm
 
+# Import custom written functions
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
-from functions_utils import find_zone_and_behavior_episodes, add_episode_data
 from functions_plotting import plot_fluorescence_min_sec
+
+
+"""
+load and process data for fiber photometry experiments. Saves preprocessed
+fluorescence data as an .h5 file.
+"""
 
 
 def preprocess_fluorescence(data_df, channel_key=None):
@@ -21,7 +26,7 @@ def preprocess_fluorescence(data_df, channel_key=None):
     auto/gcamp channels
     .
     Example usage for a single fiber recording:
-    data = preprocess_fluorescence(data)
+    data = preprocess_fluorescence(data) - no need to specify channel_key
 
     Example usage for dual fiber recording:
     data = preprocess_fluorescence(data, 'anterior')
@@ -35,7 +40,7 @@ def preprocess_fluorescence(data_df, channel_key=None):
         gcamp_channel = data_df['gcamp']
 
         data_df['auto_raw'] = auto_channel.copy()
-        data_df['auto_raw'] = gcamp_channel.copy()
+        data_df['gcamp_raw'] = gcamp_channel.copy()
 
     else:
         auto_channel = data_df['auto_' + channel_key]
@@ -48,53 +53,60 @@ def preprocess_fluorescence(data_df, channel_key=None):
     gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
     auto = fpp.remove_nans(auto_channel.to_numpy())
 
+    # Remove jumps in the data with an aggressive percentile filter
+    gcamp = percentile_filter(gcamp, percentile=99, size=25)
+    auto = percentile_filter(auto, percentile=99, size=25)
+
     # identify where signal is lost -  we remove this from later traces
-    gcamp_d0 = fpp.find_lost_signal(gcamp)
-    auto_d0 = fpp.find_lost_signal(auto)
-    shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0)))
+    # gcamp_d0 = fpp.find_lost_signal(gcamp)
+    # auto_d0 = fpp.find_lost_signal(auto)
+    # shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0))) # identifies the indices if signal is lost in at least one channel
 
-    # remove slow decay with a high pass filter
-    cutoff = 0.1    # Hz
-    order = 3
-    fs = 40         # Hz
-    b, a = fpp.butter_highpass(cutoff, order, fs)
-    gcamp = filtfilt(b, a, gcamp)
-    auto = filtfilt(b, a, auto)
+    # # remove slow decay with a high pass filter
+    # cutoff = 0.1    # Hz
+    # order = 3
+    # fs = 40         # Hz
+    # b, a = fpp.butter_highpass(cutoff, order, fs)
+    # gcamp = filtfilt(b, a, gcamp)
+    # auto = filtfilt(b, a, auto)
 
-    # smooth data and remove noise with a low pass filter
-    cutoff = 19    # Hz
-    d, c = fpp.butter_lowpass(cutoff, order, fs)
-    gcamp = filtfilt(d, c, gcamp)
-    auto = filtfilt(d, c, auto)
-    
-    # remove large jumps by replacing with the median
-    gcamp = fpp.median_large_jumps(gcamp)
-    auto = fpp.median_large_jumps(auto)
+    # # smooth data and remove noise with a low pass filter
+    # cutoff = 19    # Hz
+    # d, c = fpp.butter_lowpass(cutoff, order, fs)
+    # gcamp = filtfilt(d, c, gcamp)
+    # auto = filtfilt(d, c, auto)
+
+    # # remove large jumps by replacing with the median
+    # gcamp = fpp.median_large_jumps(gcamp)
+    # auto = fpp.median_large_jumps(auto)
 
     # smoothing the data by applying filter
     gcamp = savgol_filter(gcamp, 21, 2)
     auto = savgol_filter(auto, 21, 2)
 
-    # fitting like in LERNER paper
+    # fitting like in LERNER paper (calcuated but not used)
     controlFit = fpp.lernerFit(auto, gcamp)
-    # dff = (gcamp - controlFit) / controlFit
+    # dff_LERNER = (gcamp - controlFit) / controlFit
+    # If you want to use the LERNER fit, you need to write code to calculate the
+    # z-score from this variable
 
     # Compute DFF
     dff = (gcamp - auto) / auto
     dff = dff * 100
 
+    # Remove homecage period baseline
+    # If you want to use this, comment out the dff calculation above
+    # dff = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
+    # dff = dff * 100
+
     # z-score whole data set with overall median
     zdff = fpp.zscore_median(dff)
 
-    # Remove homecage period baseline
-    # dff_rem_base = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
-    # dff_rem_base = dff_rem_base * 100
-
-    # Remove sections where the signal is lost
-    gcamp[shared_zero] = np.NaN
-    auto[shared_zero] = np.NaN
-    dff[shared_zero] = np.NaN
-    zdff[shared_zero] = np.NaN
+    # # Remove sections where the signal is lost
+    # gcamp[shared_zero] = np.NaN
+    # auto[shared_zero] = np.NaN
+    # dff[shared_zero] = np.NaN
+    # zdff[shared_zero] = np.NaN
 
     # Save the data
     if channel_key is None:
@@ -112,11 +124,13 @@ def preprocess_fluorescence(data_df, channel_key=None):
 
 
 if __name__ == "__main__":
+    # Check that output dta directories are present
     f_io.check_dir_exists(paths.processed_data_directory)
+    f_io.check_dir_exists(paths.figure_directory)
 
-    files = list(pathlib.Path(paths.csv_directory).glob('*.csv'))
+    # Get a list of all files in the raw data directory
+    files = list(pathlib.Path(paths.raw_data_directory).glob('*.csv'))
 
-    # Go row by row through the summary data
     # tqdm only creates a progress bar for the loop
     for file in tqdm(files):
 
@@ -125,24 +139,13 @@ if __name__ == "__main__":
 
         data = f_io.read_2_channel_fiber_photometry_csv(file.resolve())
 
-        # Preprocess the fluorescence with the given channels
-        data = preprocess_fluorescence(data, 'anterior')
-        data = preprocess_fluorescence(data, 'posterior')
-
-        # # Try to load the manual video scoring file, if it exists.
-        # # If so, process it. Raise a warning if not.
-        # try:
-        #     behavior_labels = f_io.load_behavior_labels(animal, day)
-        #     behavior_bouts, zone_bouts = find_zone_and_behavior_episodes(data, behavior_labels)
-        #     data = add_episode_data(data, behavior_bouts, zone_bouts)
-        #
-        # except FileNotFoundError:
-        #     print("Manual scoring needs to be done for Animal {} Day {}.".format(animal, day))
-        #     pass
-
         # Add the identifying information to the dataframe
         data['animal'] = animal
         data['day'] = day
+
+        # Preprocess the fluorescence with the given channels
+        data = preprocess_fluorescence(data, 'anterior')
+        data = preprocess_fluorescence(data, 'posterior')
 
         # save the data as an .h5 file
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
@@ -162,7 +165,7 @@ if __name__ == "__main__":
         ax2.set_xlabel('Time (s)')
         ax2.set_title('Posterior')
 
-        fig.suptitle('Animal {} Day {} dual channel Z-dF/F'.format(test_number))
+        fig.suptitle('Animal {} Day {} dual channel Z-dF/F'.format(animal, day))
 
         plt.savefig(join(paths.figure_directory, 'animal{}_day{}_gcamp_zscore.png'.format(animal, day)), format="png")
         # plt.show()

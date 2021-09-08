@@ -181,7 +181,7 @@ def load_all_experiments():
     """
 
     # Read the summary file as a pandas dataframe
-    all_exps = list(pathlib.Path(paths.csv_directory).glob('*.csv'))
+    all_exps = list(pathlib.Path(paths.raw_data_directory).glob('*.csv'))
 
     df_list = []
 
