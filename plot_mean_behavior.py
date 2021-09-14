@@ -123,7 +123,7 @@ def get_episode_start_window(data_df, episodes, window_period=(-5, 5)):
 
         # Check to see if this animal or day changed from the last episode in the list. If so, reset counter.
         # Otherwise advance the counter
-        if (int(animal) != last_animal) or (int(day) != last_day):
+        if (float(animal) != last_animal) or (int(day) != last_day):
             ep_number = 1
         else:
             ep_number += 1
@@ -147,7 +147,7 @@ def get_episode_start_window(data_df, episodes, window_period=(-5, 5)):
         ep_df['episode_number'] = ep_number
         start_windows.append(ep_df)
 
-        last_animal = int(animal)
+        last_animal = float(animal)
         last_day = int(day)
 
     return start_windows
@@ -371,8 +371,8 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all behaviors.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    behaviors_to_analyze = 'ALL'
-    period = (-13, 10)    # In seconds
+    behaviors_to_analyze = ['Eating']
+    period = (-10, 10)    # In seconds
     
     # What is the minimum time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?

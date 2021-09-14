@@ -77,8 +77,8 @@ def main(data_df, f_trace='zscore', channel_key=None):
 
 if __name__ == "__main__":
 
-    animal = 1
-    day = 2
+    mouse = 3
+    day = 1
 
     # Check that the figure directory exists
     f_io.check_dir_exists(paths.figure_directory)
