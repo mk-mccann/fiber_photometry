@@ -66,17 +66,13 @@ def check_preprocessed_df_for_scoring(exp_df, animal, day):
 
     if 'behavior' not in exp_df.columns:
         warn('Behavior labeling not present in DataFrame. Trying to load now...')
-        try:
-            behavior_labels = load_behavior_labels(animal, day)
-            behavior_bouts, zone_bouts = f_util.find_zone_and_behavior_episodes(exp_df, behavior_labels)
-            exp_df = f_util.add_episode_data(exp_df, behavior_bouts, zone_bouts)
-            return exp_df
-
-        except FileNotFoundError as err:
-            print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(animal, day, err))
-
-    else:
+   
+        behavior_labels = load_behavior_labels(animal, day)
+        behavior_bouts, zone_bouts = f_util.find_zone_and_behavior_episodes(exp_df, behavior_labels)
+        exp_df = f_util.add_episode_data(exp_df, behavior_bouts, zone_bouts)
+        
         return exp_df
+
 
 def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
     """Loads the .h5 file with the preprocessed fluorescence data.
@@ -199,8 +195,8 @@ def load_all_experiments(base_directory=paths.processed_data_directory):
     # Create a GIANT dataframe with all experiments that are preprocessed and are scored
     for file in all_exps:
         # Get identifying info about the experiment
-        animal = str(file.stem.split('_')[0][-1])
-        day = int(file.stem.split('_')[1][-1])
+        animal = file.stem.split('_')[0][6:]
+        day = file.stem.split('_')[1][-1]
 
         try:
             # load the processed data from one experiment at a time

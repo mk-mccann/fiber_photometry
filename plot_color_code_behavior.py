@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from os.path import join
+from warnings import warn
 
 import paths
 import functions_plotting as fp
@@ -77,7 +78,7 @@ def main(data_df, f_trace='zscore', channel_key=None):
 
 if __name__ == "__main__":
 
-    mouse = 3
+    animal = 4.1
     day = 1
 
     # Check that the figure directory exists
@@ -86,14 +87,18 @@ if __name__ == "__main__":
     # Load the preprocessed data
     data = f_io.load_preprocessed_data(animal, day)
 
-    # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
+    # Some error catching - if the behavior data is not in the df, raise an error and quit
     try:
         data = f_io.check_preprocessed_df_for_scoring(data, animal, day)
+        fig = main(data)
+
+        plt.suptitle(" ".join(('Animal {} Day {}'.format(animal, day), 'Z-dF/F', 'behavior segmentation')))
+        plt.savefig(join(paths.figure_directory, "_".join(('animal{}_day{}'.format(animal, day), 'zdff', 'behavior_seg')) + ".png"))
+        plt.show()
+        
     except FileNotFoundError as err:
-        print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(animal, day, err))
+        message = "Manual scoring needs to be done for this experiment: Animal {} Day {}.".format(animal, day)
+        warn(message)
+        
 
-    fig = main(data)
 
-    plt.suptitle(" ".join(('Animal {} Day {}'.format(animal, day), 'Z-dF/F', 'behavior segmentation')))
-    plt.savefig(join(paths.figure_directory, "_".join(('animal{}_day{}'.format(animal, day), 'zdff', 'behavior_seg')) + ".png"))
-    plt.show()

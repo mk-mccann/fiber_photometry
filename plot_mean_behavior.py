@@ -32,9 +32,9 @@ def get_individual_episode_indices(data_df, key):
         # Here is a special case for the eating zone. We only want to look at times in the eating zone when the mouse
         # is actually eating
         if ('Eating' in key) and ('+' in key):
-            episode_idxs = (data_df[(data_df['zone'] == key) & (data_df['behavior'] == 'Eating')].index.to_numpy())
+            episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] == 'Eating')].index.to_numpy())
         elif ('Eating' in key) and ('-' in key):
-            episode_idxs = (data_df[(data_df['zone'] == key) & (data_df['behavior'] != 'Eating')].index.to_numpy())
+            episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] != 'Eating')].index.to_numpy())
         else:
             episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
     else:
@@ -333,9 +333,10 @@ def extract_episodes(data_df, analysis_period, types_to_analyze, min_dwell_time=
         output_dict = {e: [] for e in types_to_analyze}
 
     # Build a special case to handle the Eating Zone: Animal eating vs animal not eating
-    if 'Eating Zone' in output_dict.keys:
+    if 'Eating Zone' in output_dict.keys():
         output_dict['Eating Zone +'] = []
         output_dict['Eating Zone -'] = []
+        types_to_analyze = output_dict.keys()
 
     # Loop through each of the scoring types you are interested in analyzing in order to extract them.
     for scoring_type in output_dict.keys():
@@ -359,6 +360,9 @@ def extract_episodes(data_df, analysis_period, types_to_analyze, min_dwell_time=
 
 if __name__ == "__main__":
 
+    # Check if the figure-saving directory exists
+    f_io.check_dir_exists(paths.figure_directory)    
+
     # Read the summary file as a giant pandas dataframe
     all_exps = f_io.load_all_experiments()
 
@@ -371,7 +375,7 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all behaviors.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    behaviors_to_analyze = ['Eating']
+    behaviors_to_analyze = ['Eating', 'Eating Zone']
     period = (-10, 10)    # In seconds
     
     # What is the minimum time an animal needs to spend performing a behavior or
@@ -386,8 +390,6 @@ if __name__ == "__main__":
     all_episodes = extract_episodes(exps_to_run, period, behaviors_to_analyze,
                                     min_dwell_time=dwell_time, extract_first_n=first_n_eps)
 
-    # Check if the figure-saving directory exists
-    f_io.check_dir_exists(paths.figure_directory)
 
     # Plot means for the individual behaviors (as selected in behaviors_to_analyze)
     # If you wanted to plot for a DC experiment, it would look like
