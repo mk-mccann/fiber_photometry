@@ -1,16 +1,12 @@
+import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
 from datetime import timedelta, datetime
 from scipy.stats import sem
-import numpy as np
-import pandas as pd
-
-from functions_utils import find_episodes
 
 
 # For a list of all MPL colors: https://matplotlib.org/stable/gallery/color/named_colors.html
-
-
 episode_colors = {'Eating': 'cyan',
                   'Grooming': 'goldenrod',
                   'Digging': 'lime',
@@ -32,8 +28,19 @@ episode_colors = {'Eating': 'cyan',
                   }
 
 
-def get_mpl_datetime(time: float):
-    """ Time comes in format min.sec"""
+def get_mpl_datetime(time):
+    """Converts a float representing time in MM.SS format to HH:MM:SS format
+
+    Parameters
+    ----------
+    time : float or str
+        A decimal number indicating time in MM.SS
+
+    Returns
+    -------
+    Time in matplotlib datetime format
+    """
+
     zero = datetime(2021, 1, 1)
 
     split_time = str(time).split('.')
@@ -44,7 +51,18 @@ def get_mpl_datetime(time: float):
 # Make sure that all of the times in the csv are in the "Text", rather than a "Number" format
 # All the times must be in a two decimal format; always 15.50, never 15.5
 def mpl_datetime_from_seconds(time):
-    """ Takes either an integer or an array and converts it to mpl datetime format"""
+    """Takes either an integer or an array and converts it to MPL HH:MM:SS datetime format
+
+    Parameters
+    ----------
+    time : int or float or iterable object
+        Time in seconds
+
+    Returns
+    -------
+    Time in matplotlib datetime format
+    """
+
     zero = datetime(2021, 1, 1)
 
     if isinstance(time, int) or isinstance(time, float):
@@ -54,6 +72,23 @@ def mpl_datetime_from_seconds(time):
 
 
 def plot_fluorescence_min_sec(time, trace, ax=None):
+    """Plots a time series fluorescence trace with time in HH:MM:SS formatting
+
+    Parameters
+    ----------
+    time : iterable object of ints or floats
+        Time in seconds
+    trace : np.array
+        Time series fluorescence trace
+    ax : Matplotlib axis object, optional
+        Axes to current figure, if already generated
+
+    Returns
+    -------
+    Matplotlib axis to current figure with fluorescence trace plotted
+
+    """
+
     time_format = mpl_datetime_from_seconds(time)
 
     if ax is None:
@@ -71,17 +106,26 @@ def plot_fluorescence_min_sec(time, trace, ax=None):
     return ax
 
 
-def overlay_manual_episodes(epochs, label, ax):
+def overlay_manual_episodes(episodes, label, ax):
+    """Creates horizontal span overlays for episodes of a scoring type
+
+    Parameters
+    ----------
+    episodes : iterable object
+        List of start and end times of episodes
+    label : str
+        The name of the scoring type being plotted
+    ax : Matplotlib axis object
+        Axis of current figure on which to overlay the scoring episode
+
+    Returns
+    -------
+    labeled_section : Matplotlib axis object
+        Matplotlib axis object with overlaid scoring episodes
     """
 
-    :param epochs:
-    :param label:
-    :param ax:
-    :return:
-    """
-
-    for epoch in epochs:
-        labeled_section = ax.axvspan(mpl_datetime_from_seconds(epoch[0]), mpl_datetime_from_seconds(epoch[-1]),
+    for episode in episodes:
+        labeled_section = ax.axvspan(mpl_datetime_from_seconds(episode[0]), mpl_datetime_from_seconds(episode[-1]),
                                      facecolor=episode_colors[label],
                                      alpha=0.3)
 
@@ -89,11 +133,32 @@ def overlay_manual_episodes(epochs, label, ax):
 
 
 def highlight_episodes(data: pd.DataFrame, column, keys, ax=None):
+    """Highlights the episodes of given by 'keys' on a fluorescence trace
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        DataFrame of an experiment with preprocessed fluorescence and scoring data
+    column : str
+        Column of 'data' to be used
+    keys : iterable object of strings
+        The scoring types to be plotted
+    ax : Matplotlib axis object, optional
+        Axis of current figure on which to overlay the scoring episode
+
+    Returns
+    -------
+    Axis of current figure with overlaid scoring episodes
+
+    See Also
+    --------
+    color_overlay : creates the overlay objects
+    """
 
     if ax is None:
         fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
 
-    time = data['time']
+    time = data['time'].to_numpy()
     data_col = data[column].to_numpy()
 
     # Create the highlighted episodes
@@ -110,6 +175,23 @@ def highlight_episodes(data: pd.DataFrame, column, keys, ax=None):
 
 
 def color_overlay(x, bool_array, label, ax):
+    """Creates named and colored overlay sections for a given scoring type
+
+    Parameters
+    ----------
+    x : list or np.array
+        The x-axis data points for th plot
+    bool_array : list or np.array of booleans
+        Where on the x-axis to overlay color for this scoring type
+    label : str
+        The scoring type being overlaid
+    ax : Matplotlib axis object
+        Axis of current figure on which to overlay the scoring episode
+
+    Returns
+    -------
+    Axis of current figure with overlaid scoring episodes for the scoring type given by 'label'
+    """
 
     labeled_section = ax.fill_between(x, 0, 1, where=bool_array,
                     facecolor=episode_colors[label],
@@ -120,6 +202,23 @@ def color_overlay(x, bool_array, label, ax):
 
 
 def plot_mean_episode(time, traces, plot_singles=False, ax=None):
+    """Plots the mean trace of a scoring type. PLots mean + SEM.
+
+    Parameters
+    ----------
+    time : list or np.array
+        Time vector
+    traces : np.array
+        Array of all fluorescence traces for episodes of a given scoring type
+    plot_singles : bool, default=False
+        Plot single episode traces
+    ax : Matplotlib axis object, optional
+        Axis of current figure on which to overlay the scoring episode
+
+    Returns
+    -------
+    Matplotlib axis object with mean + SEM plotted
+    """
 
     if ax is None:
         fig = plt.figure(figsize=(10, 10))

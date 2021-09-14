@@ -1,69 +1,48 @@
 import numpy as np
 import scipy.signal as sig
-from functions_utils import find_nearest
-
-
-def subtract_baseline_median(time_trace, f_trace, start_time=None, end_time=None):
-    # TODO maybe unused, check if can be removed or not
-    if start_time is not None:
-        start_idx, _ = find_nearest(time_trace, start_time)
-    else:
-        start_idx = 0
-
-    if end_time is not None:
-        end_idx, _ = find_nearest(time_trace, end_time)
-    else:
-        end_idx = -1
-
-    baseline = np.median(f_trace[start_idx:end_idx])
-    return f_trace - baseline
 
 
 def median_large_jumps(trace, percentile=0.95):
-    """
-    Filters large jumps in fluorescence signal and replaces them with the overall median
+    """Filters large jumps in a signal and replaces them with the overall signal median
+    Depreciated and no longer used.
 
-    :param trace:
-    :param percentile:
-    :return:
+    Parameters
+    ----------
+    trace : np.array
+        Signal to cleaned up
+    percentile : float
+        Signal percentile under which to replace data with the median
+
+    Returns
+    -------
+    filtered_trace : np.array
+        Signal with jumps removed
     """
 
     filtered_trace = trace.copy()
-
-    # TODO: interpolate points where jumps occur instead of using overall median
-    med = np.median(trace)    # Take median of whole fluor trace
-    
-    mask = np.argwhere((trace < med*percentile)) 
-    
-    std = np.std(trace)
-    # # Find where trace is greater than num_std standard deviations above the 
-    # num_std=2
-    # mask_plus = np.argwhere((trace >= med + num_std*std))   
-    # mask_minus = np.argwhere((trace <= med - num_std*std))  
-    # mask = np.unique(np.concatenate((mask_plus, mask_minus)))
-    
+    med = np.median(trace)
+    mask = np.argwhere((trace < med*percentile))
     filtered_trace[mask] = med
 
     return filtered_trace
 
-
-def interpolate_large_jumps(trace, percentile=0.95):
-    filtered_trace = trace.copy()
-
-    # TODO: interpolate points where jumps occur instead of using overall median
-    med = np.median(trace)  # Take median of whole trace
-    mask = np.argwhere((trace < percentile * med))  # Find where trace less than some fraction of median
-    filtered_trace[mask] = med
-
-    return filtered_trace
 
 def downsample(ts, signal, ds_factor):
-    """
+    """Down-samples a time-series signal by some factor
 
-    :param ts:
-    :param signal:
-    :param ds_factor:
-    :return:
+    Parameters
+    ----------
+    ts : np.array
+        Time stamps
+    signal : np.array
+        Signal to be down-sampled
+    ds_factor : int or float
+        Factor by which to down-sample
+
+    Returns
+    -------
+    Down-sampled time stamps and time-series signal
+
     """
 
     signal_ds = np.mean(np.resize(signal, (int(np.floor(signal.size / ds_factor)), ds_factor)), 1)
@@ -75,11 +54,18 @@ def downsample(ts, signal, ds_factor):
 
 
 def remove_nans(trace):
-    """
-    Removes NaNs from an input array by interpolation
+    """Removes NaNs from an input array by interpolation
 
-    :param trace: (np.array) Input fluorescence trace
-    :return: Interpolated fluorescence trace with nan removed
+
+    Parameters
+    ----------
+    trace : np.array
+        Input trace containing nans
+
+    Returns
+    -------
+    trace : np.array
+        Interpolated fluorescence trace with nan removed
     """
 
     mask = np.isnan(trace)
@@ -88,19 +74,41 @@ def remove_nans(trace):
 
 
 def zscore_median(trace):
-    """
-    Takes the Z-score of a time series trace, using the median of the trace instead of the mean
+    """Takes the Z-score of a time series trace, using the median of the trace instead of the mean.
+    Ignores any NaNs in the trace during calculation.
 
-    :param trace: (np.array) Fluorescence trace
-    :return: (np.array) Z-scored fluorescence trace
+    Parameters
+    ----------
+    trace : np.array
+        Input signal
+
+    Returns
+    -------
+    Z-scored signal
     """
 
     return (trace - np.nanmedian(trace)) / np.nanstd(trace)
 
 
 def lernerFit(auto, gcamp, power=1):
-    # fitting like in LERNER paper
-    # https://github.com/talialerner
+    """Polynomial fitting of a fiber photometry signal as done in the Lerner paper
+    and done here https://github.com/talialerner
+
+    Parameters
+    ----------
+    auto : np.array or pd.Series object
+        Autofluorescence signal
+    gcamp : np.array or pd.Series object
+        GCaMP signal
+    power : int, default=1
+        polynomial order to fit
+
+    Returns
+    -------
+    controlFit : np.array
+        Polynomial fitting of the fiber photometry signal
+    """
+
     reg = np.polyfit(auto, gcamp, power)
     a = reg[0]
     b = reg[1]
@@ -109,12 +117,22 @@ def lernerFit(auto, gcamp, power=1):
 
 
 def butter_highpass(cutoff, order, fs):
-    """
-    Calculates the coefficients for a Butterworth high pass filter
+    """Calculates the coefficients for a Butterworth high pass filter
 
-    :param cutoff: the cutoff frequency in Hz
-    :param order: filter order
-    :param fs: sampling frequency in Hz
+
+    Parameters
+    ----------
+    cutoff : int or float
+        -3dB cutoff frequency in Hz
+    order : int
+        Filter order
+    fs : int
+        Signal sampling frequency
+
+    Returns
+    -------
+    b, a :
+        Filter coefficients
     """
 
     nyq = 0.5 * fs
@@ -124,12 +142,22 @@ def butter_highpass(cutoff, order, fs):
 
 
 def butter_lowpass(cutoff, order, fs):
-    """
-    Calculates the coefficients for a Butterworth low pass filter
+    """Calculates the coefficients for a Butterworth low pass filter
 
-    :param cutoff: the cutoff frequency in Hz
-    :param order: filter order
-    :param fs: sampling frequency in Hz
+
+    Parameters
+    ----------
+    cutoff : int or float
+        -3dB cutoff frequency in Hz
+    order : int
+        Filter order
+    fs : int
+        Signal sampling frequency
+
+    Returns
+    -------
+    b, a :
+        Filter coefficients
     """
 
     nyq = 0.5 * fs
@@ -139,11 +167,17 @@ def butter_lowpass(cutoff, order, fs):
 
 
 def find_lost_signal(trace):
-    """
-    Identifies when a signal was lost by searching for locations where the
-    signal derivative is zero
+    """Identifies when a signal was lost by searching for locations where the signal derivative is zero
 
-    :param trace: [np.array] Signal to be processed
+    Parameters
+    ----------
+    trace : np.array
+        Signal to be processed
+
+    Returns
+    -------
+    d0 : np.array
+        Indices of 'trace' array where the derivative goes to zero
     """
 
     d_trace = np.r_[0, np.abs(np.diff(trace))]

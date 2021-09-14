@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from os.path import join
 
 import paths
@@ -9,6 +9,21 @@ import functions_io as f_io
 
 
 def highlight_glm_episodes(time: np.array, glm_predictions: pd.DataFrame, glm_keys, ax=None):
+    """Overlay a fluorescence trace plot with the windows where the GLM predicts the scoring type of interest.
+
+    Parameters
+    ----------
+    time : np.array
+        Time series of the
+    glm_predictions : pd.DataFram
+    glm_keys : iterable object of str
+    ax : matplotlib figure axes
+
+    Returns
+    -------
+        matplotlib figure axes
+
+    """
 
     if ax is None:
         fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
@@ -26,22 +41,34 @@ def highlight_glm_episodes(time: np.array, glm_predictions: pd.DataFrame, glm_ke
     return ax
 
 
-def main(data: pd.DataFrame, glm_predictions: pd.DataFrame, glm_keys):
+def main(data_df: pd.DataFrame, glm_predictions: pd.DataFrame, glm_keys):
+    """
+
+    Parameters
+    ----------
+    data_df : pd.DataFrame
+    glm_predictions : pd.DataFrame
+    glm_keys : iterable object of strings
+
+    Returns
+    -------
+
+    """
 
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, figsize=(30, 15), sharex=False)
 
     # Plot the dF/F with manual behavior labels
-    fp.plot_fluorescence_min_sec(data['time'], data['zscore'], ax=ax1)
-    found_behaviors = np.unique(data['behavior'][data['behavior'] != ''])
-    _ = fp.highlight_episodes(data, 'behavior', found_behaviors, ax=ax1)
+    fp.plot_fluorescence_min_sec(data_df['time'], data_df['zscore'], ax=ax1)
+    found_behaviors = np.unique(data_df['behavior'][data_df['behavior'] != ''])
+    _ = fp.highlight_episodes(data_df, 'behavior', found_behaviors, ax=ax1)
     ax1.axhline(0, ls='--', c='gray')
     ax1.set_ylabel('Z-dF/F')
     ax1.set_title('Manual Behavior Labels')
 
     # Plot the dF/F with manual zone occupancy labels
-    fp.plot_fluorescence_min_sec(data['time'], data['zscore'], ax=ax2)
-    found_zones = np.unique(data['zone'][data['zone'] != ''])
-    _ = fp.highlight_episodes(data, 'zone', found_zones, ax=ax2)
+    fp.plot_fluorescence_min_sec(data_df['time'], data_df['zscore'], ax=ax2)
+    found_zones = np.unique(data_df['zone'][data_df['zone'] != ''])
+    _ = fp.highlight_episodes(data_df, 'zone', found_zones, ax=ax2)
     #ax2.axhline(2, ls='--', c='gray')
     ax2.axhline(0, ls='--', c='gray')
     # ax2.axhline(-2, ls='--', c='gray')
@@ -50,7 +77,7 @@ def main(data: pd.DataFrame, glm_predictions: pd.DataFrame, glm_keys):
     ax2.set_title('Manual Zone Occupancy')
 
     # Plot the dF/F with GLM predictions
-    fp.plot_fluorescence_min_sec(data['time'], data['zscore'], ax=ax3)
+    fp.plot_fluorescence_min_sec(data_df['time'], data_df['zscore'], ax=ax3)
     _ = highlight_glm_episodes(time, glm_predictions, glm_keys, ax=ax3)
     ax2.axhline(0, ls='--', c='gray')
     ax3.set_xlabel('Time')
@@ -72,7 +99,6 @@ def extract_glm_predictions(glm_data, mouse_id, day):
 
 
 if __name__ == "__main__":
-    "Code to test that the plotting works"
 
     mouse = 4
     day = 1

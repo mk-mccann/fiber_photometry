@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
-import pathlib
-from os.path import join
+from pathlib import Path
 from scipy.signal import savgol_filter
 from scipy.ndimage import percentile_filter
 from tqdm import tqdm
+from os.path import join
+
 
 # Import custom written functions
 import paths
@@ -124,20 +125,20 @@ def preprocess_fluorescence(data_df, channel_key=None):
 
 
 if __name__ == "__main__":
-    # Check that output dta directories are present
+    # Check that output data directories are present
     f_io.check_dir_exists(paths.processed_data_directory)
     f_io.check_dir_exists(paths.figure_directory)
 
     # Get a list of all files in the raw data directory
-    files = list(pathlib.Path(paths.raw_data_directory).glob('*.csv'))
+    files = list(Path(paths.raw_data_directory).glob('*.csv'))
 
     # tqdm only creates a progress bar for the loop
     for file in tqdm(files):
 
-        animal = str(file.stem.split('_')[-1])
-        day = int(file.stem.split('_')[0][-1])
+        animal = file.stem.split('_')[-1]
+        day = file.stem.split('_')[0][-1]
 
-        data = f_io.read_2_channel_fiber_photometry_csv(file.resolve())
+        data = f_io.load_2_channel_fiber_photometry_csv(file.resolve())
 
         # Add the identifying information to the dataframe
         data['animal'] = animal

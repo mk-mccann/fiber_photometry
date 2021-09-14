@@ -1,15 +1,25 @@
 import pandas as pd
 import os
+from warnings import warn
+from pathlib import Path
 
 import paths
+import functions_utils as f_util
 
 
 def read_summary_file(file_path):
-    """
-    Reads the Excel file containing paths for all experimental data and the correct columns to read FP data
+    """Reads the Excel file containing paths for all experimental data and the correct columns to read FP data.
+    Depreciated, as the summary file is no longer used.
 
-    :param file_path: (str) Path to the summary .xlsx file
-    :return: Pandas DataFrame containing all the information in the summary file.
+    Parameters
+    ----------
+    file_path : str of PathObject
+        Path to the summary .xlsx file
+
+    Returns
+    -------
+    all_data : pd.DataFrame
+        DataFrame containing all the information in the summary file.
     """
 
     summary_file = pd.ExcelFile(file_path, engine='openpyxl')
@@ -28,15 +38,22 @@ def read_summary_file(file_path):
 
 
 def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_directory):
-    """
-    Loads the Excel file with the behavior labels.
+    """Loads the Excel file with the behavior labels.
 
-    Takes the animal ID and directory containing the files as inputs.
+    Parameters
+    ----------
+    animal : int or float or str
+        Animal ID number
+    day : int or float or str
+        Experimental day number
+    base_directory : str or PathObject, optional
+        Path where processed data is located
 
-    :param animal: (int) Animal ID number
-    :param day: (int) Experimental day number
-    :param base_directory: (str) Path where processed data is located
-    :return: Pandas DataFrame of the manually labelled behaviors
+    Returns
+    -------
+    behavior_labels : pd.DataFrame
+        DataFrame of the manually labelled behaviors
+
     """
 
     label_filename = r"ID{}_Day{}.xlsx".format(animal, day)
@@ -45,33 +62,64 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
     return behavior_labels
 
 
+def check_preprocessed_df_for_scoring(exp_df, animal, day):
+
+    if 'behavior' not in exp_df.columns:
+        warn('Behavior labeling not present in DataFrame. Trying to load now...')
+        try:
+            behavior_labels = load_behavior_labels(animal, day)
+            behavior_bouts, zone_bouts = f_util.find_zone_and_behavior_episodes(exp_df, behavior_labels)
+            exp_df = f_util.add_episode_data(exp_df, behavior_bouts, zone_bouts)
+            return exp_df
+
+        except FileNotFoundError as err:
+            print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(animal, day, err))
+
+    else:
+        return exp_df
+
 def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
-    """
-    Loads the .h5 file of the processed data.
+    """Loads the .h5 file with the preprocessed fluorescence data.
 
-    Assumes the naming convention for the files follows the
-    animal#_day# format. Returns loaded data as a pandas DataFrame.
+    Parameters
+    ----------
+    animal : int or float or str
+        Animal ID number
+    day : int or float or str
+        Experimental day number
+    key : str, default='preprocessed'
+        Key to open the .h5 file
+    base_directory : str or PathObject, optional
+        Path where processed data is located
 
-    :param animal: (int) Animal ID number
-    :param day: (int) Experimental day number
-    :param key: (str) Key to open h5 file. Currently set ot "preprocessed"
-    :param base_directory: (str) Path where processed data is located
-    :return: Pandas DataFrame of the processed data
+    Returns
+    -------
+    preproccessed_data : pd.DataFrame
+        DataFrame of the preprocessed data
+
     """
 
     filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
-    preproc_data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
-    return preproc_data
+    preproccessed_data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
+    return preproccessed_data
 
 
-def read_1_channel_fiber_photometry_csv(file_path, file_metadata=None, column_names=None):
-    """
-    Reads the CSV containing fiber photometry data
+def load_1_channel_fiber_photometry_csv(file_path, columns_to_use=None, column_names=None):
+    """Reads the CSV containing fiber photometry data for single channel recordings
 
-    :param file_path: (str) Path to the raw data .csv
-    :param file_metadata: (pd.DataFrame) A row from a pandas DataFrame with the relevant columns to extract
-    :param column_names: (list) A list of strings with column names. Default is a NoneType.
-    :return: Pandas DataFrame with of the time-series fluorescence data.
+    Parameters
+    ----------
+    file_path : str or PathObject
+        Path to the raw data .csv
+    columns_to_use : iterable object, optional
+        Columns to extract from the csv
+    column_names : iterable object, optional
+        Names for the extracted columns of the csv
+
+    Returns
+    -------
+    fluor_df : pd.DataFrame
+        DataFrame of the time-series fluorescence data.
     """
 
     # We assume that we are only creating a dataframe to hold a single channel 
@@ -80,26 +128,30 @@ def read_1_channel_fiber_photometry_csv(file_path, file_metadata=None, column_na
     if column_names is None:
         column_names = ['time', 'auto', 'gcamp']
 
-    if file_metadata is None:
+    if columns_to_use is None:
         columns_to_use = [0, 1, 3]
-    else:
-        columns_to_use = [file_metadata['ts'], file_metadata['gcamp column'], file_metadata['auto column']]
 
-    fluor_df = pd.read_csv(file_path, skiprows=2, names=column_names, 
-    usecols=columns_to_use,
-    dtype=float
-    )
+    fluor_df = pd.read_csv(file_path,
+                           skiprows=2, names=column_names, usecols=columns_to_use, dtype=float)
 
     return fluor_df
 
 
-def read_2_channel_fiber_photometry_csv(file_path, column_names=None):
-    """
-    Reads the CSV containing fiber photometry data, but for two simultaneous recordings in a single animal
+def load_2_channel_fiber_photometry_csv(file_path, column_names=None):
+    """Reads the CSV containing fiber photometry data, but for two simultaneous recordings in a single animal
 
-    :param file_path: (str) Path to the raw data .csv
-    :param column_names: (list) A list of strings with column names. Default is a NoneType.
-    :return: Pandas DataFrame with of the time-series fluorescence data.
+
+    Parameters
+    ----------
+    file_path : str or PathObject
+        Path to the raw data .csv
+    column_names : iterable object, optional
+        Names for the extracted columns of the c
+
+    Returns
+    -------
+    fluor_df : pd.DataFrame
+        DataFrame of the time-series fluorescence data.
     """
 
     if column_names is None:
@@ -111,17 +163,77 @@ def read_2_channel_fiber_photometry_csv(file_path, column_names=None):
 
 
 def load_glm_h5(filename, key='nokey', base_directory=paths.modeling_data_directory):
-    """
-    Loads the .h5 file containing the GLM predictions
+    """Load the .h5 file with GLM classification for a given experiment
 
-    :param filename: (str) Filename of the GLM .h5 file
-    :param key: (str) Key to access the data in the .h5 file. Default is 'nokey'.
-    :param base_directory: (str) Path to the modeling data directory
-    :return: (pd.DataFrame) Loaded GLM predition dataframe
+    Parameters
+    ----------
+    filename : str or PathObject
+        Filename of the GLM .h5 file
+    key : str, default='nokey'
+        Key to access the data in the .h5 file.
+    base_directory : str or PathObject, optional
+        Path to the modeling data directory
+
+    Returns
+    -------
+    data : pd.DataFrame
+        DataFrame with the GLM classification
     """
 
     data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
     return data
+
+
+def load_all_experiments(base_directory=paths.processed_data_directory):
+    """Loads all experiments that have been scored and preprocessed into a giant dataframe
+
+    Returns
+    -------
+    DataFrame of all experiments with preprocessed fluorescence data and scoring
+    """
+
+    all_exps = list(Path(base_directory).glob('*.h5'))
+
+    df_list = []
+
+    # Create a GIANT dataframe with all experiments that are preprocessed and are scored
+    for file in all_exps:
+        # Get identifying info about the experiment
+        animal = str(file.stem.split('_')[0][-1])
+        day = int(file.stem.split('_')[1][-1])
+
+        try:
+            # load the processed data from one experiment at a time
+            exp = load_preprocessed_data(animal, day)
+
+            # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
+            try:
+                exp = check_preprocessed_df_for_scoring(exp, animal, day)
+            except FileNotFoundError as err:
+                print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
+                    animal, day, err))
+                continue
+
+            # if 'behavior' not in exp.columns:
+            #     warnings.warn('Behavior labeling not present in DataFrame. Trying to load now.')
+            #     try:
+            #         behavior_labels = load_behavior_labels(animal, day)
+            #         behavior_bouts, zone_bouts = f_util.find_zone_and_behavior_episodes(exp, behavior_labels)
+            #         exp = f_util.add_episode_data(exp, behavior_bouts, zone_bouts)
+            #     except FileNotFoundError as err:
+            #         print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
+            #             animal, day, err))
+            #         continue
+
+        except FileNotFoundError as error:
+            print(str(error))
+            continue
+
+        # If the selected dataframe is good, add it to the list
+        df_list.append(exp)
+
+    # Now create a giant dataframe from all of the experiments
+    return pd.concat(df_list).reset_index(drop=True)
 
 
 def check_dir_exists(path):
