@@ -29,9 +29,9 @@ def get_individual_episode_indices(data_df, key):
     if 'Zone' in key:
         # Here is a special case for the eating zone. We only want to look at times in the eating zone when the mouse
         # is actually eating
-        if ('Eating' in key) and ('+' in key):
+        if ('Eating' in key) and ('Plus' in key):
             episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] == 'Eating')].index.to_numpy())
-        elif ('Eating' in key) and ('-' in key):
+        elif ('Eating' in key) and ('Minus' in key):
             episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] != 'Eating')].index.to_numpy())
         else:
             episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
@@ -50,7 +50,7 @@ def get_individual_episode_indices(data_df, key):
     return valid_episode_idxs
 
 
-def get_episode_with_start_window(data_df, episodes, start_window=-5):
+def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
     """Checks the duration of an episode against a minimum duration to filter short scoring type epochs.
 
     Parameters
@@ -59,7 +59,7 @@ def get_episode_with_start_window(data_df, episodes, start_window=-5):
         DataFrame of aggregated experiments
     episodes : iterable object
         Episode indices for a given scoring type
-    start_window : int, default=-5
+    pre_episode_window : int, default=-5
         Duration in seconds to select before the onset of a scoring type.
 
     Returns
@@ -95,7 +95,7 @@ def get_episode_with_start_window(data_df, episodes, start_window=-5):
 
         ep_start_time = exp['time'][exp.index == ep_start_idx].item()
 
-        _, window_start_time = f_util.find_nearest(exp['time'], ep_start_time + start_window)
+        _, window_start_time = f_util.find_nearest(exp['time'], ep_start_time + pre_episode_window)
 
         try:
             start_idx = exp.loc[exp['time'] == window_start_time].index.item()
@@ -115,14 +115,14 @@ def get_episode_with_start_window(data_df, episodes, start_window=-5):
     return start_windows
 
 
-def extract_episodes(data_df, analysis_period):
+def extract_episodes(data_df, pre_episode_window):
     """Pulls the individual episodes of a given scoring type(s) from the data frame of aggregated experiments.
 
     Parameters
     ----------
     data_df : pd.DataFrame
         Data frame of the aggregated experiments
-    analysis_period : int
+    pre_episode_window : int
         The time in seconds before onset of a given scoring type to analyze
 
     Returns
@@ -137,8 +137,8 @@ def extract_episodes(data_df, analysis_period):
 
     # Build a special case to handle the Eating Zone: Animal eating vs animal not eating
     if 'Eating Zone' in output_dict.keys():
-        output_dict['Eating Zone +'] = []
-        output_dict['Eating Zone -'] = []
+        output_dict['Eating Zone Plus'] = []
+        output_dict['Eating Zone Minus'] = []
 
     # Loop through each of the scoring types you are interested in analyzing in order to extract them.
     for scoring_type in output_dict.keys():
@@ -148,7 +148,7 @@ def extract_episodes(data_df, analysis_period):
         # This is a check if there are episodes for a given scoring type. If there are, it adds them to the output dict
         if len(episodes_by_idx) > 0:
             # Extracts a window surrounding the start of an episode, as given by the variable 'start_window'
-            ep_start_windows = get_episode_with_start_window(data_df, episodes_by_idx, start_window=analysis_period)
+            ep_start_windows = get_episode_with_start_window(data_df, episodes_by_idx, pre_episode_window=pre_episode_window)
             scoring_type_df = pd.concat(ep_start_windows)
             output_dict[scoring_type] = scoring_type_df
         else:
@@ -157,21 +157,46 @@ def extract_episodes(data_df, analysis_period):
     return output_dict
 
 
+def create_episode_aggregate_h5(aggregate_df, pre_episode_window=-5, filename='aggregate_episodes.h5'):
+    """Function
+
+    Note that if there are no episodes of a scoring type in any experiment,
+    they are note saved into the output file.
+
+    Parameters
+    ----------
+    aggregate_df : pd.DataFrame
+            Data frame of the aggregated experiments
+    pre_episode_window : int
+        The time in seconds before onset of a given scoring type to analyze
+    filename : str, optional
+        Name of the aggregated episode file to be saved
+
+    """
+
+    # Run the main function
+    episodes = extract_episodes(aggregate_df, pre_episode_window)
+
+    # Save the dictionary to an .h5 file
+    if ('.h5' not in filename) or ('.h5py' not in filename):
+        filename = filename + '.h5'
+
+    f_io.save_pandas_dict_to_h5(episodes, filename)
+
+
 if __name__ == '__main__':
-    # Read the summary file as a giant pandas dataframe
+    # Read all preprocessed data into a giant pandas dataframe
+    # Note that here the behavior scoring must be done for an experiment to be
+    # included in the aggregated data frame
     all_exps = f_io.load_all_experiments()
 
-    # remove certain days/animals
-    # exps_to_run = all_exps.loc[all_exps["day"] == 3]    # select day 3 exps
-    # exps_to_run = all_exps.loc[all_exps["animal"] != 1]    # remove animal 1
-    exps_to_run = all_exps
-
-    # The period before/after the start of a scoring type
+    # The period before the start of an episode
     period = -5
 
     # Run the main function
-    all_episodes = extract_episodes(exps_to_run, period)
+    all_episodes = extract_episodes(all_exps, period)
 
     # Save the dictionary to an .h5 file
-    f_io.save_pandas_dict_to_h5(all_episodes, 'aggregated_behaviors.h5')
-
+    # Note that if there are no episodes of a scoring type in any experiment,
+    # they are note saved into this file.
+    f_io.save_pandas_dict_to_h5(all_episodes, 'aggregate_episodes.h5')

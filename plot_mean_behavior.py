@@ -1,55 +1,60 @@
+import warnings
+
 import numpy as np
 import matplotlib.pyplot as plt
-from os.path import join
+from os.path import join, exists
+
+import pandas as pd
 
 import paths
 import functions_utils as f_util
 import functions_io as f_io
 from functions_plotting import episode_colors, plot_mean_episode
+from aggregate_behaviors_across_experiments import create_episode_aggregate_h5
 
-
-def get_individual_episode_indices(data_df, key):
-    """Finds the DataFrame indices of all episodes of a given scoring type, and breaks them into individual episodes
-
-    Parameters
-    ----------
-    data_df : pd.DataFrame
-        Aggregated data from all experiments
-    key : str
-        Scoring type to be searched for
-
-    Returns
-    -------
-    valid_episode_idxs : list of np.arrays
-        Indices of valid episodes. If no episodes of a given scoring type, returns an empty list.
-
-    """
-
-    valid_episode_idxs = []
-
-    # Get the starting and ending indexes and times of all episodes of a given type
-    if 'Zone' in key:
-        # Here is a special case for the eating zone. We only want to look at times in the eating zone when the mouse
-        # is actually eating
-        if ('Eating' in key) and ('+' in key):
-            episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] == 'Eating')].index.to_numpy())
-        elif ('Eating' in key) and ('-' in key):
-            episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] != 'Eating')].index.to_numpy())
-        else:
-            episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
-    else:
-        episode_idxs = data_df[data_df['behavior'] == key].index.to_numpy()
-
-    # episodes_to_plot is a list of all indices fulfilling the behavior or zone occupancy condition.
-    # We want specific episodes, so split the list. If there are no episodes of a given behavior, return
-    # an empty list
-    if episode_idxs.size > 0:
-        breaks = np.where(np.diff(episode_idxs) != 1)[0] + 1  # add 1 to compensate for the diff
-        valid_episode_idxs = np.array_split(episode_idxs, breaks)
-    else:
-        pass
-
-    return valid_episode_idxs
+#
+# def get_individual_episode_indices(data_df, key):
+#     """Finds the DataFrame indices of all episodes of a given scoring type, and breaks them into individual episodes
+#
+#     Parameters
+#     ----------
+#     data_df : pd.DataFrame
+#         Aggregated data from all experiments
+#     key : str
+#         Scoring type to be searched for
+#
+#     Returns
+#     -------
+#     valid_episode_idxs : list of np.arrays
+#         Indices of valid episodes. If no episodes of a given scoring type, returns an empty list.
+#
+#     """
+#
+#     valid_episode_idxs = []
+#
+#     # Get the starting and ending indexes and times of all episodes of a given type
+#     if 'Zone' in key:
+#         # Here is a special case for the eating zone. We only want to look at times in the eating zone when the mouse
+#         # is actually eating
+#         if ('Eating' in key) and ('+' in key):
+#             episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] == 'Eating')].index.to_numpy())
+#         elif ('Eating' in key) and ('-' in key):
+#             episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] != 'Eating')].index.to_numpy())
+#         else:
+#             episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
+#     else:
+#         episode_idxs = data_df[data_df['behavior'] == key].index.to_numpy()
+#
+#     # episodes_to_plot is a list of all indices fulfilling the behavior or zone occupancy condition.
+#     # We want specific episodes, so split the list. If there are no episodes of a given behavior, return
+#     # an empty list
+#     if episode_idxs.size > 0:
+#         breaks = np.where(np.diff(episode_idxs) != 1)[0] + 1  # add 1 to compensate for the diff
+#         valid_episode_idxs = np.array_split(episode_idxs, breaks)
+#     else:
+#         pass
+#
+#     return valid_episode_idxs
 
 
 def check_episode_duration(data_df, episodes, min_dwell_time=0):
@@ -302,94 +307,103 @@ def plot_multiple_behaviors(data_dict, keys_to_plot, f_trace='zscore', channel_k
     return fig
 
 
-def extract_episodes(data_df, analysis_period, types_to_analyze, min_dwell_time=0, extract_first_n=-1):
-    """Pulls the individual episodes of a given scoring type(s) from the data frame of aggregated experiments.
-
-    Parameters
-    ----------
-    data_df : pd.DataFrame
-        Data frame of the aggregated experiments
-    analysis_period : tuple of ints
-        The time in seconds before and after onset of a a given scoring type to analyze
-    types_to_analyze: str or list of str
-        The scoring types to be analyzed. If set to "ALL", analyzes all behaviors as given in the 'episode_colors'
-        dictionary
-    min_dwell_time : int, optional
-        Minimum duration of a scoring type in seconds for it to be considered valid. Default is 0.
-    extract_first_n : int, optional
-        First N episodes to keep. Default is -1 (keep all episodes).
-
-    Returns
-    -------
-    output_dict : dict
-        Keys are the scoring types, and the contain list of pd.DataFrames for individual episodes
-
-    """
-
-    # Create a dictionary to hold the output traces
-    if types_to_analyze == 'ALL':
-        output_dict = {e: [] for e in episode_colors.keys()}
-    else:
-        output_dict = {e: [] for e in types_to_analyze}
-
-    # Build a special case to handle the Eating Zone: Animal eating vs animal not eating
-    if 'Eating Zone' in output_dict.keys():
-        output_dict['Eating Zone +'] = []
-        output_dict['Eating Zone -'] = []
-        types_to_analyze = output_dict.keys()
-
-    # Loop through each of the scoring types you are interested in analyzing in order to extract them.
-    for scoring_type in output_dict.keys():
-        # Finds individual episodes of a scoring type
-        episodes_by_idx = get_individual_episode_indices(data_df, scoring_type)
-
-        # This is a check if there are episodes for a given scoring type. If there are, it adds them to the output dict
-        if len(episodes_by_idx) > 0:
-            # Check the duration of each episode, and throw out any that are too short. Default is to keep everything.
-            episodes_by_duration = check_episode_duration(data_df, episodes_by_idx, min_dwell_time=min_dwell_time)
-            # Extracts a window surrounding the start of an episode, as given by the variable window_period
-            ep_start_windows = get_episode_start_window(data_df, episodes_by_duration, window_period=analysis_period)
-            # Take first n episodes of a behavior from each experiment. Default is to keep all (-1)
-            first_n_eps = take_first_n_episodes(ep_start_windows, n_to_keep=extract_first_n)
-            output_dict[scoring_type] = first_n_eps
-        else:
-            print('No episodes of {} found!'.format(scoring_type))
-
-    return output_dict
+# def extract_episodes(data_df, analysis_period, types_to_analyze, min_dwell_time=0, extract_first_n=-1):
+#     """Pulls the individual episodes of a given scoring type(s) from the data frame of aggregated experiments.
+#
+#     Parameters
+#     ----------
+#     data_df : pd.DataFrame
+#         Data frame of the aggregated experiments
+#     analysis_period : tuple of ints
+#         The time in seconds before and after onset of a a given scoring type to analyze
+#     types_to_analyze: str or list of str
+#         The scoring types to be analyzed. If set to "ALL", analyzes all behaviors as given in the 'episode_colors'
+#         dictionary
+#     min_dwell_time : int, optional
+#         Minimum duration of a scoring type in seconds for it to be considered valid. Default is 0.
+#     extract_first_n : int, optional
+#         First N episodes to keep. Default is -1 (keep all episodes).
+#
+#     Returns
+#     -------
+#     output_dict : dict
+#         Keys are the scoring types, and the contain list of pd.DataFrames for individual episodes
+#
+#     """
+#
+#     # Create a dictionary to hold the output traces
+#     if types_to_analyze == 'ALL':
+#         output_dict = {e: [] for e in episode_colors.keys()}
+#     else:
+#         output_dict = {e: [] for e in types_to_analyze}
+#
+#     # Build a special case to handle the Eating Zone: Animal eating vs animal not eating
+#     if 'Eating Zone' in output_dict.keys():
+#         output_dict['Eating Zone +'] = []
+#         output_dict['Eating Zone -'] = []
+#         types_to_analyze = output_dict.keys()
+#
+#     # Loop through each of the scoring types you are interested in analyzing in order to extract them.
+#     for scoring_type in output_dict.keys():
+#         # Finds individual episodes of a scoring type
+#         episodes_by_idx = get_individual_episode_indices(data_df, scoring_type)
+#
+#         # This is a check if there are episodes for a given scoring type. If there are, it adds them to the output dict
+#         if len(episodes_by_idx) > 0:
+#             # Check the duration of each episode, and throw out any that are too short. Default is to keep everything.
+#             episodes_by_duration = check_episode_duration(data_df, episodes_by_idx, min_dwell_time=min_dwell_time)
+#             # Extracts a window surrounding the start of an episode, as given by the variable window_period
+#             ep_start_windows = get_episode_start_window(data_df, episodes_by_duration, window_period=analysis_period)
+#             # Take first n episodes of a behavior from each experiment. Default is to keep all (-1)
+#             first_n_eps = take_first_n_episodes(ep_start_windows, n_to_keep=extract_first_n)
+#             output_dict[scoring_type] = first_n_eps
+#         else:
+#             print('No episodes of {} found!'.format(scoring_type))
+#
+#     return output_dict
 
 
 if __name__ == "__main__":
 
     # Check if the figure-saving directory exists
-    f_io.check_dir_exists(paths.figure_directory)    
+    f_io.check_dir_exists(paths.figure_directory)
 
-    # Read the summary file as a giant pandas dataframe
-    all_exps = f_io.load_all_experiments()
+    # Check if an aggregated episode file exists. If so, load it. If not,
+    # create it and load it.
+    aggregate_data_filename = 'aggregate_episodes.h5'
+    aggregate_data_file = join(paths.processed_data_directory, aggregate_data_filename)
 
-    # remove certain days/animals
-    # exps_to_run = all_exps.loc[all_exps["day"] == 3]    # select day 3 exps
-    # exps_to_run = all_exps.loc[all_exps["animal"] != 1]    # remove animal 1
-    exps_to_run = all_exps
+    if exists(aggregate_data_file):
+        aggregate_store = pd.HDFStore(aggregate_data_file)
+        aggregate_keys = aggregate_store.keys()
+        print(aggregate_keys)
+    else:
+        warnings.warn('Aggregate episode data file not found! Creating now.')
 
-    # Which behavior(s) do you want to look at?
+        # Read the summary file as a giant pandas dataframe
+        all_exps = f_io.load_all_experiments()
+
+        period = -5
+        create_episode_aggregate_h5(all_exps, pre_episode_window=period, filename=aggregate_data_filename)
+
+    # -- Which behavior(s) do you want to look at?
     # If set to 'ALL', generates means for all behaviors.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     behaviors_to_analyze = ['Eating', 'Eating Zone']
-    period = (-10, 10)    # In seconds
-    
-    # What is the minimum time an animal needs to spend performing a behavior or
+
+    # -- Remove certain days/animals
+    # exps_to_run = all_exps.loc[all_exps["day"] == 3]    # select day 3 exps
+    # exps_to_run = all_exps.loc[all_exps["animal"] != 1]    # remove animal 1
+    exps_to_run = all_exps
+
+    # -- What is the minimum time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     dwell_time = 0    # In seconds
 
-    # The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
+    # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
     first_n_eps = -1
-
-    # Run the main function
-    all_episodes = extract_episodes(exps_to_run, period, behaviors_to_analyze,
-                                    min_dwell_time=dwell_time, extract_first_n=first_n_eps)
-
 
     # Plot means for the individual behaviors (as selected in behaviors_to_analyze)
     # If you wanted to plot for a DC experiment, it would look like

@@ -233,6 +233,16 @@ def load_all_experiments(base_directory=paths.processed_data_directory):
 
 
 def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_data_directory):
+    """
+
+    Parameters
+    ----------
+    input_dict
+    filename
+    base_directory
+
+    """
+
     store = pd.HDFStore(os.path.join(base_directory, filename))
 
     for key in input_dict:
@@ -240,7 +250,8 @@ def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_
         if isinstance(data, list):
             continue
         else:
-            store.put(key, data)
+            store_name = key.lower().replace(' ', '_')
+            store.put(store_name, data)
 
     store.close()
 
@@ -258,8 +269,6 @@ def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_
 #     -------
 #
 #     """
-
-
 
 
 def check_dir_exists(path):
