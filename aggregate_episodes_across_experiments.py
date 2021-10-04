@@ -105,6 +105,7 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
         ep_df = data_df.iloc[start_idx:ep_end_idx].copy()
         ep_df['exp_episode_number'] = exp_ep_number
         ep_df['overall_episode_number'] = overall_ep_number
+        ep_df['normalized_time'] = ep_df['time'] - ep_start_time
         start_windows.append(ep_df)
 
         last_animal = float(animal)
@@ -198,5 +199,6 @@ if __name__ == '__main__':
 
     # Save the dictionary to an .h5 file
     # Note that if there are no episodes of a scoring type in any experiment,
-    # they are note saved into this file.
+    # they are not saved into this file.
     f_io.save_pandas_dict_to_h5(all_episodes, 'aggregate_episodes.h5')
+    print('Done!')

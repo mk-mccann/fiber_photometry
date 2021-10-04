@@ -239,7 +239,8 @@ def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_
     ----------
     input_dict
     filename
-    base_directory
+    base_directory : str or PathObject, optional
+        Path to the preprocessed data directory
 
     """
 
@@ -256,19 +257,25 @@ def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_
     store.close()
 
 
-# def load_aggregated_episodes(filename, key=None, base_directory=paths.processed_data_directory):
-#     """
-#
-#     Parameters
-#     ----------
-#     filename
-#     key
-#     base_directory
-#
-#     Returns
-#     -------
-#
-#     """
+def load_aggregated_episodes(store, key):
+    """
+
+    Parameters
+    ----------
+    filename
+    key
+    base_directory : str or PathObject, optional
+        Path to the preprocessed data directory
+
+    Returns
+    -------
+
+    """
+
+    key = key.lower.replace(' ', '_')
+    return store.get(key)
+
+
 
 
 def check_dir_exists(path):

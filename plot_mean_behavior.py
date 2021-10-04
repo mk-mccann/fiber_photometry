@@ -11,7 +11,7 @@ import functions_utils as f_util
 import functions_io as f_io
 from functions_aggregation import take_first_n_episodes, check_episode_duration
 from functions_plotting import episode_colors, plot_mean_episode
-from aggregate_behaviors_across_experiments import create_episode_aggregate_h5
+from aggregate_episodes_across_experiments import create_episode_aggregate_h5
 
 #
 # def get_individual_episode_indices(data_df, key):
