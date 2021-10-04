@@ -193,7 +193,7 @@ def remove_baseline(time, traces, norm_start=-5, norm_end=0):
 
     start_idx, _ = find_nearest(time, norm_start)
     end_idx, _ = find_nearest(time, norm_end)
-    baseline = np.median(traces[:, start_idx:end_idx], axis=-1)
+    baseline = np.median(traces[:, start_idx:end_idx+1], axis=-1)
     traces = traces - np.expand_dims(baseline, axis=1)
     return traces
 

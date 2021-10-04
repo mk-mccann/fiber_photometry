@@ -93,24 +93,27 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
         else:
             exp_ep_number += 1
 
+        # Find the start time of the episode in the aggregated dataframe, and the beginning of the start window
         ep_start_time = exp['time'][exp.index == ep_start_idx].item()
-
         _, window_start_time = f_util.find_nearest(exp['time'], ep_start_time + pre_episode_window)
 
+        # Extract the window of interest
         try:
             start_idx = exp.loc[exp['time'] == window_start_time].index.item()
         except IndexError:
             start_idx = exp.loc[exp['time'] == exp['time'].min()].index.item()
 
         ep_df = data_df.iloc[start_idx:ep_end_idx].copy()
+
+        # Add some metadata to the episode dataframe
         ep_df['exp_episode_number'] = exp_ep_number
         ep_df['overall_episode_number'] = overall_ep_number
         ep_df['normalized_time'] = ep_df['time'] - ep_start_time
+
         start_windows.append(ep_df)
 
         last_animal = float(animal)
         last_day = int(day)
-
         overall_ep_number += 1
 
     return start_windows
