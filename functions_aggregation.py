@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 
@@ -14,19 +13,23 @@ def filter_first_n_episodes(episodes, n_to_keep=-1):
 
         Returns
         -------
-        episodes_to_keep : pd.DataFrame
+        valid_episodes : pd.DataFrame
             First N episodes of a desired scoring type in each experiment
         """
 
     if n_to_keep == -1:
-        episodes_to_keep = episodes
-        return episodes_to_keep
+        valid_episodes = episodes
+        return valid_episodes
     elif n_to_keep == 0:
         print('Cannot keep 0 episodes!')
         raise IndexError
     else:
-        episodes_to_keep = episodes[episodes['exp_episode_number'] <= n_to_keep]
-        return episodes_to_keep
+        valid_episodes = episodes[episodes['exp_episode_number'] <= n_to_keep]
+
+    if valid_episodes.empty:
+        raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
+    else:
+        return valid_episodes
 
 
 def sort_episodes_by_duration(episodes, ascending=True, key='overall_episode_number'):
@@ -47,7 +50,11 @@ def filter_episodes_by_duration(episodes, duration_cutoff, filter_type='greater_
         raise AttributeError('This is not a valid filter type!')
 
     valid_episodes = episodes[episodes[key].isin(good_episodes)]
-    return valid_episodes
+
+    if valid_episodes.empty:
+        raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
+    else:
+        return valid_episodes
 
 
 def filter_episodes_for_overlap(episodes, index_key='overall_episode_number'):
@@ -64,7 +71,10 @@ def filter_episodes_for_overlap(episodes, index_key='overall_episode_number'):
 
     valid_episodes = episodes[episodes[index_key].isin(good_episodes)]
 
-    return valid_episodes
+    if valid_episodes.empty:
+        raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
+    else:
+        return valid_episodes
 
 
 def select_analysis_window(episodes, window, time_trace='normalized_time'):
