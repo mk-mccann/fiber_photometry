@@ -246,7 +246,7 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None):
 
     if plot_singles:
         for trace in traces:
-            plt.plot(time, trace)
+            plt.plot(time, trace, c='gray', alpha=0.5)
 
     plt.fill_between(time, mean_trace - sem_trace, mean_trace + sem_trace, alpha=0.2)
     plt.plot(time, mean_trace, c='k', linewidth=2)

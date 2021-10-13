@@ -5,8 +5,13 @@
 - (DONE) DF for fluorescence data and behavior data combined
     - need to look at Onur's code for generating binary df for behaviors and zones
 - (DONE) Saving in H5 files instead of npy files
+- (DONE) Naming convention for files
+- (DONE) Generate one big h5 file with all instances of all behaviors with preceding 5s window
 - Look at interpolation of large jumps
-- Naming convention for files
+- (DONE) Get the length of behavior duration from the excel spreadsheets and order them from shortest to longest or vice
+versa
+- (DONE) Filtering based on dwell time
+- (DONE) Filtering based on 5s for no behavior
 
 DATA
 ____

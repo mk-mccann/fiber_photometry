@@ -232,6 +232,52 @@ def load_all_experiments(base_directory=paths.processed_data_directory):
     return pd.concat(df_list).reset_index(drop=True)
 
 
+def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_data_directory):
+    """
+
+    Parameters
+    ----------
+    input_dict
+    filename
+    base_directory : str or PathObject, optional
+        Path to the preprocessed data directory
+
+    """
+
+    store = pd.HDFStore(os.path.join(base_directory, filename))
+
+    for key in input_dict:
+        data = input_dict[key]
+        if isinstance(data, list):
+            continue
+        else:
+            store_name = key.lower().replace(' ', '_')
+            store.put(store_name, data)
+
+    store.close()
+
+
+def load_aggregated_episodes(store, key):
+    """
+
+    Parameters
+    ----------
+    filename
+    key
+    base_directory : str or PathObject, optional
+        Path to the preprocessed data directory
+
+    Returns
+    -------
+
+    """
+
+    key = key.lower.replace(' ', '_')
+    return store.get(key)
+
+
+
+
 def check_dir_exists(path):
     """
     Checks if a given directory exists. If not, it creates it.
