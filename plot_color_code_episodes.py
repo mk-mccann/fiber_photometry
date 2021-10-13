@@ -78,7 +78,7 @@ def main(data_df, f_trace='zscore', channel_key=None):
 
 if __name__ == "__main__":
 
-    animal = 4.1
+    animal = 4.2
     day = 1
 
     # Check that the figure directory exists
