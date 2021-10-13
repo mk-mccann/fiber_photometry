@@ -85,12 +85,6 @@ def preprocess_fluorescence(data_df, channel_key=None):
     gcamp = savgol_filter(gcamp, 21, 2)
     auto = savgol_filter(auto, 21, 2)
 
-    # fitting like in LERNER paper (calcuated but not used)
-    controlFit = fpp.lernerFit(auto, gcamp)
-    # dff_LERNER = (gcamp - controlFit) / controlFit
-    # If you want to use the LERNER fit, you need to write code to calculate the
-    # z-score from this variable
-
     # Compute DFF
     dff = (gcamp - auto) / auto
     dff = dff * 100
@@ -108,6 +102,12 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # auto[shared_zero] = np.NaN
     # dff[shared_zero] = np.NaN
     # zdff[shared_zero] = np.NaN
+    
+     # fitting like in LERNER paper
+    controlFit = fpp.lernerFit(auto, gcamp)
+    dff = (gcamp - controlFit) / controlFit
+    zdff = fpp.zscore_median(dff)
+    
 
     # Save the data
     if channel_key is None:

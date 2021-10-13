@@ -24,7 +24,22 @@ episode_colors = {'Eating': 'cyan',
                   'Eating Zone': 'b',
                   'Marble Zone': 'g',
                   'Nesting Zone': 'gray',
-                  'Social Interaction Zone': 'teal'
+                  'Social Interaction Zone': 'teal',
+                  'Eating Window': "lavender",
+                  'Druckluft': 'firebrick',
+                  'Investigated Passive': 'violet',
+                  'Investigated Active': 'darkmagenta',
+                  'Investigating': 'navy',
+                  'Low Activity':'blanchedalmond',
+                  'Rearing': 'lightseagreen',
+                  'Interspersed Digging': 'steelblue',
+                  'Poke': 'yellow',
+                  'Nose Poke': 'yellowgreen',
+                  'Squeezed Zone': 'mediumvioletred',
+                  'Water Spray': 'deepskyblue',
+                  'Peanut Jar': 'sienna',
+                  'Jump': 'coral',
+                  'Edge Zone':'brown'
                   }
 
 
