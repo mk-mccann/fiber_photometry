@@ -1,9 +1,9 @@
 from os.path import join
 
 
-fp_data_root_dir = r"J:\Alja Podgornik\FP_Alja\August '21 GENSAT\Multimaze"
+fp_data_root_dir = r"J:\Alja Podgornik\FP_Alja\October '21 FEEDING EXPERIMENTS\Feeding_GRP_Oct21"
 
-csv_directory = join(fp_data_root_dir, "raw_data")
+raw_data_directory = join(fp_data_root_dir, "raw_data")
 
 behavior_scoring_directory = join(fp_data_root_dir, "behavior_scoring")
 

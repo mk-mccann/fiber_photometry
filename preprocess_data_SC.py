@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from pathlib import Path
 from os.path import join
-from scipy.signal import savgol_filter
+from scipy.signal import savgol_filter, filtfilt
 from scipy.ndimage import percentile_filter
 from tqdm import tqdm
 
@@ -62,7 +62,7 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # auto_d0 = fpp.find_lost_signal(auto)
     # shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0))) # identifies the indices if signal is lost in at least one channel
 
-    # # remove slow decay with a high pass filter
+    # remove slow decay with a high pass filter
     # cutoff = 0.1    # Hz
     # order = 3
     # fs = 40         # Hz
@@ -98,8 +98,8 @@ def preprocess_fluorescence(data_df, channel_key=None):
 
     # fitting like in LERNER paper (calcuated but not used)
     controlFit = fpp.lernerFit(auto, gcamp)
-    # dff_LERNER = (gcamp - controlFit) / controlFit
-    # zdff_LERNER = fpp.zscore_median(dff_LERNER)
+    dff = (gcamp - controlFit) / controlFit
+    zdff = fpp.zscore_median(dff)
 
     # # Remove sections where the signal is lost
     # gcamp[shared_zero] = np.NaN
@@ -152,7 +152,7 @@ if __name__ == "__main__":
         data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
 
         # Make a plot of the zdff and save it.
-        ax = plot_fluorescence_min_sec(data['time'], data['zscore'])
+        ax = plot_fluorescence_min_sec(data['time'], data['gcamp'])
         ax.set_title('Animal {} Day {} Z-dF/F'.format(animal, day))
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Z-dF/F')
