@@ -33,9 +33,10 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore', channel_key=None
 
     Keyword Arguments
     -----------------
-        norm_start : float, int
-            Number of seconds before the start of an episode from which to
-            calculate baseline for the trace
+    norm_start : float, int
+        Time (normalized) at which trace baseline calculation starts
+    norm_end : float, int
+        Time (normalized) at which trace baseline calculation ends
 
     Returns
     -------
@@ -48,6 +49,7 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore', channel_key=None
 
     # Handle keyword args
     norm_start = kwargs.get('norm_start', -5)
+    norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
         f_trace = f_trace
@@ -66,7 +68,7 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore', channel_key=None
     time = np.nanmean(times, axis=0)
 
     # Remove the baseline from the fluorescence traces in the window
-    traces = remove_baseline(time, traces, norm_start=norm_start)
+    traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
     num_episodes = traces.shape[0]
     print("Number of {} episodes = {}".format(scoring_type, num_episodes))

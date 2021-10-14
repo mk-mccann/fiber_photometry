@@ -35,14 +35,16 @@ def plot_trace_raster(episodes, scoring_type,
 
     Keyword Arguments
     -----------------
-        norm_start : float, int
-            Number of seconds before the start of an episode from which to
-            calculate baseline for the trace
+    norm_start : float, int
+        Time (normalized) at which trace baseline calculation starts
+    norm_end : float, int
+        Time (normalized) at which trace baseline calculation ends
 
     """
 
     # Handle keyword args
     norm_start = kwargs.get('norm_start', -5)
+    norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
         f_trace = f_trace
@@ -61,7 +63,7 @@ def plot_trace_raster(episodes, scoring_type,
     time = np.nanmean(times, axis=0)
 
     # Remove the baseline from the fluorescence traces in the window
-    traces = remove_baseline(time, traces, norm_start=norm_start)
+    traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
     # Create the figure
     fig, axes = plt.subplots(nrows=traces.shape[0], ncols=1, figsize=(10, 2*traces.shape[0]))

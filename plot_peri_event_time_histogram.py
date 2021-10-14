@@ -41,9 +41,11 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     Keyword Arguments
     -----------------
-        norm_start : float, int
-            Number of seconds before the start of an episode from which to
-            calculate baseline for the trace
+    norm_start : float, int
+        Time (normalized) at which trace baseline calculation starts
+    norm_end : float, int
+        Time (normalized) at which trace baseline calculation ends
+
 
     See Also
     --------
@@ -54,6 +56,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     # Handle keyword args
     norm_start = kwargs.get('norm_start', -5)
+    norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
         f_trace = f_trace
@@ -72,7 +75,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
     time = np.nanmean(times, axis=0)
 
     # Remove the baseline from the fluorescence traces in the window
-    traces = remove_baseline(time, traces, norm_start=norm_start)
+    traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
     # Bin times
     min_time = np.floor(times[0][0])
