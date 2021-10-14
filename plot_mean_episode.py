@@ -10,7 +10,7 @@ from functions_utils import list_lists_to_array, remove_baseline
 from aggregate_episodes_across_experiments import create_episode_aggregate_h5
 
 
-def plot_mean_episode(episodes, scoring_type, f_trace='zscore', channel_key=None, plot_singles=False,
+def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, plot_singles=False,
                       index_key='overall_episode_number', **kwargs):
     """Creates and saves a plot of the mean fluorescence trace across all episodes of the individual scoring types
     contained in the input 'data_dict'. Plots mean + SEM.
@@ -21,8 +21,9 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore', channel_key=None
         pd.DataFrames containing fluorescence data for all episodes of a scoring types
     scoring_type: str
         Name of the episodes being plotting
-    f_trace : str, default='zscore'
-        The fluorescence trace to be plotted. Options are ['auto', 'gcamp', 'dff', 'zscore'].
+    f_trace : str, default='zscore_Lerner'
+        The fluorescence trace to be plotted.
+        Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner].
     channel_key : str, optional, default=None
         Fluorescence channel to use. Only used in dual-fiber recordings. Options are ['anterior', 'posterior'].
         Default=None for single-fiber recordings.

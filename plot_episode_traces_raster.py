@@ -11,7 +11,7 @@ from functions_utils import list_lists_to_array, remove_baseline
 
 
 def plot_trace_raster(episodes, scoring_type,
-                      f_trace='zscore', channel_key=None,
+                      f_trace='zscore_Lerner', channel_key=None,
                       index_key='overall_episode_number', **kwargs):
 
     """ Plots a peri-event time histogram of individual episodes of some behavior.
@@ -22,8 +22,9 @@ def plot_trace_raster(episodes, scoring_type,
         pd.DataFrames containing fluorescence data for all episodes of a scoring types
     scoring_type: str
         Name of the episodes being plotting
-    f_trace : str, default='zscore'
-        The fluorescence trace to be plotted. Options are ['auto', 'gcamp', 'dff', 'zscore'].
+    f_trace : str, default='zscore_Lerner'
+        The fluorescence trace to be plotted.
+        Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner].
     channel_key : str, optional, default=None
         Fluorescence channel to use. Only used in dual-fiber recordings. Options are ['anterior', 'posterior'].
         Default=None for single-fiber recordings.
