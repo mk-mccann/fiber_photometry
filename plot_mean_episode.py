@@ -155,11 +155,11 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = 'ALL'    # ['Eating', 'Eating Zone Plus']
+    episodes_to_analyze = ['Eating Window', 'Eating', 'Eating Zone Plus']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 35    # Seconds
+    episode_duration_cutoff = 5    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 10    # Seconds
@@ -193,7 +193,7 @@ if __name__ == "__main__":
             try:
                 episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
                 episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
-                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, -1)
+                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
             except ValueError as e:
                 print(e)
                 print('Error in filtering parameters for {}! Change the parameters and re-run.'.format(episode_name))
@@ -208,7 +208,7 @@ if __name__ == "__main__":
             # plot_individual_behaviors(episodes_to_run, f_trace='zscore', channel_key='anterior))
             plot_mean_episode(episodes_to_run, episode_name, plot_singles=True)
 
-            # plt.show()
+            plt.show()
 
         aggregate_store.close()
 

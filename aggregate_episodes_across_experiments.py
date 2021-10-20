@@ -34,7 +34,7 @@ def get_individual_episode_indices(data_df, key):
         else:
             combined_episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
     else:
-        combined_episode_idxs = data_df[data_df['behavior'] == key].index.to_numpy()
+        combined_episode_idxs = data_df[data_df[key] == key].index.to_numpy()
 
     # episodes_to_plot is a list of all indices fulfilling the behavior or zone occupancy condition.
     # We want specific episodes, so split the list. If there are no episodes of a given behavior, return
@@ -45,12 +45,12 @@ def get_individual_episode_indices(data_df, key):
         
         if (key == 'Eating Zone Plus'):
             for ep in split_episode_idxs:    
-                ep_df_behav = data_df['behavior'].iloc[ep]
+                ep_df_behav = data_df['Eating'].iloc[ep]
                 if 'Eating' in ep_df_behav.unique():
                     valid_episode_idxs.append(ep)
         elif (key == 'Eating Zone Minus'):
             for ep in split_episode_idxs:    
-                ep_df_behav = data_df['behavior'].iloc[ep]
+                ep_df_behav = data_df['Eating'].iloc[ep]
                 if 'Eating' not in ep_df_behav.unique():
                     valid_episode_idxs.append(ep)
         else:

@@ -27,7 +27,8 @@ def filter_first_n_episodes(episodes, n_to_keep=-1):
         valid_episodes = episodes[episodes['exp_episode_number'] <= n_to_keep]
 
     if valid_episodes.empty:
-        raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
+        raise ValueError
+        # raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
     else:
         return valid_episodes
 
@@ -52,7 +53,8 @@ def filter_episodes_by_duration(episodes, duration_cutoff, filter_type='greater_
     valid_episodes = episodes[episodes[key].isin(good_episodes)]
 
     if valid_episodes.empty:
-        raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
+        raise ValueError
+        # raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
     else:
         return valid_episodes
 
@@ -72,7 +74,8 @@ def filter_episodes_for_overlap(episodes, index_key='overall_episode_number'):
     valid_episodes = episodes[episodes[index_key].isin(good_episodes)]
 
     if valid_episodes.empty:
-        raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
+        raise ValueError
+        # raise ValueError('The filtered DataFrame is empty! No episodes left to analyze!')
     else:
         return valid_episodes
 

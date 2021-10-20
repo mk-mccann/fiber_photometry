@@ -78,7 +78,7 @@ def main(data_df, f_trace='zscore', channel_key=None):
 
 if __name__ == "__main__":
 
-    animal = 4.2
+    animal = 4
     day = 1
 
     # Check that the figure directory exists
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # Some error catching - if the behavior data is not in the df, raise an error and quit
     try:
         data = f_io.check_preprocessed_df_for_scoring(data, animal, day)
-        fig = main(data)
+        fig = main(data, channel_key='posterior')
 
         plt.suptitle(" ".join(('Animal {} Day {}'.format(animal, day), 'Z-dF/F', 'behavior segmentation')))
         plt.savefig(join(paths.figure_directory, "_".join(('animal{}_day{}'.format(animal, day), 'zdff', 'behavior_seg')) + ".png"))

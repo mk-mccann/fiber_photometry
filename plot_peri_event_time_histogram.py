@@ -54,6 +54,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     # Handle keyword args
     norm_start = kwargs.get('norm_start', -5)
+    norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
         f_trace = f_trace
@@ -123,12 +124,12 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    # episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Eating', 'Grooming']
+    #episodes_to_analyze = 'ALL'
+    episodes_to_analyze = ['Eating Zone Minus']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 35    # Seconds
+    episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 10    # Seconds
