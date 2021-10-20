@@ -25,7 +25,7 @@ episode_colors = {'Eating': 'cyan',
                   'Marble Zone': 'g',
                   'Nesting Zone': 'gray',
                   'Social Interaction Zone': 'teal',
-                  'Eating Window': "lavender",
+                  'Eating Window': "cyan",
                   'Druckluft': 'firebrick',
                   'Investigated Passive': 'violet',
                   'Investigated Active': 'darkmagenta',
@@ -41,6 +41,17 @@ episode_colors = {'Eating': 'cyan',
                   'Jump': 'coral',
                   'Edge Zone': 'brown'
                   }
+
+
+fluorescence_axis_labels = {'auto_raw': 'Fluorescense (A.U.)',
+                            'gcamp_raw': 'Fluorescense (A.U.)',
+                            'auto': 'Fluorescense (A.U.)',
+                            'gcamp': 'Fluorescense (A.U.)',
+                            'dff': 'dF/F',
+                            'dff_Lerner': 'dF/F',
+                            'zscore': 'Z-dF/F',
+                            'zscore_Lerner': 'Z-dF/F',
+                            }
 
 
 def get_mpl_datetime(time):

@@ -7,7 +7,7 @@ from scipy.stats import binned_statistic
 
 import paths
 import functions_aggregation as f_aggr
-from functions_utils import list_lists_to_array, remove_baseline
+from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 
 
 def plot_peth(episodes, bin_duration, scoring_type,
@@ -55,7 +55,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     """
 
-    # Handle keyword args
+    # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
     norm_start = kwargs.get('norm_start', -5)
     norm_end = kwargs.get('norm_end', 0)
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
     aggregate_data_filename = 'aggregate_episodes.h5'
-    aggregate_data_file = join(paths.processed_data_directory, aggregate_data_filename)
+    aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
     # If set to 'ALL', generates means for all episodes individually.
@@ -141,8 +141,13 @@ if __name__ == "__main__":
     # If you only wanted to keep the first two, use first_n_eps = 2
     first_n_eps = -1
 
-    # -- Length of the bins for the histgram
+    # -- Length of the bins for the histogram
     bin_length = 0.5  # Seconds
+
+    # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
+    # the episode trace.
+    norm_start = -5
+    norm_end = -2
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)
@@ -179,12 +184,19 @@ if __name__ == "__main__":
             # Select the amount of time after the onset of an episode to look at
             episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, post_onset_window)
 
-            # Plot peri-event time histogram for the individual behaviors
-            # (as selected in 'episodes_to_analyze') If you wanted to plot for a
-            # DC experiment, it would look like
-            # plot_peth(episodes_to_run, bin_length, episode_name, f_trace='zscore', channel_key='anterior'))
-            plot_peth(episodes_to_run, bin_length, episode_name)
+            # Check if this is a dual-fiber experiment
+            is_DC = check_if_dual_channel_recording(episodes_to_run)
 
+            # Plot peri-event time histogram for the individual behaviors (as selected in 'episodes_to_analyze')
+            if is_DC:
+                channels = ['anterior', 'posterior']
+                for channel in channels:
+                    plot_peth(episodes_to_run, bin_length, episode_name,
+                              norm_start=norm_start, norm_end=norm_end,
+                              channel_key=channel)
+            else:
+                plot_peth(episodes_to_run, bin_length, episode_name,
+                          norm_start=norm_start, norm_end=norm_end)
             # plt.show()
 
         aggregate_store.close()

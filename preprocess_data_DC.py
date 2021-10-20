@@ -114,15 +114,15 @@ def preprocess_fluorescence(data_df, channel_key=None):
         data_df['gcamp_' + channel_key] = gcamp
         data_df['dff_' + channel_key] = dff
         data_df['zscore_' + channel_key] = zdff
-        data_df['dff_' + channel_key + '_Lerner'] = dff_Lerner
-        data_df['zscore_' + channel_key + '_Lerner'] = zdff_Lerner
+        data_df['dff_Lerner_' + channel_key] = dff_Lerner
+        data_df['zscore_Lerner_' + channel_key] = zdff_Lerner
 
     return data_df
 
 
 if __name__ == "__main__":
     # Check that output data directories are present
-    f_io.check_dir_exists(paths.processed_data_directory)
+    f_io.check_dir_exists(paths.preprocessed_data_directory)
     f_io.check_dir_exists(paths.figure_directory)
 
     # Get a list of all files in the raw data directory
@@ -137,8 +137,8 @@ if __name__ == "__main__":
         data = f_io.load_2_channel_fiber_photometry_csv(file.resolve())
 
         # Add the identifying information to the dataframe
-        data['animal'] = animal
-        data['day'] = day
+        data.insert(0, 'animal', animal)
+        data.insert(1, 'day', day)
 
         # Preprocess the fluorescence with the given channels
         data = preprocess_fluorescence(data, 'anterior')
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
         # save the data as an .h5 file
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
-        data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
+        data.to_hdf(join(paths.preprocessed_data_directory, filename), key='preprocessed', mode='w')
 
         # Make a plot of the zdffs and save it.
         fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)

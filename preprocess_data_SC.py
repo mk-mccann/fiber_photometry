@@ -113,15 +113,15 @@ def preprocess_fluorescence(data_df, channel_key=None):
         data_df['gcamp_' + channel_key] = gcamp
         data_df['dff_' + channel_key] = dff
         data_df['zscore_' + channel_key] = zdff
-        data_df['dff_' + channel_key + '_Lerner'] = dff_Lerner
-        data_df['zscore_' + channel_key + '_Lerner'] = zdff_Lerner
+        data_df['dff_Lerner_' + channel_key] = dff_Lerner
+        data_df['zscore_Lerner_' + channel_key] = zdff_Lerner
 
     return data_df
 
 
 if __name__ == "__main__":
     # Check that output data directories are present
-    f_io.check_dir_exists(paths.processed_data_directory)
+    f_io.check_dir_exists(paths.preprocessed_data_directory)
     f_io.check_dir_exists(paths.figure_directory)
 
     # Get a list of all files in the raw data directory
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
         # save the data as an .h5 file
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
-        data.to_hdf(join(paths.processed_data_directory, filename), key='preprocessed', mode='w')
+        data.to_hdf(join(paths.preprocessed_data_directory, filename), key='preprocessed', mode='w')
 
         # Make a plot of the zdff and save it.
         ax = plot_fluorescence_min_sec(data['time'], data['gcamp'])

@@ -212,3 +212,13 @@ def median_of_time_window(time: float, trace, t_start, t_end):
 
     time_mask = (time >= t_start) & (time <= t_end)
     return np.median(trace[time_mask])
+
+
+def check_if_dual_channel_recording(data_df):
+    is_DC = False
+
+    for col in list(data_df.columns):
+        if ('anterior' in col) or ('posterior' in col):
+            is_DC = True
+
+    return is_DC

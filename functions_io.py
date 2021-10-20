@@ -77,7 +77,7 @@ def check_preprocessed_df_for_scoring(exp_df, animal, day):
         return exp_df
 
 
-def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
+def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.preprocessed_data_directory):
     """Loads the .h5 file with the preprocessed fluorescence data.
 
     Parameters
@@ -184,7 +184,7 @@ def load_glm_h5(filename, key='nokey', base_directory=paths.modeling_data_direct
     return data
 
 
-def load_all_experiments(base_directory=paths.processed_data_directory):
+def load_all_experiments(base_directory=paths.preprocessed_data_directory):
     """Loads all experiments that have been scored and preprocessed into a giant dataframe
 
     Returns
@@ -236,7 +236,7 @@ def load_all_experiments(base_directory=paths.processed_data_directory):
     return pd.concat(df_list).reset_index(drop=True)
 
 
-def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.processed_data_directory):
+def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.preprocessed_data_directory):
     """
 
     Parameters

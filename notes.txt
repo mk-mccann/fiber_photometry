@@ -1,17 +1,6 @@
-- (DONE) Want to have a function that grabs the first n episodes of a given behavior in an experiment and plot the mean
-+ sem
-- (DONE) Want to have e.g. eating zone episodes only when animal was actually eating vs EZ with not eating
-    - Dwell filter can only be used for eating
-- (DONE) DF for fluorescence data and behavior data combined
-    - need to look at Onur's code for generating binary df for behaviors and zones
-- (DONE) Saving in H5 files instead of npy files
-- (DONE) Naming convention for files
-- (DONE) Generate one big h5 file with all instances of all behaviors with preceding 5s window
-- Look at interpolation of large jumps
-- (DONE) Get the length of behavior duration from the excel spreadsheets and order them from shortest to longest or vice
-versa
-- (DONE) Filtering based on dwell time
-- (DONE) Filtering based on 5s for no behavior
+- Automatic SC DC checking for all plots
+- Take a look at polynomial fitting for GenSat lines
+
 
 DATA
 ____

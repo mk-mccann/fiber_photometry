@@ -108,7 +108,7 @@ def aggregate(modeling_data_folder):
 
 
 if __name__ == "__main__":
-    dff_dir = paths.processed_data_directory
+    dff_dir = paths.preprocessed_data_directory
     modeling_data_folder = paths.modeling_data_directory
     summary_file_path = paths.summary_file
     all_exps = f_io.read_summary_file(summary_file_path)

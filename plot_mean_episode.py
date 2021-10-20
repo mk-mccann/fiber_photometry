@@ -6,7 +6,7 @@ from os.path import join
 import paths
 import functions_aggregation as f_aggr
 import functions_plotting as fp
-from functions_utils import list_lists_to_array, remove_baseline
+from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 from aggregate_episodes_across_experiments import create_episode_aggregate_h5
 
 
@@ -48,7 +48,7 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
 
     """
 
-    # Handle keyword args
+    # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
     norm_start = kwargs.get('norm_start', -5)
     norm_end = kwargs.get('norm_end', 0)
 
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
     aggregate_data_filename = 'aggregate_episodes.h5'
-    aggregate_data_file = join(paths.processed_data_directory, aggregate_data_filename)
+    aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
     # If set to 'ALL', generates means for all episodes individually.
@@ -170,6 +170,11 @@ if __name__ == "__main__":
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
     first_n_eps = -1
+
+    # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
+    # the episode trace
+    norm_start = -5
+    norm_end = -2
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)
@@ -206,10 +211,22 @@ if __name__ == "__main__":
             # Select the amount of time after the onset of an episode to look at
             episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, post_onset_window)
 
+            # Check if this is a dual-fiber experiment
+            is_DC = check_if_dual_channel_recording(episodes_to_run)
+
             # Plot means for the individual behaviors (as selected in 'episodes_to_analyze')
             # If you wanted to plot for a DC experiment, it would look like
             # plot_individual_behaviors(episodes_to_run, f_trace='zscore', channel_key='anterior))
-            plot_mean_episode(episodes_to_run, episode_name, plot_singles=True)
+            if is_DC:
+                channels = ['anterior', 'posterior']
+                for channel in channels:
+                    plot_mean_episode(episodes_to_run, episode_name,
+                                      plot_singles=True, norm_start=norm_start, norm_end=norm_end,
+                                      channel_key=channel)
+            else:
+                plot_mean_episode(episodes_to_run, episode_name,
+                                  plot_singles=True, norm_start=norm_start, norm_end=norm_end
+                                  )
 
             plt.show()
 
