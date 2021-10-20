@@ -39,7 +39,7 @@ episode_colors = {'Eating': 'cyan',
                   'Water Spray': 'deepskyblue',
                   'Peanut Jar': 'sienna',
                   'Jump': 'coral',
-                  'Edge Zone':'brown'
+                  'Edge Zone': 'brown'
                   }
 
 
@@ -147,15 +147,13 @@ def overlay_manual_episodes(episodes, label, ax):
     return labeled_section
 
 
-def highlight_episodes(data: pd.DataFrame, column, keys, ax=None):
+def highlight_episodes(data: pd.DataFrame, keys, ax=None):
     """Highlights the episodes of given by 'keys' on a fluorescence trace
 
     Parameters
     ----------
     data : pd.DataFrame
         DataFrame of an experiment with preprocessed fluorescence and scoring data
-    column : str
-        Column of 'data' to be used
     keys : iterable object of strings
         The scoring types to be plotted
     ax : Matplotlib axis object, optional
@@ -174,11 +172,11 @@ def highlight_episodes(data: pd.DataFrame, column, keys, ax=None):
         fig, ax = plt.subplots(nrows=1, figsize=(10, 15))
 
     time = data['time'].to_numpy()
-    data_col = data[column].to_numpy()
 
     # Create the highlighted episodes
     vspans = []
     for key in keys:
+        data_col = data[key].to_numpy()
         episodes_to_plot = data_col == key
         label = color_overlay(mpl_datetime_from_seconds(time), episodes_to_plot, key, ax)
         vspans.append([label, key])

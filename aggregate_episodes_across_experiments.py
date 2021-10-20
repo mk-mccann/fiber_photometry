@@ -27,28 +27,29 @@ def get_individual_episode_indices(data_df, key):
 
     # Get the indices of all episodes of a given type
     if 'Zone' in key:
-        # Here is a special case for the Eating Zone. We have three different Eating Zone types: ('Eating Zone', 'Eating Zone +', and 'Eating Zone -')
-        # Just get the Eating Zone indices for all of them
-        if ('Eating' in key):
-            combined_episode_idxs = data_df[data_df['zone'] == 'Eating Zone'].index.to_numpy()
+        # Here is a special case for the Eating Zone. We have three different Eating Zone types:
+        # ('Eating Zone', 'Eating Zone Plus', and 'Eating Zone Minus') Just get the Eating Zone indices for all of them
+        if 'Eating' in key:
+            combined_episode_idxs = data_df[data_df['Eating Zone'] == 'Eating Zone'].index.to_numpy()
         else:
-            combined_episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
+            combined_episode_idxs = data_df[data_df[key] == key].index.to_numpy()
     else:
         combined_episode_idxs = data_df[data_df[key] == key].index.to_numpy()
 
-    # episodes_to_plot is a list of all indices fulfilling the behavior or zone occupancy condition.
+    # 'combined_episode_idxs' is a list of all indices fulfilling the behavior or zone occupancy condition.
     # We want specific episodes, so split the list. If there are no episodes of a given behavior, return
     # an empty list
     if combined_episode_idxs.size > 0:
         breaks = np.where(np.diff(combined_episode_idxs) != 1)[0] + 1  # add 1 to compensate for the diff
         split_episode_idxs = np.array_split(combined_episode_idxs, breaks)
-        
-        if (key == 'Eating Zone Plus'):
+
+        # Handle the 'Eating Zone Plus' and 'Eating Zone Minus' keys
+        if key == 'Eating Zone Plus':
             for ep in split_episode_idxs:    
                 ep_df_behav = data_df['Eating'].iloc[ep]
                 if 'Eating' in ep_df_behav.unique():
                     valid_episode_idxs.append(ep)
-        elif (key == 'Eating Zone Minus'):
+        elif key == 'Eating Zone Minus':
             for ep in split_episode_idxs:    
                 ep_df_behav = data_df['Eating'].iloc[ep]
                 if 'Eating' not in ep_df_behav.unique():
@@ -58,29 +59,6 @@ def get_individual_episode_indices(data_df, key):
         
     else:
         pass
-
-
-    # # Get the starting and ending indexes and times of all episodes of a given type
-    # if 'Zone' in key:
-    #     # Here is a special case for the eating zone. We only want to look at times in the eating zone when the mouse
-    #     # is actually eating
-    #     if ('Eating' in key) and ('Plus' in key):
-    #         episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] == 'Eating')].index.to_numpy())
-    #     elif ('Eating' in key) and ('Minus' in key):
-    #         episode_idxs = (data_df[(data_df['zone'] == 'Eating Zone') & (data_df['behavior'] != 'Eating')].index.to_numpy())
-    #     else:
-    #         episode_idxs = data_df[data_df['zone'] == key].index.to_numpy()
-    # else:
-    #     episode_idxs = data_df[data_df['behavior'] == key].index.to_numpy()
-
-    # # episodes_to_plot is a list of all indices fulfilling the behavior or zone occupancy condition.
-    # # We want specific episodes, so split the list. If there are no episodes of a given behavior, return
-    # # an empty list
-    # if episode_idxs.size > 0:
-    #     breaks = np.where(np.diff(episode_idxs) != 1)[0] + 1  # add 1 to compensate for the diff
-    #     valid_episode_idxs = np.array_split(episode_idxs, breaks)
-    # else:
-    #     pass
 
     return valid_episode_idxs
 

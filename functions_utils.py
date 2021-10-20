@@ -100,8 +100,8 @@ def find_zone_and_behavior_episodes(data_df, behavior_labels):
     """
 
     ts = data_df['time'].to_numpy()
-    behaviors = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "Start" in col.split(" ")[-1]]
-    zones = [" ".join(col.split(" ")[0:-1]) for col in behavior_labels.columns if "In" in col.split(" ")[-1]]
+    behaviors = [' '.join(col.split(' ')[0:-1]) for col in behavior_labels.columns if 'Start' in col.split(' ')[-1]]
+    zones = [' '.join(col.split(' ')[0:-1]) for col in behavior_labels.columns if 'In' in col.split(' ')[-1]]
 
     behav_bouts = []
     for behav in behaviors:

@@ -34,21 +34,14 @@ def preprocess_fluorescence(data_df, channel_key=None):
     data = preprocess_fluorescence(data, 'posterior')
     """
 
-    # Define the gcamp and autofluorescence channels and save a copy of the raw
-    # data in a new column
+    # Define the GCaMP and autofluorescence channels
     if channel_key is None:
-        auto_channel = data_df['auto']
-        gcamp_channel = data_df['gcamp']
-
-        data_df['auto_raw'] = auto_channel.copy()
-        data_df['gcamp_raw'] = gcamp_channel.copy()
+        auto_channel = data_df['auto_raw']
+        gcamp_channel = data_df['gcamp_raw']
 
     else:
-        auto_channel = data_df['auto_' + channel_key]
-        gcamp_channel = data_df['gcamp_' + channel_key]
-
-        data_df['auto_' + channel_key + '_raw'] = auto_channel.copy()
-        data_df['gcamp_' + channel_key + '_raw'] = gcamp_channel.copy()
+        auto_channel = data_df['auto_' + channel_key + '_raw']
+        gcamp_channel = data_df['gcamp_' + channel_key + '_raw']
 
     # replace NaN's with closest (interpolated) non-NaN
     gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
@@ -103,23 +96,26 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # dff[shared_zero] = np.NaN
     # zdff[shared_zero] = np.NaN
     
-     # fitting like in LERNER paper
+    # fitting like in LERNER paper
     controlFit = fpp.lernerFit(auto, gcamp)
-    dff = (gcamp - controlFit) / controlFit
-    zdff = fpp.zscore_median(dff)
-    
+    dff_Lerner = (gcamp - controlFit) / controlFit
+    zdff_Lerner = fpp.zscore_median(dff_Lerner)
 
     # Save the data
     if channel_key is None:
-        data_df['gcamp'] = gcamp
         data_df['auto'] = auto
+        data_df['gcamp'] = gcamp
         data_df['dff'] = dff
         data_df['zscore'] = zdff
+        data_df['dff_Lerner'] = dff_Lerner
+        data_df['zscore_Lerner'] = zdff_Lerner
     else:
-        data_df['gcamp_' + channel_key] = gcamp
         data_df['auto_' + channel_key] = auto
+        data_df['gcamp_' + channel_key] = gcamp
         data_df['dff_' + channel_key] = dff
         data_df['zscore_' + channel_key] = zdff
+        data_df['dff_' + channel_key + '_Lerner'] = dff_Lerner
+        data_df['zscore_' + channel_key + '_Lerner'] = zdff_Lerner
 
     return data_df
 

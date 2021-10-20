@@ -73,6 +73,9 @@ def check_preprocessed_df_for_scoring(exp_df, animal, day):
         
         return exp_df
 
+    else:
+        return exp_df
+
 
 def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths.processed_data_directory):
     """Loads the .h5 file with the preprocessed fluorescence data.
@@ -122,7 +125,7 @@ def load_1_channel_fiber_photometry_csv(file_path, columns_to_use=None, column_n
     # of fluorescence data (time, gcamp, auto), so here the columns names are 
     # set to a default.
     if column_names is None:
-        column_names = ['time', 'auto', 'gcamp']
+        column_names = ['time', 'auto_raw', 'gcamp_raw']
 
     if columns_to_use is None:
         columns_to_use = [0, 1, 3]
@@ -151,7 +154,8 @@ def load_2_channel_fiber_photometry_csv(file_path, column_names=None):
     """
 
     if column_names is None:
-        column_names = ['time', 'auto_anterior', 'gcamp_anterior', 'auto_posterior', 'gcamp_posterior']
+        column_names = ['time', 'auto_anterior_raw', 'gcamp_anterior_raw',
+                        'auto_posterior_raw', 'gcamp_posterior_raw']
 
     fluor_df = pd.read_csv(file_path, skiprows=2, names=column_names, usecols=[0, 1, 2, 4, 5], dtype=float)
 
