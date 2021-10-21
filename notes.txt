@@ -1,4 +1,3 @@
-- Automatic SC DC checking for all plots
 - Take a look at polynomial fitting for GenSat lines
 
 

@@ -3,7 +3,6 @@ import pandas as pd
 
 import functions_utils as f_util
 import functions_io as f_io
-from functions_plotting import episode_colors
 
 
 def get_individual_episode_indices(data_df, key):
