@@ -119,8 +119,8 @@ def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', is_dual_channel=F
 
 if __name__ == "__main__":
 
-    animal = 4
-    day = 1
+    animal = 1
+    day = 2
 
     # Check that the figure directory exists
     f_io.check_dir_exists(paths.figure_directory)
