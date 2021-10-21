@@ -128,7 +128,7 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Eating Zone Minus']
+    episodes_to_analyze = ['Eating Zone Minus', 'Eating Zone Plus', 'Eating']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
@@ -142,12 +142,12 @@ if __name__ == "__main__":
     first_n_eps = -1
 
     # -- Length of the bins for the histogram
-    bin_length = 0.5  # Seconds
+    bin_length = 0.3  # Seconds
 
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace.
     norm_start = -5
-    norm_end = -2
+    norm_end = 0
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)
@@ -163,10 +163,10 @@ if __name__ == "__main__":
 
             # -- Remove certain days/animals
             # episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
-            # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
+            episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
             # only day 3 experiments excluding animal 1
             # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
-            episodes_to_run = all_episodes
+            #episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
             # that means the filtering removed all the episodes from the behaviors, and

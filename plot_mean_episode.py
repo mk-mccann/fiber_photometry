@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Eating Window', 'Eating', 'Eating Zone Plus']
+    episodes_to_analyze = ['Eating Zone Minus', 'Eating', 'Eating Zone Plus']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?

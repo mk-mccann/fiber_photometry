@@ -150,7 +150,8 @@ def extract_episodes(data_df, pre_episode_window):
     """
 
     # Create a dictionary to hold the output traces
-    output_dict = {e: [] for e in episode_colors.keys()}
+    labeled_episodes = data_df.columns[data_df.columns.get_loc('zone') + 1:]
+    output_dict = {e: [] for e in labeled_episodes}
 
     # Build a special case to handle the Eating Zone: Animal eating vs animal not eating
     if 'Eating Zone' in output_dict.keys():
