@@ -79,9 +79,10 @@ def plot_peth(episodes, bin_duration, scoring_type,
     traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
     # Bin times
-    min_time = np.floor(times[0][0])
-    max_time = np.ceil(times[0][-1])
+    min_time = np.rint(time[0])
+    max_time = np.rint(time[-1])
     bins = np.arange(min_time, max_time+bin_duration, bin_duration)
+    #bins[bins == np.min(np.abs(bins))] = 0
 
     # Calculate the statistics on the bin
     bin_values, _, _ = binned_statistic(time, traces, statistic=bin_function, bins=bins)
@@ -142,7 +143,7 @@ if __name__ == "__main__":
     first_n_eps = -1
 
     # -- Length of the bins for the histogram
-    bin_length = 0.3  # Seconds
+    bin_length = 0.2  # Seconds
 
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace.
