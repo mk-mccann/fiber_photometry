@@ -52,7 +52,7 @@ def get_sec_from_min_sec(time: float):
     """
     split_time = str(time).split('.')
     minutes = int(split_time[0])
-    seconds = int(split_time[1])
+    seconds = int(split_time[1][:2])
     return 60 * minutes + seconds
 
 
