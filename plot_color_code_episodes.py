@@ -111,6 +111,12 @@ if __name__ == "__main__":
                 plt.tight_layout()
                 plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
+        else:
+            fig, title = plot_color_code_episodes(data, f_trace=f_trace)
+            plt.suptitle(title.format(animal, day))
+            plt.tight_layout()
+            plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
+
         # Uncomment here to show the plot
         # plt.show()
 

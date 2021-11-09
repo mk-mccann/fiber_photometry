@@ -192,7 +192,7 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
     DataFrame of all experiments with preprocessed fluorescence data and scoring
     """
 
-    all_exps = list(Path(base_directory).glob('*.h5'))
+    all_exps = list(Path(base_directory).glob('*preprocessed.h5'))
 
     df_list = []
 
@@ -213,17 +213,6 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
                 print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
                     animal, day, err))
                 continue
-
-            # if 'behavior' not in exp.columns:
-            #     warnings.warn('Behavior labeling not present in DataFrame. Trying to load now.')
-            #     try:
-            #         behavior_labels = load_behavior_labels(animal, day)
-            #         behavior_bouts, zone_bouts = f_util.find_zone_and_behavior_episodes(exp, behavior_labels)
-            #         exp = f_util.add_episode_data(exp, behavior_bouts, zone_bouts)
-            #     except FileNotFoundError as err:
-            #         print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
-            #             animal, day, err))
-            #         continue
 
         except FileNotFoundError as error:
             print(str(error))
@@ -278,7 +267,6 @@ def load_aggregated_episodes(store, key):
 
     key = key.lower.replace(' ', '_')
     return store.get(key)
-
 
 
 

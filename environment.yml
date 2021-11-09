@@ -2,21 +2,24 @@ name: fiber_photometry
 channels:
   - defaults
 dependencies:
-  - h5py=2.10
-  - ipywidgets=7.6
-  - ipympl=0.7
-  - joblib=1.0
-  - jupyter=1.0
-  - matplotlib=3.3
-  - matplotlib-base=3.3
-  - numpy=1.19
-  - openpyxl=3.0
-  - pandas=1.2
-  - pillow=8.1
-  - pip=21.0
-  - pyqt=5.9
-  - python=3.7
-  - pytables=3.6
-  - scikit-learn=0.24
-  - scipy=1.6
-  - tqdm=4.59
+  - h5py
+  - hdf5
+  - ipywidgets
+  - jupyter
+  - matplotlib
+  - numpy
+  - pandas
+  - pillow
+  - pyqt
+  - pytables
+  - python=3.8
+  - qt=5
+  - qtconsole
+  - qtpy
+  - scikit-learn
+  - scipy
+  - tqdm
+
+  - pip:
+    - hmmlearn
+    - ipympl
