@@ -149,7 +149,7 @@ if __name__ == "__main__":
         data.to_hdf(join(paths.preprocessed_data_directory, filename), key='preprocessed', mode='w')
 
         # Make a plot of the zdff and save it.
-        ax = plot_fluorescence_min_sec(data['time'], data['gcamp'])
+        ax = plot_fluorescence_min_sec(data['time'], data['zscore_Lerner'])
         ax.set_title('Animal {} Day {} Z-dF/F'.format(animal, day))
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Z-dF/F')

@@ -221,11 +221,11 @@ if __name__ == "__main__":
                 channels = ['anterior', 'posterior']
                 for channel in channels:
                     plot_mean_episode(episodes_to_run, episode_name,
-                                      plot_singles=True, norm_start=norm_start, norm_end=norm_end,
+                                      plot_singles=False, norm_start=norm_start, norm_end=norm_end,
                                       channel_key=channel)
             else:
                 plot_mean_episode(episodes_to_run, episode_name,
-                                  plot_singles=True, norm_start=norm_start, norm_end=norm_end
+                                  plot_singles=False, norm_start=norm_start, norm_end=norm_end
                                   )
 
             plt.show()
