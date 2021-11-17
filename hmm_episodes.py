@@ -1,28 +1,26 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from hmmlearn import hmm
 
 from functions_io import load_all_experiments
+from functions_plotting import plot_heatmap
 
 
 def fit_hmm_single_animal_day(df, animal, day, key='behavior'):
     sub_df = df.loc[(df.animal == str(animal)) & (df.day == str(day))]
     data = sub_df[key].to_list()
 
-    collapsed_data = collapse_samples_to_states(data)
+    collapsed_data = collapse_samples_to_states([data])
     collapsed_data = [list(filter(None, s)) for s in collapsed_data]
     flattened_data = np.concatenate(collapsed_data)
 
     unique_labels = np.unique(flattened_data)
     integer_data = np.array([np.argwhere(unique_labels == x)[0][0] for x in flattened_data])
 
-    remodel = hmm.MultinomialHMM(n_components=len(unique_labels), covariance_type='full',
-                                 n_iter=100, tol=0.01,
-                                 verbose=True)
-
     X = integer_data.reshape(-1, 1)
 
-    return remodel, X, unique_labels
+    return X, unique_labels
 
 
 def collapse_samples_to_states(data):
@@ -66,15 +64,17 @@ if __name__ == "__main__":
     # Overwrite the behavior column with the behaviors we are interested in
     all_data['behavior'] = all_data[behaviors_to_use].fillna('').sum(axis=1)
 
-    X, lengths, states = fit_hmm_across_animals(all_data, 1, key='behavior')
+    # X, lengths, states = fit_hmm_across_animals(all_data, 1, key='behavior')
+    X, states = fit_hmm_single_animal_day(all_data, 2, 2, key='behavior')
 
     remodel = hmm.MultinomialHMM(n_components=len(states),
                                  n_iter=100, tol=0.01,
                                  verbose=True)
 
-    Z2 = remodel.fit(X, lengths)
+    # Z2 = remodel.fit(X, lengths)
+    Z3 = remodel.fit(X)
 
-    # hmm_animal_day, X, states = fit_hmm_single_animal_day(all_data, animal, day)
-    # Z3 = hmm_animal_day.fit(X)
+    fig, ax = plot_heatmap(Z3.transmat_, states, states)
+    plt.show()
 
     print('hi')
