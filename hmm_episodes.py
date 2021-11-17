@@ -1,7 +1,7 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from hmmlearn import hmm
+import networkx as nx
 
 from functions_io import load_all_experiments
 from functions_plotting import plot_heatmap
@@ -74,7 +74,10 @@ if __name__ == "__main__":
     # Z2 = remodel.fit(X, lengths)
     Z3 = remodel.fit(X)
 
+    # Plot the transition matrix
     fig, ax = plot_heatmap(Z3.transmat_, states, states)
+    plt.xticks(rotation=45)
+    plt.gca().invert_yaxis()
     plt.show()
 
     print('hi')
