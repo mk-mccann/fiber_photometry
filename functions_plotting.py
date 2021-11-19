@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
-
 from matplotlib import ticker
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from datetime import timedelta, datetime
 from scipy.stats import sem
 
@@ -270,9 +270,7 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None):
     return ax
 
 
-def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
-                     textcolors=("black", "white"),
-                     threshold=None, **textkw):
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=("black", "white"), threshold=None, **textkw):
     """
     A function to annotate a heatmap.
 
@@ -330,9 +328,10 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     return texts
 
 
-def plot_heatmap(values, xlabels, ylabels, ax=None, **kwargs):
+def plot_heatmap(values, xlabels, ylabels, ax=None, use_colorbar=False, **kwargs):
+
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(10, 10))
 
     cmap_min = kwargs.get('cmap_min', 0)
     cmap_max = kwargs.get('cmap_max', np.max(values))
@@ -344,6 +343,8 @@ def plot_heatmap(values, xlabels, ylabels, ax=None, **kwargs):
     ax.set_xticklabels(xlabels)
     ax.set_yticks(np.arange(len(ylabels)))
     ax.set_yticklabels(ylabels)
-    ax.invert_yaxis()
+
+    if use_colorbar:
+        fig.colorbar(im, ax=ax, fraction=0.05, pad=0.05)
 
     return im, ax
