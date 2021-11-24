@@ -5,11 +5,18 @@ from paths import raw_data_directory
 
 
 def decimate_csv(file_path, step=300):
-    """
+    """ Downsamples a high sampling frequency recording to match the convention used by the lab
 
-    :param file_path:
-    :param step:
-    :return:
+    Parameters
+    ----------
+    file_path : str or PathObject
+        Path the the file
+    step : int
+        Number of samples to average at a time
+
+    Returns
+    -------
+
     """
     # Load the csv
     df = read_csv(file_path, skiprows=1, header=0)

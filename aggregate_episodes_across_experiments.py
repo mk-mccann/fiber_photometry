@@ -167,7 +167,8 @@ def extract_episodes(data_df, pre_episode_window):
         # This is a check if there are episodes for a given scoring type. If there are, it adds them to the output dict
         if len(episodes_by_idx) > 0:
             # Extracts a window surrounding the start of an episode, as given by the variable 'start_window'
-            ep_start_windows = get_episode_with_start_window(data_df, episodes_by_idx, pre_episode_window=pre_episode_window)
+            ep_start_windows = get_episode_with_start_window(data_df, episodes_by_idx,
+                                                             pre_episode_window=pre_episode_window)
             scoring_type_df = pd.concat(ep_start_windows)
             output_dict[scoring_type] = scoring_type_df
         else:

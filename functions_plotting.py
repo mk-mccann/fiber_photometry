@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
+
 from matplotlib import ticker
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from datetime import timedelta, datetime
@@ -45,10 +46,10 @@ episode_colors = {'Eating': 'cyan',
                   }
 
 
-fluorescence_axis_labels = {'auto_raw': 'Fluorescense (A.U.)',
-                            'gcamp_raw': 'Fluorescense (A.U.)',
-                            'auto': 'Fluorescense (A.U.)',
-                            'gcamp': 'Fluorescense (A.U.)',
+fluorescence_axis_labels = {'auto_raw': 'Fluorescence (A.U.)',
+                            'gcamp_raw': 'Fluorescence (A.U.)',
+                            'auto': 'Fluorescence (A.U.)',
+                            'gcamp': 'Fluorescence (A.U.)',
                             'dff': 'dF/F',
                             'dff_Lerner': 'dF/F',
                             'zscore': 'Z-dF/F',
@@ -83,12 +84,12 @@ def mpl_datetime_from_seconds(time):
 
     Parameters
     ----------
-    time : int or float or iterable object
+    time : int or float or iterable object of ints or floats
         Time in seconds
 
     Returns
     -------
-    Time in matplotlib datetime format
+        Time in matplotlib datetime format
     """
 
     zero = datetime(2021, 1, 1)
@@ -270,7 +271,9 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None):
     return ax
 
 
-def annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=("black", "white"), threshold=None, **textkw):
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
+                     textcolors=("black", "white"),
+                     threshold=None, **textkw):
     """
     A function to annotate a heatmap.
 
@@ -291,7 +294,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=("black", "whit
         Value in data units according to which the colors from textcolors are
         applied.  If None (the default) uses the middle of the colormap as
         separation.  Optional.
-    **kwargs
+    kwargs
         All other arguments are forwarded to each call to `text` used to create
         the text labels.
     """
@@ -328,10 +331,33 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}", textcolors=("black", "whit
     return texts
 
 
+def plot_heatmap(values, xlabels, ylabels, ax=None, **kwargs):
+    """ Wrapper function to plot a heatmap with a colorbar
+
+    Parameters
+    ----------
+    values : np.Array
+        values to be plotted
+    xlabels : iterable of str
+        X axis labels
+    ylabels : iterable of str
+        Y axis labels
+    ax : matplotlib AxisObejct, optional
+        Axis on which to create the heatmap
+    **kwargs
+        cmap_min : int or float
+            Minimum value for the colormap
+        cmap_max : int or float
+            Maximum value for the colormap
+
+    Returns
+    -------
+
+    """
 def plot_heatmap(values, xlabels, ylabels, ax=None, use_colorbar=False, **kwargs):
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 10))
+        fig, ax = plt.subplots()
 
     cmap_min = kwargs.get('cmap_min', 0)
     cmap_max = kwargs.get('cmap_max', np.max(values))

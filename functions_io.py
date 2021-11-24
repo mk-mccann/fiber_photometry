@@ -63,6 +63,23 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
 
 
 def check_preprocessed_df_for_scoring(exp_df, animal, day):
+    """Checks if the preprocessed fluorescence DataFrame has the behavior data loaded into it
+
+    Parameters
+    ----------
+    exp_df : pd.DataFrame
+        The preprocessed fluorescence data
+    animal : int or float or str
+        Animal ID number
+    day : int or float or str
+        Experimental day number
+
+    Returns
+    -------
+    exp_df : pd.DataFrame
+        Preprocessed fluorescence data with behavior labels
+
+    """
 
     if 'behavior' not in exp_df.columns:
         warn('Behavior labeling not present in DataFrame. Trying to load now...')
@@ -93,14 +110,14 @@ def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths
 
     Returns
     -------
-    preproccessed_data : pd.DataFrame
+    preprocessed_data : pd.DataFrame
         DataFrame of the preprocessed data
 
     """
 
     filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
-    preproccessed_data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
-    return preproccessed_data
+    preprocessed_data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
+    return preprocessed_data
 
 
 def load_1_channel_fiber_photometry_csv(file_path, columns_to_use=None, column_names=None):
@@ -235,12 +252,12 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
 
 
 def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.preprocessed_data_directory):
-    """
+    """ Saves a dictionary to am .h5 file where each dictionary key is a key in the .h5 file
 
     Parameters
     ----------
-    input_dict
-    filename
+    input_dict : dict
+    filename : str or PathObject
     base_directory : str or PathObject, optional
         Path to the preprocessed data directory
 
@@ -260,23 +277,22 @@ def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.preprocess
 
 
 def load_aggregated_episodes(store, key):
-    """
+    """Read the .h5 file of aggregated episodes and return the requested store
 
     Parameters
     ----------
-    filename
-    key
-    base_directory : str or PathObject, optional
-        Path to the preprocessed data directory
+    store : HDFObject
+        The loaded .h5 file
+    key : str
+        The key to the dataframe to be loaded
 
     Returns
     -------
-
+        pd.DataFrame
     """
 
     key = key.lower.replace(' ', '_')
     return store.get(key)
-
 
 
 def check_dir_exists(path):

@@ -63,7 +63,7 @@ def median_comparison(episodes, f_trace='zscore_Lerner', channel_key=None, plot_
         else:
             print("No episodes of {} found!".format(k))
             
-    return pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in median_dict.items() ]))
+    return pd.DataFrame(dict([(k, pd.Series(v)) for k, v in median_dict.items()]))
 
 
 if __name__ == "__main__":

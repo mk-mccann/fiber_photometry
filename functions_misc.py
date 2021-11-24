@@ -1,20 +1,20 @@
-from numpy import zeros, argmin, arange, abs
+import numpy as np
 
 
 # find CS bool - boolean of CS duration
 def find_CS_bool(ts, start_times_CSplus, end_times_CSplus):
-    CS_bool = zeros(ts.size, dtype=bool)
-    preCS_bool = zeros(ts.size, dtype=bool)
-    postCS_bool = zeros(ts.size, dtype=bool)
-    for j in arange(start_times_CSplus.size):
-        start_CS_ind = argmin(abs(ts - start_times_CSplus[j]))
-        end_CS_ind = argmin(abs(ts - end_times_CSplus[j]))
+    CS_bool = np.zeros(ts.size, dtype=bool)
+    preCS_bool = np.zeros(ts.size, dtype=bool)
+    postCS_bool = np.zeros(ts.size, dtype=bool)
+    for j in np.arange(start_times_CSplus.size):
+        start_CS_ind = np.argmin(abs(ts - start_times_CSplus[j]))
+        end_CS_ind = np.argmin(abs(ts - end_times_CSplus[j]))
         CS_bool[start_CS_ind:end_CS_ind] = True
-        start_preCS_ind = argmin(abs(ts - (start_times_CSplus[j] - 30)))
-        end_preCS_ind = argmin(abs(ts - (end_times_CSplus[j] - 30)))
+        start_preCS_ind = np.argmin(abs(ts - (start_times_CSplus[j] - 30)))
+        end_preCS_ind = np.argmin(abs(ts - (end_times_CSplus[j] - 30)))
         preCS_bool[start_preCS_ind:end_preCS_ind] = True
-        start_postCS_ind = argmin(abs(ts - (start_times_CSplus[j] + 30)))
-        end_postCS_ind = argmin(abs(ts - (end_times_CSplus[j] + 30)))
+        start_postCS_ind = np.argmin(abs(ts - (start_times_CSplus[j] + 30)))
+        end_postCS_ind = np.argmin(abs(ts - (end_times_CSplus[j] + 30)))
         postCS_bool[start_postCS_ind:end_postCS_ind] = True
 
     return CS_bool, preCS_bool, postCS_bool

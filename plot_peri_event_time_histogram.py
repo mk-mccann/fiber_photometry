@@ -46,6 +46,8 @@ def plot_peth(episodes, bin_duration, scoring_type,
         Time (normalized) at which trace baseline calculation starts
     norm_end : float, int
         Time (normalized) at which trace baseline calculation ends
+    cmap_lim : float, int
+        The limits for the color map of the heatmap. Defaults to the maximum of the dataset
 
 
     See Also
@@ -89,11 +91,21 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     # Create the figure
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
-    cbar_range_max = np.ceil(np.nanmax(traces))
+
+    # Set the range for the color map
+    cbar_range_max = kwargs.get('cmap_lim', np.ceil(np.nanmax(traces)))
     im = ax.imshow(bin_values, cmap='seismic', vmin=-cbar_range_max, vmax=cbar_range_max)
 
     x_tick_labels = np.arange(bins[0], bins[-1]+bin_duration, 5)
-    x_tick_positions = np.linspace(-0.5, len(bins)-1.5,  len(x_tick_labels))
+
+    if int(x_tick_labels[-1]) != int(bins[-1]):
+        x_tick_labels = np.append(x_tick_labels, int(bins[-1]))
+        zero_idx = np.argwhere(bins == np.min(np.abs(bins)))[0][0]
+        x_tick_positions = np.linspace(-0.5, zero_idx-0.5,  len(x_tick_labels)-1)
+        x_tick_positions = np.append(x_tick_positions, len(bins) - 1.5)
+    else:
+        x_tick_positions = np.linspace(-0.5, len(bins) - 1.5, len(x_tick_labels))
+
     ax.set_xticks(x_tick_positions)
     ax.set_xticklabels(x_tick_labels)
     ax.axvline(x=x_tick_positions[x_tick_labels == 0][0], c='k', linestyle='--')
@@ -130,7 +142,7 @@ if __name__ == "__main__":
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
     episodes_to_analyze = ['Transfer']
-    
+
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
     f_trace = 'zscore_Lerner'
@@ -152,7 +164,7 @@ if __name__ == "__main__":
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace.
     norm_start = -5
-    norm_end = -0
+    norm_end = 0
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)
@@ -167,12 +179,11 @@ if __name__ == "__main__":
             all_episodes = aggregate_store.get(episode_name.lower().replace(' ', '_'))
 
             # -- Remove certain days/animals
-            #episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
-            #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "1"]    # remove animal 1
+            # episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
+            # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
             # only day 3 experiments excluding animal 1
-            #episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 1)]
-            #episodes_to_run = all_episodes
-            episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 1.0) & (all_episodes["zscore_Lerner"] >= -1.0)]
+            # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
+            episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
             # that means the filtering removed all the episodes from the behaviors, and
@@ -199,11 +210,12 @@ if __name__ == "__main__":
                 for channel in channels:
                     plot_peth(episodes_to_run, bin_length, episode_name,
                               norm_start=norm_start, norm_end=norm_end,
-                              channel_key=channel)
+                              channel_key=channel, cmap_lim=2)
             else:
-                plot_peth(episodes_to_run, bin_length, episode_name, f_trace=f_trace,
-                          norm_start=norm_start, norm_end=norm_end)
-            # plt.show()
+                plot_peth(episodes_to_run, bin_length, episode_name,
+                          norm_start=norm_start, norm_end=norm_end,
+                          cmap_lim=2)
+            plt.show()
 
         aggregate_store.close()
 

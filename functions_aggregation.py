@@ -43,9 +43,9 @@ def sort_episodes_by_duration(episodes, ascending=True, key='overall_episode_num
 def filter_episodes_by_duration(episodes, duration_cutoff, filter_type='greater_than', key='overall_episode_number'):
     sorted_durations = sort_episodes_by_duration(episodes, ascending=True, key=key)
 
-    if filter_type is 'greater_than':
+    if filter_type == 'greater_than':
         good_episodes = sorted_durations[sorted_durations >= duration_cutoff].index.to_numpy()
-    elif filter_type is 'less_than':
+    elif filter_type == 'less_than':
         good_episodes = sorted_durations[sorted_durations <= duration_cutoff].index.to_numpy()
     else:
         raise AttributeError('This is not a valid filter type!')
@@ -68,7 +68,7 @@ def filter_episodes_for_overlap(episodes, index_key='overall_episode_number'):
 
         start_window_behavior = group[group['normalized_time'] < 0]['behavior'].unique()
 
-        if (start_window_behavior.size == 1) and (start_window_behavior[0] is ''):
+        if (start_window_behavior.size == 1) and (start_window_behavior[0] == ''):
             good_episodes.append(ep)
 
     valid_episodes = episodes[episodes[index_key].isin(good_episodes)]

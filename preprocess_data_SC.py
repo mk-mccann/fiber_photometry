@@ -9,7 +9,7 @@ from tqdm import tqdm
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
-from functions_plotting import plot_fluorescence_min_sec
+from functions_plotting import plot_fluorescence_min_sec, fluorescence_axis_labels
 
 
 """
@@ -148,11 +148,16 @@ if __name__ == "__main__":
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
         data.to_hdf(join(paths.preprocessed_data_directory, filename), key='preprocessed', mode='w')
 
-        # Make a plot of the zdff and save it.
-        ax = plot_fluorescence_min_sec(data['time'], data['gcamp_raw'])
-        ax.set_title('Animal {} Day {} dff'.format(animal, day))
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('Z-dF/F')
-        #plt.savefig(join(paths.figure_directory, 'animal{}_day{}_gcamp_zscore.png'.format(animal, day)), format="png")
-        plt.show()
+        # --- Make a plot of the zdff and save it. --- #
+        # Which fluorescence trace do you want to plot?
+        # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
+        f_trace = 'zscore_Lerner'
+
+        ax = plot_fluorescence_min_sec(data['time'], data[f_trace])
+        title = 'Animal {} Day {} {}'.format(animal, day, f_trace).title().replace('_', ' ')
+        ax.set_title(title)
+        ax.set_xlabel('Time (hh:mm:ss)')
+        ax.set_ylabel(fluorescence_axis_labels[f_trace])
+        plt.savefig(join(paths.figure_directory, title.lower().replace(' ', '_') + '.png'), format="png")
+        # plt.show()
 

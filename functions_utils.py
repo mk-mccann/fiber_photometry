@@ -3,12 +3,21 @@ import pandas as pd
 
 
 def find_nearest(array: np.array, value: float):
-    """
-    Find the closest-matching value to the input in the array.
+    """ Find the closest-matching value to the input in the array.
 
-    :param array: (array-like) Array to search
-    :param value: (float) Value to match
-    :return: The index of the closest match and the value
+    Parameters
+    ----------
+    array : np.array-like
+        Array to search
+    value : float
+        Value to match
+
+    Returns
+    -------
+    idx : int
+        the index of the closest match in the array
+    value : int or float
+        The closest value
     """
 
     array = np.asarray(array)
@@ -17,22 +26,33 @@ def find_nearest(array: np.array, value: float):
 
 
 def flatten_list(list_of_lists):
-    """
-    Flattens a list of lists
+    """ Flattens a list of lists
 
-    :param list_of_lists:
-    :return: (list) flattened list
+    Parameters
+    ----------
+    list_of_lists : list
+
+    Returns
+    -------
+        flattened list
     """
+
     return [item for sublist in list_of_lists for item in sublist]
 
 
 def list_lists_to_array(list_of_lists):
-    """
-    Converts a list of lists into a 2D array
+    """ Converts a list of lists into a 2D array
 
-    :param list_of_lists:
-    :return: (np.array) Array where each row was an entry in the list of lists
+    Parameters
+    ----------
+    list_of_lists : list
+
+    Returns
+    -------
+    new_array : np.array
+        Array where each row was an entry in the list of lists
     """
+
     max_length = max([len(sublist) for sublist in list_of_lists])
     new_array = np.empty((len(list_of_lists), max_length))
     new_array[:] = np.NaN
@@ -44,12 +64,17 @@ def list_lists_to_array(list_of_lists):
 
 
 def get_sec_from_min_sec(time: float):
-    """
-    Converts a float representing time in min.sec to seconds
+    """ Converts a float representing time in min.sec to seconds
 
-    :param time:
-    :return:
+    Parameters
+    ----------
+    time : float
+
+    Returns
+    -------
+    seconds : float
     """
+
     split_time = str(time).split('.')
     minutes = int(split_time[0])
     seconds = int(split_time[1][:2])
@@ -57,13 +82,21 @@ def get_sec_from_min_sec(time: float):
 
 
 def find_episodes(time, labels, key):
-    """
-    Find the start and end times of all episodes of a behavior or sequence referenced to the fluorescence time series.
+    """ Find the start and end times of all episodes of a behavior or sequence
+    referenced to the fluorescence time series.
 
-    :param time:
-    :param labels:
-    :param key:
-    :return:
+    Parameters
+    ----------
+    time : pd.Series or np.array
+        Time vector
+    labels : list or iterable object of str
+        The labeled behaviors or zone occupancies
+    key : str
+        The episode type to find
+
+    Returns
+    -------
+        indices and times of an episode occurrence
     """
 
     if "Zone" in key:
@@ -74,8 +107,8 @@ def find_episodes(time, labels, key):
     # Create a vectorized version of get_sec_from_min_sec to apply to whole arrays
     vec_get_sec_from_min_sec = np.vectorize(get_sec_from_min_sec)
 
-    epidsode_idxs = []
-    epidode_times = []
+    episode_idxs = []
+    episode_times = []
 
     if len(start_end) > 0:
 
@@ -85,18 +118,25 @@ def find_episodes(time, labels, key):
             start_idx, start_time = find_nearest(time, event[0])
             end_idx, end_time = find_nearest(time, event[1])
 
-            epidsode_idxs.append([start_idx, end_idx])
-            epidode_times.append([start_time, end_time])
+            episode_idxs.append([start_idx, end_idx])
+            episode_times.append([start_time, end_time])
 
-    return epidsode_idxs, epidode_times
+    return episode_idxs, episode_times
 
 
 def find_zone_and_behavior_episodes(data_df, behavior_labels):
-    """
+    """ Locates the times at which a given behavior occurs in an experiment
 
-    :param data_df:
-    :param behavior_labels:
-    :return:
+    Parameters
+    ----------
+    data_df : pd.DataFrame
+        The prprocessed fluorescence data
+    behavior_labels : iterable object of str
+        The column names from the behavior labeling
+
+    Returns
+    -------
+        The start and end times and indices of a given episode
     """
 
     ts = data_df['time'].to_numpy()
@@ -126,12 +166,19 @@ def find_zone_and_behavior_episodes(data_df, behavior_labels):
 
 
 def add_episode_data(data_df, behavior_bouts, zone_bouts):
-    """
+    """ Adds labeled behavior data to a dataframe
 
-    :param data_df:
-    :param behavior_bouts:
-    :param zone_bouts:
-    :return:
+    Parameters
+    ----------
+    data_df : pd.DataFrame
+    behavior_bouts : tuple or list
+        List of behaviors with start and end times and indices
+    zone_bouts : tuple or list
+        List of zone occupancies with start and end times and indices
+
+    Returns
+    -------
+        pd.DataFrame with behavior episodes
     """
 
     behaviors = np.unique(behavior_bouts[:, 0])
@@ -165,10 +212,15 @@ def add_episode_data(data_df, behavior_bouts, zone_bouts):
 
 
 def get_mean_episode(episodes):
-    """
+    """ Gets the mean trace from an array of traces
 
-    :param episodes:
-    :return:
+    Parameters
+    ----------
+    episodes :
+
+    Returns
+    -------
+
     """
 
     f_traces = [e[1] for e in episodes]
@@ -182,32 +234,50 @@ def get_mean_episode(episodes):
 
 
 def remove_baseline(time, traces, norm_start=-5, norm_end=0):
-    """
+    """ Removes the baseline of a trace given a specific time window by subtracting the median of that window
 
-    :param time:
-    :param traces:
-    :param norm_start:
-    :param norm_end:
-    :return:
+    Parameters
+    ----------
+    time : pd.Series, list, or np.array
+        The time trace
+    traces : pd.Series, list, or np.array
+        The fluorescence trace
+    norm_start : int or float
+        Start time of the normalization window
+    norm_end : int or float
+        End time of the normalization window
+
+    Returns
+    -------
+        traces with baseline subtracted
     """
 
     start_idx, _ = find_nearest(time, norm_start)
     end_idx, _ = find_nearest(time, norm_end)
-    baseline = np.median(traces[:, start_idx:end_idx+1], axis=-1)
+    baseline = np.median(traces[:, start_idx:end_idx + 1], axis=-1)
     traces = traces - np.expand_dims(baseline, axis=1)
     return traces
 
 
-def median_of_time_window(time: float, trace, t_start, t_end):
-    """
+def median_of_time_window(time, trace, t_start, t_end):
+    """ Finds the median of a given range of times in a trace
 
-    :param time:
-    :param trace:
-    :param t_start:
-    :param t_end:
-    :return:
-    """
+    Parameters
+    ----------
+    time : pd.Series, list, or np.array
+        The time trace
+    trace : pd.Series, list, or np.array
+        The fluorescence trace
+    t_start : int or float
+        Start time of the median window
+    t_end : int or float
+        End time of the median window
 
+    Returns
+    -------
+        median value of selected trace in specified time window
+
+    """
     # time is assumed to be in seconds
 
     time_mask = (time >= t_start) & (time <= t_end)
@@ -215,6 +285,17 @@ def median_of_time_window(time: float, trace, t_start, t_end):
 
 
 def check_if_dual_channel_recording(data_df):
+    """ Checks if a recording is a dual-channel recording or not
+
+    Parameters
+    ----------
+    data_df : pd.DataFrame
+
+    Returns
+    -------
+    is_DC : bool
+        True if a dual-channel recording, false otherwise
+    """
     is_DC = False
 
     for col in list(data_df.columns):

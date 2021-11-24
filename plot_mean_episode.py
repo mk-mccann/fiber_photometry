@@ -7,7 +7,6 @@ import paths
 import functions_aggregation as f_aggr
 import functions_plotting as fp
 from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
-from aggregate_episodes_across_experiments import create_episode_aggregate_h5
 
 
 def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, plot_singles=False,
@@ -76,76 +75,12 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
 
     # Plot the mean episode
     fig = fp.plot_mean_episode(time, traces, plot_singles=plot_singles)
-    plt.ylabel('Z-dF/F')
+    plt.ylabel(fp.fluorescence_axis_labels[f_trace])
     plt.title('Mean trace for {}'.format(scoring_type))
-    plt_name = "mean_{}_dff_zscore.png".format(scoring_type.lower().replace(' ', '_'))
-    #plt.ylim([-1.0, 2.0])
+    plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))
 
     return fig
-
-
-# def plot_multiple_behaviors(data_dict, keys_to_plot, f_trace='zscore', channel_key=None, plot_singles=False):
-#     """Creates and saves a plot of the mean fluorescence trace across all episodes of multiple scoring types contained
-#     in the input data_dict. Plots mean + SEM.
-#
-#     Parameters
-#     ----------
-#     data_dict : dict
-#         Dictionary where each key is a list of pd.DataFrames containing fluorescence data for all episodes of that
-#         scoring types
-#     keys_to_plot: list of str
-#        The scoring types to be plotted.
-#     f_trace : str, default='zscore'
-#         The fluorescence trace to be plotted. Options are ['auto', 'gcamp', 'dff', 'zscore'].
-#     channel_key : str, optional
-#         Fluorescence channel to use. Only used in dual-fiber recordings. Options are ['anterior', 'posterior'].
-#         Default is None for single-fiber recordings.
-#     plot_singles : bool, default False
-#         Boolean value to plot individual episode traces.
-#
-#     Returns
-#     -------
-#
-#     See Also
-#     --------
-#     plot_mean_episode : Plots mean + SEM of all input traces
-#     """
-#
-#     collected_traces = []
-#
-#     if channel_key is None:
-#         f_trace = f_trace
-#     else:
-#         f_trace = '_'.join([f_trace, channel_key])
-#
-#     for k in keys_to_plot:
-#         f_traces_of_key = [df[f_trace].to_numpy() for df in data_dict[k]]
-#
-#         if len(f_traces_of_key) > 0:
-#             trace_array = f_util.list_lists_to_array(f_traces_of_key)
-#
-#             num_episodes = trace_array.shape[0]
-#             print("Number of {} episodes = {}".format(k, num_episodes))
-#
-#             t = np.linspace(period[0], period[1], trace_array.shape[-1])
-#
-#             # Remove the baseline using the 5 seconds before behavior onset
-#             # trace_array = f_util.remove_baseline(t, trace_array, norm_start=-5, norm_end=0)
-#
-#             collected_traces.append(trace_array)
-#
-#         else:
-#             print("No episodes of {} found!".format(k))
-#
-#     collected_traces = np.vstack(collected_traces)
-#     # Plot the mean episode
-#     fig = plot_mean_episode(t, collected_traces, plot_singles=plot_singles)
-#     plt.ylabel('Z-dF/F')
-#     plt.title('Mean trace for {}'.format(', '.join(keys_to_plot)))
-#     plt_name = "mean_{}_dff_zscore.png".format('_'.join(keys_to_plot))
-#     plt.savefig(join(paths.figure_directory, plt_name))
-#     return fig
 
 
 if __name__ == "__main__":
@@ -159,11 +94,11 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Transfer']
+    episodes_to_analyze = ['Eating Zone Minus', 'Eating', 'Eating Zone Plus']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 0    # Seconds
+    episode_duration_cutoff = 5    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 10    # Seconds
@@ -223,7 +158,7 @@ if __name__ == "__main__":
                 channels = ['anterior', 'posterior']
                 for channel in channels:
                     plot_mean_episode(episodes_to_run, episode_name,
-                                      plot_singles=False, norm_start=norm_start, norm_end=norm_end,
+                                      plot_singles=True, norm_start=norm_start, norm_end=norm_end,
                                       channel_key=channel)
             else:
                 plot_mean_episode(episodes_to_run, episode_name,

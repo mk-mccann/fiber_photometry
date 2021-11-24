@@ -1,6 +1,6 @@
 from os.path import join
 
-project_root_dir = r"J:\Alja Podgornik\FP_Alja\January '21 WILD TYPE\Multimaze"
+project_root_dir = r"/home/matt/Dropbox/Alja_FP/January '21 WILD TYPE/Multimaze"
 
 raw_data_directory = join(project_root_dir, "raw_data")
 

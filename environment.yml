@@ -1,7 +1,11 @@
 name: fiber_photometry
+
 channels:
   - defaults
+  - conda-forge
+
 dependencies:
+  - python=3.8
   - pip
   - h5py
   - hdf5
@@ -13,7 +17,6 @@ dependencies:
   - pillow
   - pyqt
   - pytables
-  - python=3.8
   - qt=5
   - qtconsole
   - qtpy

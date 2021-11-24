@@ -119,7 +119,6 @@ def lernerFit(auto, gcamp, power=1):
 def butter_highpass(cutoff, order, fs):
     """Calculates the coefficients for a Butterworth high pass filter
 
-
     Parameters
     ----------
     cutoff : int or float

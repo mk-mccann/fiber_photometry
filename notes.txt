@@ -1,7 +1,10 @@
 TO DO
 -----
 - Take a look at polynomial fitting for GenSat lines
-- HMM transition matrix plots
+- Documentation:
+- Finish compare_behavior_medians.py
+- Look up Lerner Fit to see what is happening wih ringing
+
 
 DATA
 ____

@@ -10,7 +10,7 @@ from os.path import join
 import paths
 import functions_preprocessing as fpp
 import functions_io as f_io
-from functions_plotting import plot_fluorescence_min_sec
+from functions_plotting import plot_fluorescence_min_sec, fluorescence_axis_labels
 
 
 """
@@ -148,22 +148,27 @@ if __name__ == "__main__":
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
         data.to_hdf(join(paths.preprocessed_data_directory, filename), key='preprocessed', mode='w')
 
+        # Which fluorescence trace do you want to plot?
+        # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
+        f_trace = 'zscore_Lerner'
+
         # Make a plot of the zdffs and save it.
         fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)
 
         # Plot the anterior recording
-        ax1 = plot_fluorescence_min_sec(data['time'], data['gcamp_anterior'], ax=ax1)
-        ax1.set_ylabel('Z-dF/F')
+        ax1 = plot_fluorescence_min_sec(data['time'], data['{}_anterior'.format(f_trace)], ax=ax1)
+        ax1.set_ylabel(fluorescence_axis_labels[f_trace])
         ax1.set_title('Anterior')
 
         # Plot the posterior recording
-        ax2 = plot_fluorescence_min_sec(data['time'], data['gcamp_posterior'], ax=ax2)
-        ax2.set_ylabel('Z-dF/F')
-        ax2.set_xlabel('Time (s)')
+        ax2 = plot_fluorescence_min_sec(data['time'], data['{}_posterior'.format(f_trace)], ax=ax2)
+        ax2.set_ylabel(fluorescence_axis_labels[f_trace])
+        ax2.set_xlabel('Time (hh:mm:ss)')
         ax2.set_title('Posterior')
 
-        fig.suptitle('Animal {} Day {} dual channel Z-dF/F'.format(animal, day))
+        title = 'Animal {} Day {} Dual Channel {}'.format(animal, day, f_trace).title().replace('_', ' ')
+        fig.suptitle(title)
 
-        plt.savefig(join(paths.figure_directory, 'animal{}_day{}_gcamp_zscore.png'.format(animal, day)), format="png")
+        plt.savefig(join(paths.figure_directory, title.lower().replace(' ', '_') + '.png'), format="png")
         # plt.show()
 
