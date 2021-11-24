@@ -331,7 +331,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     return texts
 
 
-def plot_heatmap(values, xlabels, ylabels, ax=None, **kwargs):
+def plot_heatmap(values, xlabels, ylabels, ax=None, use_colorbar=True, **kwargs):
     """ Wrapper function to plot a heatmap with a colorbar
 
     Parameters
@@ -344,7 +344,9 @@ def plot_heatmap(values, xlabels, ylabels, ax=None, **kwargs):
         Y axis labels
     ax : matplotlib AxisObejct, optional
         Axis on which to create the heatmap
-    **kwargs
+    use_colorbar : bool, optional
+        Use a colorbar or not
+    kwargs
         cmap_min : int or float
             Minimum value for the colormap
         cmap_max : int or float
@@ -354,7 +356,6 @@ def plot_heatmap(values, xlabels, ylabels, ax=None, **kwargs):
     -------
 
     """
-def plot_heatmap(values, xlabels, ylabels, ax=None, use_colorbar=False, **kwargs):
 
     if ax is None:
         fig, ax = plt.subplots()
