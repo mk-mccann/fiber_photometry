@@ -82,8 +82,8 @@ def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None)
 
 if __name__ == "__main__":
 
-    animal = 2
-    day = 3
+    animal = 1
+    day = 1
 
     # Check that the figure directory exists
     f_io.check_dir_exists(paths.figure_directory)
@@ -117,11 +117,11 @@ if __name__ == "__main__":
             plt.tight_layout()
             plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
-        else:
-            fig, title = plot_color_code_episodes(data, f_trace=f_trace)
-            plt.suptitle(title.format(animal, day))
-            plt.tight_layout()
-            plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
+        #else:
+            #fig, title = plot_color_code_episodes(data, f_trace=f_trace)
+            #plt.suptitle(title.format(animal, day))
+            #plt.tight_layout()
+            #plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
         # Uncomment here to show the plot
         plt.show()

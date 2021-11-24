@@ -2,7 +2,7 @@ name: fiber_photometry
 channels:
   - defaults
 dependencies:
-  -pip
+  - pip
   - h5py
   - hdf5
   - ipywidgets

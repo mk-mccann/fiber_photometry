@@ -152,12 +152,12 @@ if __name__ == "__main__":
         fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(20, 15), sharex=False)
 
         # Plot the anterior recording
-        ax1 = plot_fluorescence_min_sec(data['time'], data['zscore_Lerner_anterior'], ax=ax1)
+        ax1 = plot_fluorescence_min_sec(data['time'], data['gcamp_anterior'], ax=ax1)
         ax1.set_ylabel('Z-dF/F')
         ax1.set_title('Anterior')
 
         # Plot the posterior recording
-        ax2 = plot_fluorescence_min_sec(data['time'], data['zscore_Lerner_posterior'], ax=ax2)
+        ax2 = plot_fluorescence_min_sec(data['time'], data['gcamp_posterior'], ax=ax2)
         ax2.set_ylabel('Z-dF/F')
         ax2.set_xlabel('Time (s)')
         ax2.set_title('Posterior')

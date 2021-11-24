@@ -79,6 +79,7 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
     plt.ylabel('Z-dF/F')
     plt.title('Mean trace for {}'.format(scoring_type))
     plt_name = "mean_{}_dff_zscore.png".format(scoring_type.lower().replace(' ', '_'))
+    #plt.ylim([-1.0, 2.0])
     plt.savefig(join(paths.figure_directory, plt_name))
 
     return fig
@@ -158,11 +159,11 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Eating Zone Minus', 'Eating', 'Eating Zone Plus']
+    episodes_to_analyze = ['Transfer']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 5    # Seconds
+    episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 10    # Seconds
@@ -193,6 +194,7 @@ if __name__ == "__main__":
             # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
             # only day 3 experiments excluding animal 1
             # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
+            #episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 2.0) & (all_episodes["zscore_Lerner"] >= -2.0)]
             episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
@@ -225,7 +227,7 @@ if __name__ == "__main__":
                                       channel_key=channel)
             else:
                 plot_mean_episode(episodes_to_run, episode_name,
-                                  plot_singles=False, norm_start=norm_start, norm_end=norm_end
+                                  plot_singles=True, norm_start=norm_start, norm_end=norm_end
                                   )
 
             plt.show()

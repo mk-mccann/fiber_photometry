@@ -129,14 +129,18 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Eating', 'Eating Zone Plus', 'Eating Zone Minus']
+    episodes_to_analyze = ['Transfer']
+    
+    # Which fluorescence trace do you want to plot?
+    # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
+    f_trace = 'zscore_Lerner'
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 10    # Seconds
+    post_onset_window = 5    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -155,7 +159,7 @@ if __name__ == "__main__":
         aggregate_keys = aggregate_store.keys()
         print('The following episodes are available to analyze: {}'.format(aggregate_keys))
 
-        if episodes_to_analyze is 'ALL':
+        if episodes_to_analyze == 'ALL':
             episodes_to_analyze = [ak.strip('/') for ak in aggregate_keys]
 
         for episode_name in episodes_to_analyze:
@@ -164,10 +168,11 @@ if __name__ == "__main__":
 
             # -- Remove certain days/animals
             #episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
-            episodes_to_run = all_episodes.loc[all_episodes["animal"] != "1"]    # remove animal 1
+            #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "1"]    # remove animal 1
             # only day 3 experiments excluding animal 1
             #episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 1)]
             #episodes_to_run = all_episodes
+            episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 1.0) & (all_episodes["zscore_Lerner"] >= -1.0)]
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
             # that means the filtering removed all the episodes from the behaviors, and
@@ -196,7 +201,7 @@ if __name__ == "__main__":
                               norm_start=norm_start, norm_end=norm_end,
                               channel_key=channel)
             else:
-                plot_peth(episodes_to_run, bin_length, episode_name,
+                plot_peth(episodes_to_run, bin_length, episode_name, f_trace=f_trace,
                           norm_start=norm_start, norm_end=norm_end)
             # plt.show()
 
