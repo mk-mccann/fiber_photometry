@@ -192,37 +192,46 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
     DataFrame of all experiments with preprocessed fluorescence data and scoring
     """
 
-    all_exps = list(Path(base_directory).glob('*preprocessed.h5'))
+    # First check if we have an aggregate file
+    if os.path.isfile(os.path.join(base_directory, 'aggregate_all_experiments.h5')):
+        # If we have it, load it and move on
+        all_exps_df = pd.read_hdf(os.path.join(base_directory, 'aggregate_all_experiments.h5'), key='all_exps')
 
-    df_list = []
+    else:
+        # if we don't have an aggregate file, load from all processed files
+        all_exps = list(Path(base_directory).glob('*preprocessed.h5'))
 
-    # Create a GIANT dataframe with all experiments that are preprocessed and are scored
-    for file in all_exps:
-        # Get identifying info about the experiment
-        animal = file.stem.split('_')[0][6:]
-        day = file.stem.split('_')[1][-1]
+        df_list = []
 
-        try:
-            # load the processed data from one experiment at a time
-            exp = load_preprocessed_data(animal, day)
+        # Create a GIANT dataframe with all experiments that are preprocessed and are scored
+        for file in all_exps:
+            # Get identifying info about the experiment
+            animal = file.stem.split('_')[0][6:]
+            day = file.stem.split('_')[1][-1]
 
-            # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
             try:
-                exp = check_preprocessed_df_for_scoring(exp, animal, day)
-            except FileNotFoundError as err:
-                print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
-                    animal, day, err))
+                # load the processed data from one experiment at a time
+                exp = load_preprocessed_data(animal, day)
+
+                # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
+                try:
+                    exp = check_preprocessed_df_for_scoring(exp, animal, day)
+                except FileNotFoundError as err:
+                    print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
+                        animal, day, err))
+                    continue
+
+            except FileNotFoundError as error:
+                print(str(error))
                 continue
 
-        except FileNotFoundError as error:
-            print(str(error))
-            continue
+            # If the selected dataframe is good, add it to the list
+            df_list.append(exp)
 
-        # If the selected dataframe is good, add it to the list
-        df_list.append(exp)
+        # Now create a giant dataframe from all of the experiments
+        all_exps_df = pd.concat(df_list).reset_index(drop=True)
 
-    # Now create a giant dataframe from all of the experiments
-    return pd.concat(df_list).reset_index(drop=True)
+    return all_exps_df
 
 
 def save_pandas_dict_to_h5(input_dict, filename, base_directory=paths.preprocessed_data_directory):

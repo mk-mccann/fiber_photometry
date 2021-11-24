@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+from os.path import join
 
+import paths
 import functions_utils as f_util
 import functions_io as f_io
 
@@ -206,6 +208,9 @@ if __name__ == '__main__':
     # Note that here the behavior scoring must be done for an experiment to be
     # included in the aggregated data frame
     all_exps = f_io.load_all_experiments()
+
+    # Save a dataframe of all experiments to an .h5 file
+    all_exps.to_hdf(join(paths.preprocessed_data_directory, 'aggregate_all_experiments.h5'), key='all_exps', mode='w')
 
     # The period before the start of an episode
     period = -5

@@ -1,5 +1,7 @@
+TO DO
+-----
 - Take a look at polynomial fitting for GenSat lines
-
+- HMM transition matrix plots
 
 DATA
 ____
@@ -11,3 +13,4 @@ __________
 
 Index out of range - one of the numbers is not in mm.ss format
 "['Nesting End'] not in index" - there is a space after the "End" word that needs to get deleted
+
