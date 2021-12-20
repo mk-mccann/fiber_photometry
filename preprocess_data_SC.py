@@ -4,6 +4,7 @@ from os.path import join
 from scipy.signal import savgol_filter, filtfilt
 from scipy.ndimage import percentile_filter
 from tqdm import tqdm
+import numpy as np
 
 # Import custom written functions
 import paths
@@ -46,14 +47,23 @@ def preprocess_fluorescence(data_df, channel_key=None):
     gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
     auto = fpp.remove_nans(auto_channel.to_numpy())
 
-    # Remove jumps in the data with an aggressive percentile filter
-    gcamp = percentile_filter(gcamp, percentile=99, size=25)
-    auto = percentile_filter(auto, percentile=99, size=25)
-
     # identify where signal is lost -  we remove this from later traces
-    # gcamp_d0 = fpp.find_lost_signal(gcamp)
-    # auto_d0 = fpp.find_lost_signal(auto)
-    # shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0))) # identifies the indices if signal is lost in at least one channel
+    gcamp_d0 = fpp.find_large_jumps(gcamp, percentile=0.9)
+    auto_d0 = fpp.find_large_jumps(auto, percentile=0.9)
+    shared_motion = np.unique(np.concatenate((gcamp_d0, auto_d0)))  # identifies the indices if signal is lost in at least one channel
+
+    # Interpolate for now. This will be removed from processed signals later on
+    # if shared_motion.size > 0:
+    #     gcamp[shared_motion] = np.percentile(gcamp, 99)
+    #     auto[shared_motion] = np.percentile(auto, 99)
+        # interp_values = np.delete(np.arange(len(gcamp)), shared_motion)
+        # gcamp[shared_motion] = np.interp(shared_motion, data_df.time[interp_values], gcamp[interp_values])
+        # auto[shared_motion] = np.interp(shared_motion, data_df.time[interp_values], auto[interp_values])
+
+    # Remove jumps in the data with an aggressive percentile filter
+    gcamp = percentile_filter(gcamp, percentile=98, size=25)
+    auto = percentile_filter(auto, percentile=98, size=25)
+
 
     # remove slow decay with a high pass filter
     # cutoff = 0.1    # Hz
@@ -99,6 +109,14 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # auto[shared_zero] = np.NaN
     # dff[shared_zero] = np.NaN
     # zdff[shared_zero] = np.NaN
+
+    # Remove the segments where the signal was lost.
+    gcamp[shared_motion] = np.nan
+    auto[shared_motion] = np.nan
+    dff[shared_motion] = np.nan
+    zdff[shared_motion] = np.nan
+    dff_Lerner[shared_motion] = np.nan
+    zdff_Lerner[shared_motion] = np.nan
 
     # Save the data
     if channel_key is None:
@@ -148,7 +166,7 @@ if __name__ == "__main__":
         filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
         data.to_hdf(join(paths.preprocessed_data_directory, filename), key='preprocessed', mode='w')
 
-        # --- Make a plot of the zdff and save it. --- #
+        # --- Make a plot and save it. --- #
         # Which fluorescence trace do you want to plot?
         # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
         f_trace = 'zscore_Lerner'
@@ -159,5 +177,9 @@ if __name__ == "__main__":
         ax.set_xlabel('Time (hh:mm:ss)')
         ax.set_ylabel(fluorescence_axis_labels[f_trace])
         plt.savefig(join(paths.figure_directory, title.lower().replace(' ', '_') + '.png'), format="png")
+
+        # fig = plt.figure()
+        # plt.plot(np.abs(np.diff(data[f_trace])))
+        # plt.title('Animal {} Day {} df/dt'.format(animal, day, f_trace).title())
         # plt.show()
 

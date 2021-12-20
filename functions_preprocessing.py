@@ -2,7 +2,7 @@ import numpy as np
 import scipy.signal as sig
 
 
-def median_large_jumps(trace, percentile=0.95):
+def find_large_jumps(trace, percentile=0.95):
     """Filters large jumps in a signal and replaces them with the overall signal median
     Depreciated and no longer used.
 
@@ -19,12 +19,38 @@ def median_large_jumps(trace, percentile=0.95):
         Signal with jumps removed
     """
 
-    filtered_trace = trace.copy()
-    med = np.median(trace)
-    mask = np.argwhere((trace < med*percentile))
-    filtered_trace[mask] = med
+    # filtered_trace = trace.copy()
+    med = np.percentile(trace, 2.5)
+    # mask = np.argwhere((trace > med * (1 + (1 - percentile))) | (trace < (med - med * percentile)))
+    mask = np.argwhere(trace < med)
 
-    return filtered_trace
+    return mask
+
+
+def windowed_median(trace, window_size, std_multiplier=2):
+    new_trace = trace.copy()
+
+    windows = np.arange(0, len(trace), window_size)
+    idxs = []
+    running_median = np.median(trace)
+
+    if windows[-1] < len(trace):
+        np.append(windows, len(trace))
+
+    for i, (start, stop) in enumerate(zip(windows[:-1], windows[1:])):
+        sample = trace[start:stop].copy()
+        sample_med = np.nanmedian(sample)
+        sample_std = np.nanstd(sample)
+        # running_median = np.mean([running_median, sample_med])
+
+        mask = np.argwhere((sample > (running_median + std_multiplier * sample_std)) | (
+                    sample < (running_median - std_multiplier * sample_std)))
+        sample[mask] = running_median
+
+        new_trace[start:stop] = sample
+        idxs.append(mask)
+
+    return np.concatenate(idxs)
 
 
 def downsample(ts, signal, ds_factor):
@@ -166,7 +192,8 @@ def butter_lowpass(cutoff, order, fs):
 
 
 def find_lost_signal(trace):
-    """Identifies when a signal was lost by searching for locations where the signal derivative is zero
+    """Identifies when a signal was lost by searching for locations where the
+    signal derivative is large
 
     Parameters
     ----------
@@ -176,9 +203,9 @@ def find_lost_signal(trace):
     Returns
     -------
     d0 : np.array
-        Indices of 'trace' array where the derivative goes to zero
+        Indices of 'trace' array where the derivative is large
     """
 
     d_trace = np.r_[0, np.abs(np.diff(trace))]
-    d0 = np.where(d_trace == 0)[0]
+    d0 = np.argwhere(d_trace >= 0.5)
     return d0

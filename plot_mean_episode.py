@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Eating Zone Minus', 'Eating', 'Eating Zone Plus']
+    episodes_to_analyze = ['Transfer', ]
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         aggregate_keys = aggregate_store.keys()
         print('The following episodes are available to analyze: {}'.format(aggregate_keys))
 
-        if episodes_to_analyze is 'ALL':
+        if episodes_to_analyze == 'ALL':
             episodes_to_analyze = [ak.strip('/') for ak in aggregate_keys]
 
         for episode_name in episodes_to_analyze:
