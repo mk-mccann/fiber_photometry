@@ -3,10 +3,10 @@ import pandas as pd
 import sys
 from os.path import join
 
-import functions_io as f_io
+import fp.io as f_io
 import paths
 
-from functions_plotting import plot_fluorescence_min_sec
+from fp.plotting import plot_fluorescence_min_sec
 
 from PyQt5.QtWidgets import QFileDialog, QApplication
 from datetime import timedelta, datetime

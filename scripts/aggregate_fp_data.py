@@ -1,12 +1,12 @@
-import os
 import numpy as np
 import pandas as pd
+import os
 from os.path import join
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-import functions_io as f_io
-from functions_utils import find_episodes
+import fp.io as f_io
+from fp.utils import find_episodes
 import paths
 
 

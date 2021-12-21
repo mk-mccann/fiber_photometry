@@ -1,7 +1,10 @@
+*.egg-info
+
+__pycache__/
 .idea/
 .vscode/
-.ipynb_checkpoints/
-__pycache__/
+
 data/
+scripts/.ipynb_checkpoints/
 
 paths.py

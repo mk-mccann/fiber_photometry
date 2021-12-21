@@ -8,9 +8,9 @@ from os.path import join
 
 # Import custom written functions
 import paths
-import functions_preprocessing as fpp
-import functions_io as f_io
-from functions_plotting import plot_fluorescence_min_sec, fluorescence_axis_labels
+import fp.preprocessing as fpp
+import fp.io as f_io
+from fp.plotting import plot_fluorescence_min_sec, fluorescence_axis_labels
 
 
 """

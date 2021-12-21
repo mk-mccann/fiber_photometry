@@ -6,8 +6,8 @@ from os.path import join
 from scipy.stats import binned_statistic
 
 import paths
-import functions_aggregation as f_aggr
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
+import fp.aggregation as f_aggr
+from fp.utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 
 
 def plot_peth(episodes, bin_duration, scoring_type,

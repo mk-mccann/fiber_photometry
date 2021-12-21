@@ -5,8 +5,8 @@ import networkx as nx
 from os.path import join
 
 import paths
-from functions_io import load_all_experiments
-from functions_plotting import plot_heatmap
+from fp.io import load_all_experiments
+from fp.plotting import plot_heatmap
 
 
 def collapse_samples_to_states(data):

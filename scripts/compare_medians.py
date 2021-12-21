@@ -1,5 +1,5 @@
-import functions_io as f_io
-from functions_utils import median_of_time_window
+import fp.io as f_io
+from fp.utils import median_of_time_window
 
 
 if __name__ == "__main__":

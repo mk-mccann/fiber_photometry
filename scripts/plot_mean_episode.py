@@ -4,16 +4,15 @@ import matplotlib.pyplot as plt
 from os.path import join
 
 import paths
-import functions_aggregation as f_aggr
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
-from functions_plotting import fluorescence_axis_labels
+import fp.aggregation as aggr
+import fp.plotting as fp_plot
+from fp.utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 
 
-def plot_trace_raster(episodes, scoring_type,
-                      f_trace='zscore_Lerner', channel_key=None,
+def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, plot_singles=False,
                       index_key='overall_episode_number', **kwargs):
-
-    """ Plots a peri-event time histogram of individual episodes of some behavior.
+    """Creates and saves a plot of the mean fluorescence trace across all episodes of the individual scoring types
+    contained in the input 'data_dict'. Plots mean + SEM.
 
     Parameters
     ----------
@@ -27,11 +26,10 @@ def plot_trace_raster(episodes, scoring_type,
     channel_key : str, optional, default=None
         Fluorescence channel to use. Only used in dual-fiber recordings. Options are ['anterior', 'posterior'].
         Default=None for single-fiber recordings.
+    plot_singles : bool, default=False
+        Boolean value to plot individual episode traces.
     index_key : str, default='overall_episode_number'
         Name of the column in 'episodes' used for indexing
-
-    Returns
-    -------
 
     Keyword Arguments
     -----------------
@@ -40,6 +38,13 @@ def plot_trace_raster(episodes, scoring_type,
     norm_end : float, int
         Time (normalized) at which trace baseline calculation ends
 
+    Returns
+    -------
+
+    See Also
+    --------
+    plot_mean_episode : Plots mean + SEM of all input traces
+
     """
 
     # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
@@ -47,60 +52,39 @@ def plot_trace_raster(episodes, scoring_type,
     norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
-        f_trace_key = f_trace
+        f_trace = f_trace
     else:
-        f_trace_key = '_'.join([f_trace, channel_key])
+        f_trace = '_'.join([f_trace, channel_key])
 
     # Get episode traces
     times = episodes.groupby([index_key])['normalized_time'].agg(list).to_list()
-    traces = episodes.groupby([index_key])[f_trace_key].agg(list).to_list()
+    traces = episodes.groupby([index_key])[f_trace].agg(list).to_list()
 
     times = list_lists_to_array(times)
     traces = list_lists_to_array(traces)
 
     # The times should all be pretty similar (at least close enough for binning)
-    # Take an average time trace for our calculation
+    # Take an average time trace for our calculate
     time = np.nanmean(times, axis=0)
 
     # Remove the baseline from the fluorescence traces in the window
     traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
-    # Create the figure
-    fig, axes = plt.subplots(nrows=traces.shape[0], ncols=1, figsize=(10, 2*traces.shape[0]))
+    num_episodes = traces.shape[0]
+    print("Number of {} episodes = {}".format(scoring_type, num_episodes))
 
-    for ax, trace in zip(axes, traces):
-        ax.plot(time, trace)
-        ax.set_ylim(np.nanmin(traces), np.nanmax(traces))
-
-        ax.axvline(x=time[time == 0], c='k', linestyle='--')
-
-        # Hide the right, top, and bottom spines
-        ax.spines['right'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-
-        # Only show ticks on the left spine
-        ax.tick_params(axis='x', which='both', bottom=False, labelbottom=False)
-        ax.yaxis.set_ticks_position('left')
-
-    # Re-activate the bottom spine and ticks
-    axes[-1].spines['bottom'].set_visible(True)
-    axes[-1].tick_params(axis='x', which='both', bottom=True, labelbottom=True)
-
-    # Label the axes
-    axes[-1].set_xlabel('Time (s)')
-    axes[-1].set_ylabel(fluorescence_axis_labels[f_trace])
-
-    plt.suptitle('Raster traces for {} - {}'.format(scoring_type, f_trace))
-
-    plt.tight_layout()
-    plt_name = "raster_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
+    # Plot the mean episode
+    fig = fp_plot.plot_mean_episode(time, traces, plot_singles=plot_singles)
+    plt.ylabel(fp_plot.fluorescence_axis_labels[f_trace])
+    plt.title('Mean trace for {}'.format(scoring_type))
+    plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))
 
     return fig
 
 
 if __name__ == "__main__":
+
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
     aggregate_data_filename = 'aggregate_episodes.h5'
@@ -110,12 +94,11 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    # episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Eating Zone Plus']
+    episodes_to_analyze = ['Transfer', ]
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 35    # Seconds
+    episode_duration_cutoff = 5    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 10    # Seconds
@@ -134,7 +117,7 @@ if __name__ == "__main__":
         aggregate_keys = aggregate_store.keys()
         print('The following episodes are available to analyze: {}'.format(aggregate_keys))
 
-        if episodes_to_analyze is 'ALL':
+        if episodes_to_analyze == 'ALL':
             episodes_to_analyze = [ak.strip('/') for ak in aggregate_keys]
 
         for episode_name in episodes_to_analyze:
@@ -146,15 +129,16 @@ if __name__ == "__main__":
             # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
             # only day 3 experiments excluding animal 1
             # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
+            #episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 2.0) & (all_episodes["zscore_Lerner"] >= -2.0)]
             episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
             # that means the filtering removed all the episodes from the behaviors, and
             # that you need to change the filtering parameters for that kind of behavior
             try:
-                episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
-                episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
-                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, -1)
+                episodes_to_run = aggr.filter_episodes_for_overlap(episodes_to_run)
+                episodes_to_run = aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
+                episodes_to_run = aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
             except ValueError as e:
                 print(e)
                 print('Error in filtering parameters for {}! Change the parameters and re-run.'.format(episode_name))
@@ -162,20 +146,24 @@ if __name__ == "__main__":
                 continue
 
             # Select the amount of time after the onset of an episode to look at
-            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, post_onset_window)
+            episodes_to_run = aggr.select_analysis_window(episodes_to_run, post_onset_window)
 
             # Check if this is a dual-fiber experiment
             is_DC = check_if_dual_channel_recording(episodes_to_run)
 
-            # Plot rastered fluorescence traces for the individual behaviors (as selected in 'episodes_to_analyze')
+            # Plot means for the individual behaviors (as selected in 'episodes_to_analyze')
+            # If you wanted to plot for a DC experiment, it would look like
+            # plot_individual_behaviors(episodes_to_run, f_trace='zscore', channel_key='anterior))
             if is_DC:
                 channels = ['anterior', 'posterior']
                 for channel in channels:
-                    plot_trace_raster(episodes_to_run, episode_name,
-                                      norm_start=norm_start, norm_end=norm_end,
+                    plot_mean_episode(episodes_to_run, episode_name,
+                                      plot_singles=True, norm_start=norm_start, norm_end=norm_end,
                                       channel_key=channel)
             else:
-                plot_trace_raster(episodes_to_run, episode_name, norm_start=norm_start, norm_end=norm_end)
+                plot_mean_episode(episodes_to_run, episode_name,
+                                  plot_singles=True, norm_start=norm_start, norm_end=norm_end
+                                  )
 
             plt.show()
 

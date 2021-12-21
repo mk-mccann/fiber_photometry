@@ -1,16 +1,15 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import sem
 from os.path import join
 
 import paths
-import functions_aggregation as f_aggr
-import functions_plotting as fp
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
+import fp.utils as utils
+import fp.aggregation as f_aggr
 
 
-def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, plot_singles=False,
-                      index_key='overall_episode_number', **kwargs):
+def median_comparison(episodes, f_trace='zscore_Lerner', channel_key=None, plot_singles=False):
     """Creates and saves a plot of the mean fluorescence trace across all episodes of the individual scoring types
     contained in the input 'data_dict'. Plots mean + SEM.
 
@@ -18,25 +17,14 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
     ----------
     episodes : pd.DataFrame
         pd.DataFrames containing fluorescence data for all episodes of a scoring types
-    scoring_type: str
-        Name of the episodes being plotting
     f_trace : str, default='zscore_Lerner'
         The fluorescence trace to be plotted.
         Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner].
-    channel_key : str, optional, default=None
+    channel_key : str, optional
         Fluorescence channel to use. Only used in dual-fiber recordings. Options are ['anterior', 'posterior'].
-        Default=None for single-fiber recordings.
+        Default is None for single-fiber recordings.
     plot_singles : bool, default=False
         Boolean value to plot individual episode traces.
-    index_key : str, default='overall_episode_number'
-        Name of the column in 'episodes' used for indexing
-
-    Keyword Arguments
-    -----------------
-    norm_start : float, int
-        Time (normalized) at which trace baseline calculation starts
-    norm_end : float, int
-        Time (normalized) at which trace baseline calculation ends
 
     Returns
     -------
@@ -47,40 +35,35 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
 
     """
 
-    # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
-    norm_start = kwargs.get('norm_start', -5)
-    norm_end = kwargs.get('norm_end', 0)
-
     if channel_key is None:
         f_trace = f_trace
     else:
         f_trace = '_'.join([f_trace, channel_key])
 
-    # Get episode traces
-    times = episodes.groupby([index_key])['normalized_time'].agg(list).to_list()
-    traces = episodes.groupby([index_key])[f_trace].agg(list).to_list()
+    median_dict = {}    
 
-    times = list_lists_to_array(times)
-    traces = list_lists_to_array(traces)
+    # Loop through all the conditions we pulled out before and plot them
+    for k in data_dict.keys():
+        f_traces_of_key = [df[f_trace].to_numpy() for df in data_dict[k]]
 
-    # The times should all be pretty similar (at least close enough for binning)
-    # Take an average time trace for our calculate
-    time = np.nanmean(times, axis=0)
+        if len(f_traces_of_key) > 0:
+            k_dict = {}
+            
+            trace_array = utils.list_lists_to_array(f_traces_of_key)
 
-    # Remove the baseline from the fluorescence traces in the window
-    traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
+            num_episodes = trace_array.shape[0]
+            print("Number of {} episodes = {}".format(k, num_episodes))
 
-    num_episodes = traces.shape[0]
-    print("Number of {} episodes = {}".format(scoring_type, num_episodes))
+            ep_medians = np.nanmedian(trace_array, axis=1)
+            ep_mean = np.mean(ep_medians)
+            ep_sem = sem(ep_medians)
+            
+            median_dict[k] = ep_medians
 
-    # Plot the mean episode
-    fig = fp.plot_mean_episode(time, traces, plot_singles=plot_singles)
-    plt.ylabel(fp.fluorescence_axis_labels[f_trace])
-    plt.title('Mean trace for {}'.format(scoring_type))
-    plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
-    plt.savefig(join(paths.figure_directory, plt_name))
-
-    return fig
+        else:
+            print("No episodes of {} found!".format(k))
+            
+    return pd.DataFrame(dict([(k, pd.Series(v)) for k, v in median_dict.items()]))
 
 
 if __name__ == "__main__":
@@ -94,14 +77,14 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Transfer', ]
+    episodes_to_analyze = 'ALL'  # ['Eating', 'Eating Zone Plus']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 5    # Seconds
+    episode_duration_cutoff = 35  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 10    # Seconds
+    post_onset_window = 10  # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -117,7 +100,7 @@ if __name__ == "__main__":
         aggregate_keys = aggregate_store.keys()
         print('The following episodes are available to analyze: {}'.format(aggregate_keys))
 
-        if episodes_to_analyze == 'ALL':
+        if episodes_to_analyze is 'ALL':
             episodes_to_analyze = [ak.strip('/') for ak in aggregate_keys]
 
         for episode_name in episodes_to_analyze:
@@ -129,7 +112,6 @@ if __name__ == "__main__":
             # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
             # only day 3 experiments excluding animal 1
             # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
-            #episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 2.0) & (all_episodes["zscore_Lerner"] >= -2.0)]
             episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
@@ -138,7 +120,7 @@ if __name__ == "__main__":
             try:
                 episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
                 episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
-                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
+                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, -1)
             except ValueError as e:
                 print(e)
                 print('Error in filtering parameters for {}! Change the parameters and re-run.'.format(episode_name))
@@ -148,22 +130,12 @@ if __name__ == "__main__":
             # Select the amount of time after the onset of an episode to look at
             episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, post_onset_window)
 
-            # Check if this is a dual-fiber experiment
-            is_DC = check_if_dual_channel_recording(episodes_to_run)
-
             # Plot means for the individual behaviors (as selected in 'episodes_to_analyze')
             # If you wanted to plot for a DC experiment, it would look like
             # plot_individual_behaviors(episodes_to_run, f_trace='zscore', channel_key='anterior))
-            if is_DC:
-                channels = ['anterior', 'posterior']
-                for channel in channels:
-                    plot_mean_episode(episodes_to_run, episode_name,
-                                      plot_singles=True, norm_start=norm_start, norm_end=norm_end,
-                                      channel_key=channel)
-            else:
-                plot_mean_episode(episodes_to_run, episode_name,
-                                  plot_singles=True, norm_start=norm_start, norm_end=norm_end
-                                  )
+            median_comparison(episodes_to_run, episode_name,
+                              plot_singles=True, norm_start=norm_start, norm_end=norm_end
+                              )
 
             plt.show()
 
@@ -171,3 +143,5 @@ if __name__ == "__main__":
 
     except FileNotFoundError as e:
         print(e)
+
+

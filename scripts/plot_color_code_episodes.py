@@ -3,9 +3,9 @@ from os.path import join
 from warnings import warn
 
 import paths
-import functions_plotting as fp
-import functions_io as f_io
-from functions_utils import check_if_dual_channel_recording
+import fp.plotting as fp_plot
+import fp.io as f_io
+from fp.utils import check_if_dual_channel_recording
 
 
 def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None):
@@ -62,19 +62,19 @@ def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None)
 
     # Get the dF/F plot and highlight the times performing labeled behaviors
     # Plot the fluorescence trace on the first panel (ax1)
-    fp.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data, ax=ax1)
+    fp_plot.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data, ax=ax1)
     # Highlight the labelled behaviors on the first panel.
-    _ = fp.highlight_episodes(data_df, found_behaviors, ax=ax1)
+    _ = fp_plot.highlight_episodes(data_df, found_behaviors, ax=ax1)
     # Draw a dashed line at y=0
     ax1.axhline(0, ls='--', c='gray')
     # Add the correct axis labels
-    ax1.set_ylabel(fp.fluorescence_axis_labels[f_trace])
+    ax1.set_ylabel(fp_plot.fluorescence_axis_labels[f_trace])
 
     # Add a subplot containing the times in a certain zone
-    fp.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data, ax=ax2)
-    _ = fp.highlight_episodes(data_df, found_zones, ax=ax2)
+    fp_plot.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data, ax=ax2)
+    _ = fp_plot.highlight_episodes(data_df, found_zones, ax=ax2)
     ax2.axhline(0, ls='--', c='gray')
-    ax2.set_ylabel(fp.fluorescence_axis_labels[f_trace])
+    ax2.set_ylabel(fp_plot.fluorescence_axis_labels[f_trace])
     ax2.set_xlabel('Time')
 
     return fig, title

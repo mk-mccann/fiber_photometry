@@ -3,8 +3,8 @@ import pandas as pd
 from os.path import join
 
 import paths
-import functions_utils as f_util
-import functions_io as f_io
+import fp.utils as utils
+import fp.io as f_io
 
 
 def get_individual_episode_indices(data_df, key):
@@ -109,7 +109,7 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
 
         # Find the start time of the episode in the aggregated dataframe, and the beginning of the start window
         ep_start_time = exp['time'][exp.index == ep_start_idx].item()
-        _, window_start_time = f_util.find_nearest(exp['time'], ep_start_time + pre_episode_window)
+        _, window_start_time = utils.find_nearest(exp['time'], ep_start_time + pre_episode_window)
 
         # Extract the window of interest
         try:
