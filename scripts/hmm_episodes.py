@@ -6,7 +6,7 @@ from os.path import join
 
 import paths
 from fp.io import load_all_experiments
-from fp.plotting import plot_heatmap
+from fp.visualization import plot_heatmap
 
 
 def collapse_samples_to_states(data):

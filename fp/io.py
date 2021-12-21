@@ -4,7 +4,7 @@ from warnings import warn
 from pathlib import Path
 
 import paths
-import functions_utils as f_util
+import fp.utils as f_util
 
 
 def read_summary_file(file_path):

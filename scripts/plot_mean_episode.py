@@ -5,7 +5,7 @@ from os.path import join
 
 import paths
 import fp.aggregation as aggr
-import fp.plotting as fp_plot
+import fp.visualization as viz
 from fp.utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 
 
@@ -74,8 +74,8 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
     print("Number of {} episodes = {}".format(scoring_type, num_episodes))
 
     # Plot the mean episode
-    fig = fp_plot.plot_mean_episode(time, traces, plot_singles=plot_singles)
-    plt.ylabel(fp_plot.fluorescence_axis_labels[f_trace])
+    fig = viz.plot_mean_episode(time, traces, plot_singles=plot_singles)
+    plt.ylabel(viz.fluorescence_axis_labels[f_trace])
     plt.title('Mean trace for {}'.format(scoring_type))
     plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))

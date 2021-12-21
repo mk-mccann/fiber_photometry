@@ -6,7 +6,7 @@ from os.path import join
 import fp.io as f_io
 import paths
 
-from fp.plotting import plot_fluorescence_min_sec
+from fp.visualization import plot_fluorescence_min_sec
 
 from PyQt5.QtWidgets import QFileDialog, QApplication
 from datetime import timedelta, datetime

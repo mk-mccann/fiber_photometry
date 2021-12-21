@@ -10,7 +10,7 @@ from os.path import join
 import paths
 import fp.preprocessing as fpp
 import fp.io as f_io
-from fp.plotting import plot_fluorescence_min_sec, fluorescence_axis_labels
+from fp.visualization import plot_fluorescence_min_sec, fluorescence_axis_labels
 
 
 """

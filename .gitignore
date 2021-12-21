@@ -1,10 +1,11 @@
 *.egg-info
-
 __pycache__/
+
+# IDE specific folders
 .idea/
 .vscode/
 
+# Package folders and files
 data/
-scripts/.ipynb_checkpoints/
-
+notebooks/.ipynb_checkpoints/
 paths.py

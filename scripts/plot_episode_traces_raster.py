@@ -6,7 +6,7 @@ from os.path import join
 import paths
 import fp.aggregation as f_aggr
 from fp.utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
-from fp.plotting import fluorescence_axis_labels
+from fp.visualization import fluorescence_axis_labels
 
 
 def plot_trace_raster(episodes, scoring_type,
