@@ -64,7 +64,7 @@ def get_individual_episode_indices(data_df, key):
     return valid_episode_idxs
 
 
-def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
+def get_episode_with_start_window(data_df, episodes, pre_episode_window=0, post_episode_window=0):
     """Checks the duration of an episode against a minimum duration to filter short scoring type epochs.
 
     Parameters
@@ -73,17 +73,19 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
         DataFrame of aggregated experiments
     episodes : iterable object
         Episode indices for a given scoring type
-    pre_episode_window : int, default=-5
+    pre_episode_window : int, default=0
         Duration in seconds to select before the onset of a scoring type.
+    post_episode_window : int, default=0
+        Duration in seconds to select after the onset of a scoring type.
 
     Returns
     -------
-    start_windows : list of pd.DataFrames
-        List of windows surrounding the start of a scoring type epoch of interest
+    episode_windows : list of pd.DataFrames
+        List of windows surrounding the start and end of a scoring type epoch of interest
 
     """
 
-    start_windows = []
+    episode_windows = []
 
     # Some variables to number the episodes of a behavior within a given experiment
     exp_ep_number = 1
@@ -111,29 +113,38 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=-5):
         ep_start_time = exp['time'][exp.index == ep_start_idx].item()
         _, window_start_time = f_util.find_nearest(exp['time'], ep_start_time + pre_episode_window)
 
+        # Find the end time of the episode in the aggregated dataframe, and the end of the end window
+        ep_end_time = exp['time'][exp.index == ep_end_idx].item()
+        _, window_end_time = f_util.find_nearest(exp['time'], ep_end_time + post_episode_window)
+
         # Extract the window of interest
         try:
             start_idx = exp.loc[exp['time'] == window_start_time].index.item()
         except IndexError:
             start_idx = exp.loc[exp['time'] == exp['time'].min()].index.item()
 
-        ep_df = data_df.iloc[start_idx:ep_end_idx].copy()
+        try:
+            end_idx = exp.loc[exp['time'] == window_end_time].index.item()
+        except IndexError:
+            end_idx = exp.loc[exp['time'] == exp['time'].max()].index.item()
+
+        ep_df = data_df.iloc[start_idx:end_idx].copy()
 
         # Add some metadata to the episode dataframe
         ep_df['exp_episode_number'] = exp_ep_number
         ep_df['overall_episode_number'] = overall_ep_number
         ep_df['normalized_time'] = ep_df['time'] - ep_start_time
 
-        start_windows.append(ep_df)
+        episode_windows.append(ep_df)
 
         last_animal = float(animal)
         last_day = int(day)
         overall_ep_number += 1
 
-    return start_windows
+    return episode_windows
 
 
-def extract_episodes(data_df, pre_episode_window):
+def extract_episodes(data_df, pre_episode_window, post_episode_window):
     """Pulls the individual episodes of a given scoring type(s) from the data frame of aggregated experiments.
 
     Parameters
@@ -142,6 +153,8 @@ def extract_episodes(data_df, pre_episode_window):
         Data frame of the aggregated experiments
     pre_episode_window : int
         The time in seconds before onset of a given scoring type to analyze
+    post_episode_window : int
+        The time in seconds after the end of a given scoring type to analyze
 
     Returns
     -------
@@ -166,9 +179,11 @@ def extract_episodes(data_df, pre_episode_window):
 
         # This is a check if there are episodes for a given scoring type. If there are, it adds them to the output dict
         if len(episodes_by_idx) > 0:
-            # Extracts a window surrounding the start of an episode, as given by the variable 'start_window'
+            # Extracts a window surrounding the start and end of an episode, as given by the variables
+            # 'pre_episode_window' and 'post_episode_window'
             ep_start_windows = get_episode_with_start_window(data_df, episodes_by_idx,
-                                                             pre_episode_window=pre_episode_window)
+                                                             pre_episode_window=pre_episode_window,
+                                                             post_episode_window=post_episode_window)
             scoring_type_df = pd.concat(ep_start_windows)
             output_dict[scoring_type] = scoring_type_df
         else:
@@ -214,13 +229,17 @@ if __name__ == '__main__':
     all_exps.to_hdf(join(paths.preprocessed_data_directory, 'aggregate_all_experiments.h5'), key='all_exps', mode='w')
 
     # The period before the start of an episode
-    period = -5
+    pre_episode_period = -5
+
+    # The period after the end of an episode
+    post_episode_period = 5
 
     # Run the main function
-    all_episodes = extract_episodes(all_exps, period)
+    all_episodes = extract_episodes(all_exps, pre_episode_period, post_episode_period)
 
     # Save the dictionary to an .h5 file
     # Note that if there are no episodes of a scoring type in any experiment,
     # they are not saved into this file.
-    f_io.save_pandas_dict_to_h5(all_episodes, 'aggregate_episodes.h5')
+    output_filename = 'aggregate_episodes.h5'
+    f_io.save_pandas_dict_to_h5(all_episodes, output_filename)
     print('Done!')

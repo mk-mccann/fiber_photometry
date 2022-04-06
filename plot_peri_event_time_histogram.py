@@ -7,7 +7,7 @@ from scipy.stats import binned_statistic
 
 import paths
 import functions_aggregation as f_aggr
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
+from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording, find_nearest
 
 
 def plot_peth(episodes, bin_duration, scoring_type,
@@ -100,9 +100,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     if int(x_tick_labels[-1]) != int(bins[-1]):
         x_tick_labels = np.append(x_tick_labels, int(bins[-1]))
-        zero_idx = np.argwhere(bins == np.min(np.abs(bins)))[0][0]
-        x_tick_positions = np.linspace(-0.5, zero_idx-0.5,  len(x_tick_labels)-1)
-        x_tick_positions = np.append(x_tick_positions, len(bins) - 1.5)
+        x_tick_positions = np.array([find_nearest(bins, xlabel)[0] - 0.5 for xlabel in x_tick_labels])
     else:
         x_tick_positions = np.linspace(-0.5, len(bins) - 1.5, len(x_tick_labels))
 
@@ -111,8 +109,8 @@ def plot_peth(episodes, bin_duration, scoring_type,
     ax.axvline(x=x_tick_positions[x_tick_labels == 0][0], c='k', linestyle='--')
     ax.set_xlabel('Binned Time (s)')
 
-    y_tick_labels = np.arange(1, traces.shape[0]+1, 5)
-    y_tick_positions = np.linspace(0, traces.shape[0]-1, len(y_tick_labels))
+    y_tick_positions = np.linspace(0, traces.shape[0]-1, len(np.arange(0, traces.shape[0], 5)))
+    y_tick_labels = y_tick_positions.astype(int) + 1
     ax.set_yticks(y_tick_positions)
     ax.set_yticklabels(y_tick_labels)
     ax.set_ylabel('Episode')
@@ -141,18 +139,18 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Transfer']
+    episodes_to_analyze = ['Shock']
 
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
-    f_trace = 'zscore_Lerner'
+    f_trace = 'zscore'
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 5    # Seconds
+    post_onset_window = 10    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -210,11 +208,12 @@ if __name__ == "__main__":
                 for channel in channels:
                     plot_peth(episodes_to_run, bin_length, episode_name,
                               norm_start=norm_start, norm_end=norm_end,
-                              channel_key=channel, cmap_lim=2)
+                              channel_key=channel, cmap_lim=2,
+                              f_trace=f_trace)
             else:
                 plot_peth(episodes_to_run, bin_length, episode_name,
                           norm_start=norm_start, norm_end=norm_end,
-                          cmap_lim=2)
+                          cmap_lim=2, f_trace=f_trace)
             plt.show()
 
         aggregate_store.close()
