@@ -9,6 +9,7 @@ import functions_plotting as fp
 from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 
 
+
 def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, plot_singles=False,
                       index_key='overall_episode_number', **kwargs):
     """Creates and saves a plot of the mean fluorescence trace across all episodes of the individual scoring types
@@ -48,7 +49,7 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
     """
 
     # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
-    norm_start = kwargs.get('norm_start', -5)
+    norm_start = kwargs.get('norm_start', -3)
     norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
@@ -76,6 +77,7 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
     # Plot the mean episode
     fig = fp.plot_mean_episode(time, traces, plot_singles=plot_singles)
     plt.ylabel(fp.fluorescence_axis_labels[f_trace])
+    plt.ylim(-1.25, 0.5)
     plt.title('Mean trace for {}'.format(scoring_type))
     plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))
@@ -94,11 +96,11 @@ if __name__ == "__main__":
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Transfer', ]
+    episodes_to_analyze = ['Grooming']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 5    # Seconds
+    episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 10    # Seconds
@@ -125,10 +127,10 @@ if __name__ == "__main__":
             all_episodes = aggregate_store.get(episode_name.lower().replace(' ', '_'))
 
             # -- Remove certain days/animals
-            # episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
-            # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
+            # episodes_to_run = all_episodes.loc[all_episodes["day"] == "3"]    # select day 3 exps
+            #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "1"]    # remove animal 1
             # only day 3 experiments excluding animal 1
-            # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
+            #episodes_to_run = all_episodes.loc[(all_episodes["animal"] != "1") & (all_episodes["day"] != "1")]
             #episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 2.0) & (all_episodes["zscore_Lerner"] >= -2.0)]
             episodes_to_run = all_episodes
 
@@ -158,11 +160,11 @@ if __name__ == "__main__":
                 channels = ['anterior', 'posterior']
                 for channel in channels:
                     plot_mean_episode(episodes_to_run, episode_name,
-                                      plot_singles=True, norm_start=norm_start, norm_end=norm_end,
+                                      plot_singles=False, norm_start=norm_start, norm_end=norm_end,
                                       channel_key=channel)
             else:
                 plot_mean_episode(episodes_to_run, episode_name,
-                                  plot_singles=True, norm_start=norm_start, norm_end=norm_end
+                                  plot_singles=False, norm_start=norm_start, norm_end=norm_end
                                   )
 
             plt.show()

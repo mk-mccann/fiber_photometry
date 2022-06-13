@@ -103,7 +103,7 @@ def plot_trace_raster(episodes, scoring_type,
 if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregate_episodes.h5'
+    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
@@ -111,14 +111,14 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     # episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Eating Zone Plus']
+    episodes_to_analyze = ['Eating']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
-    episode_duration_cutoff = 35    # Seconds
+    episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 10    # Seconds
+    post_onset_window = 7    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2

@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from hmmlearn import hmm
-import networkx as nx
-from os.path import join
 
 import paths
 from functions_io import load_all_experiments
@@ -97,7 +95,7 @@ if __name__ == "__main__":
     group = 'chr'    #'ctrl'
 
     # Load the csv
-    all_data = pd.read_csv(r"V:\Matt McCann\Opto\Dataframes\Combined_data.csv")
+    all_data = pd.read_csv(r"J:\Alja Podgornik\Optogenetics\Multimaze\January '22\Dataframes\Combined_data.csv")
 
     # # Get labeled behaviors, but exclude the following from the analysis
     # behaviors_to_exclude = ['Eating', 'Transfer', 'Switch', 'WSW', 'Ear Scratch', 'Nibbling Floor', 'Squeezed MZ Edge']

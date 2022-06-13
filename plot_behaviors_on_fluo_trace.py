@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from os.path import join
 from warnings import warn
+from scipy.ndimage import percentile_filter, gaussian_filter1d
+
 
 import paths
 import functions_plotting as fp
@@ -8,7 +10,7 @@ import functions_io as f_io
 from functions_utils import check_if_dual_channel_recording
 
 
-def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None):
+def plot_behaviors_on_fluo_trace(data_df, f_trace='zscore_Lerner', behaviors_to_plot='ALL', channel_key=None):
     """Plots a figure for the selected fluorescence trace for a given recording and overlays the manually-scored
     behavior and zone-occupation periods. Time is scaled to HH:mm format for readability. If a single-fiber recording,
     produces a 2x1 figure, if a dual-fiber recording, produces a 2x2 figure
@@ -44,8 +46,10 @@ def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None)
 
     # Extract the labeled behaviors and zones
     labeled_episodes = data_df.columns[data_df.columns.get_loc('zone') + 1:]
-    found_behaviors = [ep for ep in labeled_episodes if 'Zone' not in ep]
-    found_zones = [ep for ep in labeled_episodes if 'Zone' in ep]
+    if behaviors_to_plot == 'ALL':
+        found_behaviors = [ep for ep in labeled_episodes if 'Zone' not in ep]
+    else:
+        found_behaviors = behaviors_to_plot
 
     if channel_key is None:
         f_trace_key = f_trace
@@ -57,33 +61,34 @@ def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None)
 
     fluor_data = data_df[f_trace_key].to_numpy()
 
-    # Generate a figure with 2 panels in a single column
-    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(20, 15), sharex=True, sharey=True)
+    # Smooth this even more
+    fluor_data_smooth = gaussian_filter1d(fluor_data, 6)
+
+    # Generate a figure
+    fig = plt.figure(figsize=(15, 5))
+    ax = plt.gca()
 
     # Get the dF/F plot and highlight the times performing labeled behaviors
     # Plot the fluorescence trace on the first panel (ax1)
-    fp.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data, ax=ax1)
+    fp.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data_smooth, ax=ax)
     # Highlight the labelled behaviors on the first panel.
-    _ = fp.highlight_episodes(data_df, found_behaviors, ax=ax1)
+    _ = fp.highlight_episodes(data_df, found_behaviors, ax=ax)
     # Draw a dashed line at y=0
-    ax1.axhline(0, ls='--', c='gray')
+    ax.axhline(0, ls='--', c='gray', alpha=0.2)
     # Add the correct axis labels
-    ax1.set_ylabel(fp.fluorescence_axis_labels[f_trace])
-
-    # Add a subplot containing the times in a certain zone
-    fp.plot_fluorescence_min_sec(data_df.time.to_numpy(), fluor_data, ax=ax2)
-    _ = fp.highlight_episodes(data_df, found_zones, ax=ax2)
-    ax2.axhline(0, ls='--', c='gray')
-    ax2.set_ylabel(fp.fluorescence_axis_labels[f_trace])
-    ax2.set_xlabel('Time')
+    ax.set_ylabel(fp.fluorescence_axis_labels[f_trace])
+    ax.set_xlabel('Time')
+    # Remove top and right axis
+    ax.spines.right.set_visible(False)
+    ax.spines.top.set_visible(False)
 
     return fig, title
 
 
 if __name__ == "__main__":
 
-    animal = 1
-    day = 2
+    animal = 3
+    day = 1
 
     # Check that the figure directory exists
     f_io.check_dir_exists(paths.figure_directory)
@@ -94,6 +99,12 @@ if __name__ == "__main__":
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
     f_trace = 'zscore_Lerner'
+
+    # -- Which behavior(s) do you want to look at?
+    # If set to 'ALL', plots all behaviors
+    # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
+    # This is true for single behaviors also!
+    behaviors_to_plot = ['Eating Window', 'Grooming', 'Transfer', 'Social Interaction']
 
     # Some error catching - if the behavior data is not in the df, raise an error and quit
     try:
@@ -106,28 +117,28 @@ if __name__ == "__main__":
         if is_DC:
             channels = ['anterior', 'posterior']
             for channel in channels:
-                fig, title = plot_color_code_episodes(data, f_trace=f_trace, channel_key=channel)
+                fig, title = plot_behaviors_on_fluo_trace(data, f_trace=f_trace, behaviors_to_plot=behaviors_to_plot, channel_key=channel)
                 plt.suptitle(title.format(animal, day))
                 plt.tight_layout()
                 plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
-        
+
         else:
-            fig, title = plot_color_code_episodes(data, f_trace = f_trace)
-            plt.suptitle(title.format(animal,day))
+            fig, title = plot_behaviors_on_fluo_trace(data, f_trace=f_trace, behaviors_to_plot=behaviors_to_plot)
+            plt.suptitle(title.format(animal, day))
             plt.tight_layout()
             plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
-        #else:
-            #fig, title = plot_color_code_episodes(data, f_trace=f_trace)
-            #plt.suptitle(title.format(animal, day))
-            #plt.tight_layout()
-            #plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
+        # else:
+        # fig, title = plot_color_code_episodes(data, f_trace=f_trace)
+        # plt.suptitle(title.format(animal, day))
+        # plt.tight_layout()
+        # plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
         # Uncomment here to show the plot
         plt.show()
 
         print('Done!')
-        
+
     except FileNotFoundError as err:
         message = "Manual scoring needs to be done for this experiment: Animal {} Day {}.".format(animal, day)
         warn(message)

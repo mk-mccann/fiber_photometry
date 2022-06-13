@@ -7,8 +7,8 @@ from scipy.stats import binned_statistic
 
 import paths
 import functions_aggregation as f_aggr
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
-
+from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording, find_nearest
+from functions_preprocessing import remove_nans
 
 def plot_peth(episodes, bin_duration, scoring_type,
               f_trace='zscore_Lerner', channel_key=None, bin_function=np.nanmedian,
@@ -58,7 +58,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
     """
 
     # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
-    norm_start = kwargs.get('norm_start', -5)
+    norm_start = kwargs.get('norm_start', -3)
     norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
@@ -89,20 +89,29 @@ def plot_peth(episodes, bin_duration, scoring_type,
     # Calculate the statistics on the bin
     bin_values, _, _ = binned_statistic(time, traces, statistic=bin_function, bins=bins)
 
+    # If there are nans, interpolate them
+    bin_values_corrected = []
+    for row, values in enumerate(bin_values):
+        if np.isnan(values).any():
+            if np.count_nonzero(np.isnan(values)) != len(values):
+                bin_values_corrected.append(remove_nans(values))
+        else:
+            bin_values_corrected.append(values)
+
+    bin_values_corrected = np.array(bin_values_corrected)
+
     # Create the figure
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
 
     # Set the range for the color map
     cbar_range_max = kwargs.get('cmap_lim', np.ceil(np.nanmax(traces)))
-    im = ax.imshow(bin_values, cmap='seismic', vmin=-cbar_range_max, vmax=cbar_range_max)
+    im = ax.imshow(bin_values_corrected, cmap='seismic', vmin=-cbar_range_max, vmax=cbar_range_max)
 
     x_tick_labels = np.arange(bins[0], bins[-1]+bin_duration, 5)
 
     if int(x_tick_labels[-1]) != int(bins[-1]):
         x_tick_labels = np.append(x_tick_labels, int(bins[-1]))
-        zero_idx = np.argwhere(bins == np.min(np.abs(bins)))[0][0]
-        x_tick_positions = np.linspace(-0.5, zero_idx-0.5,  len(x_tick_labels)-1)
-        x_tick_positions = np.append(x_tick_positions, len(bins) - 1.5)
+        x_tick_positions = np.array([find_nearest(bins, xlabel)[0] - 0.5 for xlabel in x_tick_labels])
     else:
         x_tick_positions = np.linspace(-0.5, len(bins) - 1.5, len(x_tick_labels))
 
@@ -111,8 +120,8 @@ def plot_peth(episodes, bin_duration, scoring_type,
     ax.axvline(x=x_tick_positions[x_tick_labels == 0][0], c='k', linestyle='--')
     ax.set_xlabel('Binned Time (s)')
 
-    y_tick_labels = np.arange(1, traces.shape[0]+1, 5)
-    y_tick_positions = np.linspace(0, traces.shape[0]-1, len(y_tick_labels))
+    y_tick_positions = np.linspace(0, bin_values_corrected.shape[0] - 1, len(np.arange(0, bin_values_corrected.shape[0], 5)))
+    y_tick_labels = y_tick_positions.astype(int) + 1
     ax.set_yticks(y_tick_positions)
     ax.set_yticklabels(y_tick_labels)
     ax.set_ylabel('Episode')
@@ -133,7 +142,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
 if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregate_episodes.h5'
+    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
@@ -141,7 +150,7 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Transfer']
+    episodes_to_analyze = ['Grooming']
 
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
@@ -152,7 +161,10 @@ if __name__ == "__main__":
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 5    # Seconds
+    pre_onset_window = -5  # Seconds
+
+    # -- How long after the onset of an episode do you want to look at?
+    post_onset_window = 7    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -163,8 +175,8 @@ if __name__ == "__main__":
 
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace.
-    norm_start = -5
-    norm_end = 0
+    norm_start = -3
+    norm_end = -0
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)
@@ -180,9 +192,9 @@ if __name__ == "__main__":
 
             # -- Remove certain days/animals
             # episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
-            # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
+            #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "2"]    # remove animal 1
             # only day 3 experiments excluding animal 1
-            # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
+            #episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
             episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
@@ -199,7 +211,7 @@ if __name__ == "__main__":
                 continue
 
             # Select the amount of time after the onset of an episode to look at
-            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, post_onset_window)
+            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, pre_onset_window, post_onset_window)
 
             # Check if this is a dual-fiber experiment
             is_DC = check_if_dual_channel_recording(episodes_to_run)
@@ -210,11 +222,11 @@ if __name__ == "__main__":
                 for channel in channels:
                     plot_peth(episodes_to_run, bin_length, episode_name,
                               norm_start=norm_start, norm_end=norm_end,
-                              channel_key=channel, cmap_lim=2)
+                              channel_key=channel, cmap_lim=3)
             else:
                 plot_peth(episodes_to_run, bin_length, episode_name,
                           norm_start=norm_start, norm_end=norm_end,
-                          cmap_lim=2)
+                          cmap_lim=3)
             plt.show()
 
         aggregate_store.close()

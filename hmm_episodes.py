@@ -101,7 +101,7 @@ if __name__ == "__main__":
     labeled_episodes = all_data.columns[all_data.columns.get_loc('zone') + 1:]
 
     # Get labeled behaviors, but exclude the following from the analysis
-    behaviors_to_exclude = ['Eating', 'Transfer', 'Switch', 'WSW', 'Ear Scratch', 'Nibbling Floor', 'Squeezed MZ Edge']
+    behaviors_to_exclude = ['Eating', 'Switch', 'Transfer', 'WSW', 'Ear Scratch', 'Nibbling Floor', 'Squeezed MZ Edge']
     found_behaviors = [ep for ep in labeled_episodes if 'Zone' not in ep]
     behaviors_to_use = [fb for fb in found_behaviors if fb not in behaviors_to_exclude]
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # fig_title = 'Transition probability: Animal {} Day {}'.format(animal, day)
 
     # --- Uncomment this section for plotting across animals on a given day --- #
-    X, lengths, states = fit_hmm_across_animals(all_data, 1, key='behavior')
+    X, lengths, states = fit_hmm_across_animals(all_data, 3, key='behavior')
 
     remodel = hmm.MultinomialHMM(n_components=len(states),
                                  n_iter=100, tol=0.01,

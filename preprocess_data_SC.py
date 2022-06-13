@@ -34,6 +34,9 @@ def preprocess_fluorescence(data_df, channel_key=None):
     data = preprocess_fluorescence(data, 'posterior')
     """
 
+    # Drop the first 30 seconds of the experiment (where the weird initial signal decrease happens)
+    data_df = data_df.drop(data_df[data_df.time < 30].index)
+
     # Define the GCaMP and autofluorescence channels
     if channel_key is None:
         auto_channel = data_df['auto_raw']
@@ -111,12 +114,12 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # zdff[shared_zero] = np.NaN
 
     # Remove the segments where the signal was lost.
-    gcamp[shared_motion] = np.nan
-    auto[shared_motion] = np.nan
-    dff[shared_motion] = np.nan
-    zdff[shared_motion] = np.nan
-    dff_Lerner[shared_motion] = np.nan
-    zdff_Lerner[shared_motion] = np.nan
+    # gcamp[shared_motion] = np.nan
+    # auto[shared_motion] = np.nan
+    # dff[shared_motion] = np.nan
+    # zdff[shared_motion] = np.nan
+    # dff_Lerner[shared_motion] = np.nan
+    # zdff_Lerner[shared_motion] = np.nan
 
     # Save the data
     if channel_key is None:
@@ -173,6 +176,13 @@ if __name__ == "__main__":
 
         ax = plot_fluorescence_min_sec(data['time'], data[f_trace])
         title = 'Animal {} Day {} {}'.format(animal, day, f_trace).title().replace('_', ' ')
+        ax.set_title(title)
+        ax.set_xlabel('Time (hh:mm:ss)')
+        ax.set_ylabel(fluorescence_axis_labels[f_trace])
+        plt.savefig(join(paths.figure_directory, title.lower().replace(' ', '_') + '.png'), format="png")
+
+        ax = plot_fluorescence_min_sec(data['time'], data['gcamp_raw'])
+        title = 'Animal {} Day {} Raw Fluo'.format(animal, day).title().replace('_', ' ')
         ax.set_title(title)
         ax.set_xlabel('Time (hh:mm:ss)')
         ax.set_ylabel(fluorescence_axis_labels[f_trace])
