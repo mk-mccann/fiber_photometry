@@ -158,6 +158,9 @@ if __name__ == "__main__":
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
     subset_to_plot = [1, 4, 5, 7, 8, 17]
 
+    # Limits to the colorbar
+    cmap_lim = 3
+
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
     f_trace = 'zscore_Lerner'
@@ -232,11 +235,11 @@ if __name__ == "__main__":
                 for channel in channels:
                     plot_peth(episodes_to_run, bin_length, episode_name,
                               norm_start=norm_start, norm_end=norm_end,
-                              channel_key=channel, cmap_lim=3)
+                              channel_key=channel, cmap_lim=cmap_lim)
             else:
                 plot_peth(episodes_to_run, bin_length, episode_name,
                           norm_start=norm_start, norm_end=norm_end,
-                          cmap_lim=3)
+                          cmap_lim=cmap_lim)
             plt.show()
 
         aggregate_store.close()

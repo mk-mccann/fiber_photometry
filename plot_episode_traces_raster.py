@@ -123,15 +123,18 @@ if __name__ == "__main__":
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
     subset_to_plot = [1, 4, 5, 7, 8, 17]
 
+    # Limits to the y-axis of the plot
+    ylim = (-3, 3)
+
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    pre_onset_window = -5  # Seconds
+    pre_onset_window = -2  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 7    # Seconds
+    post_onset_window = 4    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -190,9 +193,9 @@ if __name__ == "__main__":
                 for channel in channels:
                     plot_trace_raster(episodes_to_run, episode_name,
                                       norm_start=norm_start, norm_end=norm_end,
-                                      channel_key=channel)
+                                      channel_key=channel, ylim=ylim)
             else:
-                plot_trace_raster(episodes_to_run, episode_name, norm_start=norm_start, norm_end=norm_end, ylim=(-2, 2))
+                plot_trace_raster(episodes_to_run, episode_name, norm_start=norm_start, norm_end=norm_end, ylim=ylim)
 
             plt.show()
 
