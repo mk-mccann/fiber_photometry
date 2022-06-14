@@ -12,7 +12,8 @@ from functions_preprocessing import remove_nans
 
 def plot_peth(episodes, bin_duration, scoring_type,
               f_trace='zscore_Lerner', channel_key=None, bin_function=np.nanmedian,
-              index_key='overall_episode_number', **kwargs):
+              index_key='overall_episode_number',
+              ax=None, **kwargs):
 
     """ Plots a peri-event time histogram of individual episodes of some behavior.
 
@@ -101,7 +102,8 @@ def plot_peth(episodes, bin_duration, scoring_type,
     bin_values_corrected = np.array(bin_values_corrected)
 
     # Create the figure
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
+    if ax is None:
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, traces.shape[0]//2))
 
     # Set the range for the color map
     cbar_range_max = kwargs.get('cmap_lim', np.ceil(np.nanmax(traces)))
@@ -128,15 +130,16 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     ax.set_title('PETH - {}'.format(scoring_type))
 
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    fig.colorbar(im, cax=cax, label=f_trace)
+    if 'fig' in locals():
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(im, cax=cax, label=f_trace)
 
     plt.tight_layout()
     plt_name = "peth_{}_zscore.png".format(scoring_type.lower().replace(' ', '_'))
     plt.savefig(join(paths.figure_directory, plt_name))
 
-    return fig
+    return ax, im
 
 
 if __name__ == "__main__":
@@ -151,6 +154,9 @@ if __name__ == "__main__":
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
     episodes_to_analyze = ['Grooming']
+
+    # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
+    subset_to_plot = [1, 4, 5, 7, 8, 17]
 
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
@@ -212,6 +218,10 @@ if __name__ == "__main__":
 
             # Select the amount of time after the onset of an episode to look at
             episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, pre_onset_window, post_onset_window)
+
+            # select specific episodes from a list
+            if len(subset_to_plot) > 0:
+                episodes_to_run = episodes_to_run[episodes_to_run.overall_episode_number.isin(subset_to_plot)]
 
             # Check if this is a dual-fiber experiment
             is_DC = check_if_dual_channel_recording(episodes_to_run)

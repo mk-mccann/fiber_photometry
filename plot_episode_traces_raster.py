@@ -11,7 +11,8 @@ from functions_plotting import fluorescence_axis_labels
 
 def plot_trace_raster(episodes, scoring_type,
                       f_trace='zscore_Lerner', channel_key=None,
-                      index_key='overall_episode_number', **kwargs):
+                      index_key='overall_episode_number', axes=None,
+                      **kwargs):
 
     """ Plots a peri-event time histogram of individual episodes of some behavior.
 
@@ -66,11 +67,15 @@ def plot_trace_raster(episodes, scoring_type,
     traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
     # Create the figure
-    fig, axes = plt.subplots(nrows=traces.shape[0], ncols=1, figsize=(10, 2*traces.shape[0]))
+    if axes is None:
+        fig, axes = plt.subplots(nrows=traces.shape[0], ncols=1, figsize=(10, 2*traces.shape[0]))
 
     for ax, trace in zip(axes, traces):
         ax.plot(time, trace)
-        ax.set_ylim(np.nanmin(traces), np.nanmax(traces))
+        if 'ylim' in kwargs:
+            ax.set_ylim(kwargs['ylim'][0], kwargs['ylim'][1])
+        else:
+            ax.set_ylim(np.nanmin(traces), np.nanmax(traces))
 
         ax.axvline(x=time[time == 0], c='k', linestyle='--')
 
@@ -89,15 +94,17 @@ def plot_trace_raster(episodes, scoring_type,
 
     # Label the axes
     axes[-1].set_xlabel('Time (s)')
-    axes[-1].set_ylabel(fluorescence_axis_labels[f_trace])
+    # axes[-1].set_ylabel(fluorescence_axis_labels[f_trace])
+    fig.text(0.04, 0.5, fluorescence_axis_labels[f_trace], va='center', rotation='vertical')
 
     plt.suptitle('Raster traces for {} - {}'.format(scoring_type, f_trace))
 
     plt.tight_layout()
+    plt.subplots_adjust(left=0.1, bottom=0.1, right=0.9, top=0.9)
     plt_name = "raster_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))
 
-    return fig
+    return axes
 
 
 if __name__ == "__main__":
@@ -111,11 +118,17 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     # episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Eating']
+    episodes_to_analyze = ['Grooming']
+
+    # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
+    subset_to_plot = [1, 4, 5, 7, 8, 17]
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
+
+    # -- How long after the onset of an episode do you want to look at?
+    pre_onset_window = -5  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 7    # Seconds
@@ -134,7 +147,7 @@ if __name__ == "__main__":
         aggregate_keys = aggregate_store.keys()
         print('The following episodes are available to analyze: {}'.format(aggregate_keys))
 
-        if episodes_to_analyze is 'ALL':
+        if episodes_to_analyze == 'ALL':
             episodes_to_analyze = [ak.strip('/') for ak in aggregate_keys]
 
         for episode_name in episodes_to_analyze:
@@ -162,12 +175,16 @@ if __name__ == "__main__":
                 continue
 
             # Select the amount of time after the onset of an episode to look at
-            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, post_onset_window)
+            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, pre_onset_window, post_onset_window)
+
+            # select specific episodes from a list
+            if len(subset_to_plot) > 0:
+                episodes_to_run = episodes_to_run[episodes_to_run.overall_episode_number.isin(subset_to_plot)]
 
             # Check if this is a dual-fiber experiment
             is_DC = check_if_dual_channel_recording(episodes_to_run)
 
-            # Plot rastered fluorescence traces for the individual behaviors (as selected in 'episodes_to_analyze')
+            # Plot raster fluorescence traces for the individual behaviors (as selected in 'episodes_to_analyze')
             if is_DC:
                 channels = ['anterior', 'posterior']
                 for channel in channels:
@@ -175,7 +192,7 @@ if __name__ == "__main__":
                                       norm_start=norm_start, norm_end=norm_end,
                                       channel_key=channel)
             else:
-                plot_trace_raster(episodes_to_run, episode_name, norm_start=norm_start, norm_end=norm_end)
+                plot_trace_raster(episodes_to_run, episode_name, norm_start=norm_start, norm_end=norm_end, ylim=(-2, 2))
 
             plt.show()
 
