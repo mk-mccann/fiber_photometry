@@ -109,7 +109,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
     cbar_range_max = kwargs.get('cmap_lim', np.ceil(np.nanmax(traces)))
     im = ax.imshow(bin_values_corrected, cmap='seismic', vmin=-cbar_range_max, vmax=cbar_range_max)
 
-    x_tick_labels = np.arange(bins[0], bins[-1]+bin_duration, 5)
+    x_tick_labels = np.arange(bins[0], bins[-1] + bin_duration, abs(bins[0]))
 
     if int(x_tick_labels[-1]) != int(bins[-1]):
         x_tick_labels = np.append(x_tick_labels, int(bins[-1]))
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Grooming']
+    episodes_to_analyze = ['Eating']
 
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
     subset_to_plot = [1, 4, 5, 7, 8, 17]
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    pre_onset_window = -5  # Seconds
+    pre_onset_window = -3  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
     post_onset_window = 7    # Seconds
