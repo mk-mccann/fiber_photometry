@@ -1,102 +1,95 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from os.path import join
 
 import paths
 import functions_aggregation as f_aggr
-import functions_plotting as fp
 from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
 
 
+def find_peaks(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, index_key='overall_episode_number', **kwargs):
 
-def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, plot_singles=False,
-                      index_key='overall_episode_number', **kwargs):
-    """Creates and saves a plot of the mean fluorescence trace across all episodes of the individual scoring types
-    contained in the input 'data_dict'. Plots mean + SEM.
-
-    Parameters
-    ----------
-    episodes : pd.DataFrame
-        pd.DataFrames containing fluorescence data for all episodes of a scoring types
-    scoring_type: str
-        Name of the episodes being plotting
-    f_trace : str, default='zscore_Lerner'
-        The fluorescence trace to be plotted.
-        Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner].
-    channel_key : str, optional, default=None
-        Fluorescence channel to use. Only used in dual-fiber recordings. Options are ['anterior', 'posterior'].
-        Default=None for single-fiber recordings.
-    plot_singles : bool, default=False
-        Boolean value to plot individual episode traces.
-    index_key : str, default='overall_episode_number'
-        Name of the column in 'episodes' used for indexing
-
-    Keyword Arguments
-    -----------------
-    norm_start : float, int
-        Time (normalized) at which trace baseline calculation starts
-    norm_end : float, int
-        Time (normalized) at which trace baseline calculation ends
-
-    Returns
-    -------
-
-    See Also
-    --------
-    plot_mean_episode : Plots mean + SEM of all input traces
-
-    """
-
-    # Handle keyword args. If these are not specified, the default to the values in parenthesis below.
-    norm_start = kwargs.get('norm_start', -3)
+    # Handle keyword args. If these are not specified, the default to the values in parentheses below.
+    norm_start = kwargs.get('norm_start', -5)
     norm_end = kwargs.get('norm_end', 0)
 
     if channel_key is None:
-        f_trace = f_trace
+        f_trace_key = f_trace
     else:
-        f_trace = '_'.join([f_trace, channel_key])
+        f_trace_key = '_'.join([f_trace, channel_key])
 
     # Get episode traces
     times = episodes.groupby([index_key])['normalized_time'].agg(list).to_list()
-    traces = episodes.groupby([index_key])[f_trace].agg(list).to_list()
+    episodes[f_trace_key].fillna(0, inplace=True)
+    traces = episodes.groupby([index_key])[f_trace_key].agg(list)
+    episode_idxs = traces.index.to_numpy()
+
+    if scoring_type == 'Grooming':
+        trace_peak_idx = traces.apply(np.nanargmin).to_numpy()
+    else:
+        trace_peak_idx = traces.apply(np.nanargmax).to_numpy()
 
     times = list_lists_to_array(times)
     traces = list_lists_to_array(traces)
 
     # The times should all be pretty similar (at least close enough for binning)
-    # Take an average time trace for our calculate
+    # Take an average time trace for our calculation
     time = np.nanmean(times, axis=0)
 
     # Remove the baseline from the fluorescence traces in the window
     traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
 
-    num_episodes = traces.shape[0]
-    print("Number of {} episodes = {}".format(scoring_type, num_episodes))
+    # Get extrema
+    extrema = []
+    extrema_time = []
+    for trace, idx in zip(traces, trace_peak_idx):
+        extrema.append(trace[idx])
+        extrema_time.append(time[idx])
 
-    # Plot the mean episode
-    fig = fp.plot_mean_episode(time, traces, plot_singles=plot_singles)
-    plt.ylabel(fp.fluorescence_axis_labels[f_trace])
-    # plt.ylim(-1.25, 0.5)
-    plt.title('Mean trace for {}'.format(scoring_type))
-    plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
-    plt.savefig(join(paths.figure_directory, plt_name))
+    # Get episode metadata
+    episode_metadata = []
+    cols = ['animal', 'day', 'exp_episode_number']
+    for ep in episode_idxs:
+        metadata = episodes[episodes[index_key] == ep][cols].drop_duplicates()
+        episode_metadata.append(metadata.values.astype(int))
 
-    return fig
+    # Get everything into a nice big dataframe so we can save it as a csv
+    df_data_list = []
+    df_columns = ['animal', 'day', 'behavior', 'exp_episode_number', 'overall_episode_number', 'peak', 'time_to_peak']
+    for i, ep_num in enumerate(episode_idxs):
+        animal, day, exp_ep_num = episode_metadata[i].tolist()[0]
+        overall_ep_num = ep_num
+        ep_peak = extrema[i]
+        ep_peak_time = extrema_time[i]
+        ep_data = [animal, day, scoring_type, exp_ep_num, overall_ep_num, ep_peak, ep_peak_time]
+        df_data_list.append(ep_data)
+
+    df = pd.DataFrame(data=df_data_list, columns=df_columns)
+
+    if channel_key is not None:
+        df['channel'] = channel_key
+
+    return df
 
 
 if __name__ == "__main__":
-
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregate_episodes.h5'
+    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Transfer']
+    # episodes_to_analyze = 'ALL'
+    episodes_to_analyze = ['Grooming', 'Eating Window', 'Shock', 'Social_Interaction', 'Transfer']
+
+    # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
+    subset_to_plot = []
+
+    # Limits to the y-axis of the plot
+    ylim = (-3, 3)
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
@@ -106,7 +99,7 @@ if __name__ == "__main__":
     pre_onset_window = -2  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 10    # Seconds
+    post_onset_window = 4    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -117,6 +110,7 @@ if __name__ == "__main__":
     norm_start = -5
     norm_end = -2
 
+    df_list = []
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)
         aggregate_keys = aggregate_store.keys()
@@ -130,11 +124,10 @@ if __name__ == "__main__":
             all_episodes = aggregate_store.get(episode_name.lower().replace(' ', '_'))
 
             # -- Remove certain days/animals
-            # episodes_to_run = all_episodes.loc[all_episodes["day"] == "3"]    # select day 3 exps
-            #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "1"]    # remove animal 1
+            # episodes_to_run = all_episodes.loc[all_episodes["day"] == 3]    # select day 3 exps
+            # episodes_to_run = all_episodes.loc[all_episodes["animal"] != 1]    # remove animal 1
             # only day 3 experiments excluding animal 1
-            #episodes_to_run = all_episodes.loc[(all_episodes["animal"] != "1") & (all_episodes["day"] != "1")]
-            #episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 2.0) & (all_episodes["zscore_Lerner"] >= -2.0)]
+            # episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
             episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
@@ -142,7 +135,7 @@ if __name__ == "__main__":
             # that you need to change the filtering parameters for that kind of behavior
             try:
                 episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
-                episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
+                episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff, filter_type='greater_than')
                 episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
             except ValueError as e:
                 print(e)
@@ -153,26 +146,31 @@ if __name__ == "__main__":
             # Select the amount of time after the onset of an episode to look at
             episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, pre_onset_window, post_onset_window)
 
+            # select specific episodes from a list
+            if len(subset_to_plot) > 0:
+                episodes_to_run = episodes_to_run[episodes_to_run.overall_episode_number.isin(subset_to_plot)]
+
             # Check if this is a dual-fiber experiment
             is_DC = check_if_dual_channel_recording(episodes_to_run)
 
-            # Plot means for the individual behaviors (as selected in 'episodes_to_analyze')
-            # If you wanted to plot for a DC experiment, it would look like
-            # plot_individual_behaviors(episodes_to_run, f_trace='zscore', channel_key='anterior))
+            # Plot raster fluorescence traces for the individual behaviors (as selected in 'episodes_to_analyze')
             if is_DC:
                 channels = ['anterior', 'posterior']
                 for channel in channels:
-                    plot_mean_episode(episodes_to_run, episode_name,
-                                      plot_singles=False, norm_start=norm_start, norm_end=norm_end,
+                    peak_df = find_peaks(episodes_to_run, episode_name,
+                                      norm_start=norm_start, norm_end=norm_end,
                                       channel_key=channel)
             else:
-                plot_mean_episode(episodes_to_run, episode_name,
-                                  plot_singles=False, norm_start=norm_start, norm_end=norm_end
-                                  )
+                peak_df = find_peaks(episodes_to_run, episode_name, norm_start=norm_start, norm_end=norm_end)
 
-            plt.show()
+            df_list.append(peak_df)
 
         aggregate_store.close()
+
+        peaks = pd.concat(df_list)
+        savename = f"peaks_{'_'.join(episodes_to_analyze).lower()}.csv"
+        peaks.to_csv(join(paths.preprocessed_data_directory, savename), index=False)
+        print('done!')
 
     except FileNotFoundError as e:
         print(e)

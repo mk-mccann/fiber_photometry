@@ -130,7 +130,7 @@ if __name__ == "__main__":
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
 
-    # -- How long after the onset of an episode do you want to look at?
+    # -- How long before the onset of an episode do you want to look at?
     pre_onset_window = -2  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
@@ -170,7 +170,7 @@ if __name__ == "__main__":
             try:
                 episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
                 episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
-                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, -1)
+                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
             except ValueError as e:
                 print(e)
                 print('Error in filtering parameters for {}! Change the parameters and re-run.'.format(episode_name))
