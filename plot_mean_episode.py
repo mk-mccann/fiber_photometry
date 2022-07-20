@@ -89,24 +89,24 @@ if __name__ == "__main__":
 
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregate_episodes.h5'
+    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Transfer']
+    episodes_to_analyze = ['Shock', 'Transfer']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long before the onset of an episode do you want to look at?
-    pre_onset_window = -2  # Seconds
+    pre_onset_window = -3  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 10    # Seconds
+    post_onset_window = 7    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -114,8 +114,8 @@ if __name__ == "__main__":
 
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace
-    norm_start = -5
-    norm_end = -2
+    norm_start = -3
+    norm_end = -0
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)

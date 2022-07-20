@@ -118,10 +118,10 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     # episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Grooming']
+    episodes_to_analyze = ['Transfer']
 
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
-    subset_to_plot = [1, 4, 5, 7, 8, 17]
+    subset_to_plot = []
 
     # Limits to the y-axis of the plot
     ylim = (-3, 3)

@@ -4,7 +4,7 @@ from os.path import join
 
 import paths
 import functions_aggregation as f_aggr
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
+from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording, find_nearest
 
 
 def find_peaks(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None, index_key='overall_episode_number', **kwargs):
@@ -35,6 +35,8 @@ def find_peaks(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None
     # The times should all be pretty similar (at least close enough for binning)
     # Take an average time trace for our calculation
     time = np.nanmean(times, axis=0)
+    t_0_idx = np.argwhere(time == 0)[0][0]
+    t_max_idx, _ = find_nearest(time, 15.0)
 
     # Remove the baseline from the fluorescence traces in the window
     traces = remove_baseline(time, traces, norm_start=norm_start, norm_end=norm_end)
@@ -42,26 +44,33 @@ def find_peaks(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None
     # Get extrema
     extrema = []
     extrema_time = []
+    medians = []
     for trace, idx in zip(traces, trace_peak_idx):
         extrema.append(trace[idx])
         extrema_time.append(time[idx])
+
+        if len(trace) > t_max_idx:
+            medians.append(np.nanmedian(trace[t_0_idx:t_max_idx]))
+        else:
+            medians.append(np.nanmedian(trace[t_0_idx:]))
 
     # Get episode metadata
     episode_metadata = []
     cols = ['animal', 'day', 'exp_episode_number']
     for ep in episode_idxs:
         metadata = episodes[episodes[index_key] == ep][cols].drop_duplicates()
-        episode_metadata.append(metadata.values.astype(int))
+        episode_metadata.append(metadata.values.astype(float))
 
     # Get everything into a nice big dataframe so we can save it as a csv
     df_data_list = []
-    df_columns = ['animal', 'day', 'behavior', 'exp_episode_number', 'overall_episode_number', 'peak', 'time_to_peak']
+    df_columns = ['animal', 'day', 'behavior', 'exp_episode_number', 'overall_episode_number', 'peak', 'time_to_peak', 'median']
     for i, ep_num in enumerate(episode_idxs):
         animal, day, exp_ep_num = episode_metadata[i].tolist()[0]
         overall_ep_num = ep_num
         ep_peak = extrema[i]
         ep_peak_time = extrema_time[i]
-        ep_data = [animal, day, scoring_type, exp_ep_num, overall_ep_num, ep_peak, ep_peak_time]
+        ep_median = medians[i]
+        ep_data = [animal, day, scoring_type, exp_ep_num, overall_ep_num, ep_peak, ep_peak_time, ep_median]
         df_data_list.append(ep_data)
 
     df = pd.DataFrame(data=df_data_list, columns=df_columns)
@@ -75,7 +84,7 @@ def find_peaks(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None
 if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
+    aggregate_data_filename = 'aggregated_episodes_no_post_window.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
@@ -85,21 +94,18 @@ if __name__ == "__main__":
     # episodes_to_analyze = 'ALL'
     episodes_to_analyze = ['Grooming', 'Eating Window', 'Shock', 'Social_Interaction', 'Transfer']
 
-    # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
+    # Give a subset of trials to consider. If you want to plot them all, leave the list empty []
     subset_to_plot = []
-
-    # Limits to the y-axis of the plot
-    ylim = (-3, 3)
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long before the onset of an episode do you want to look at?
-    pre_onset_window = -2  # Seconds
+    pre_onset_window = -3  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 4    # Seconds
+    post_onset_window = -1    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -107,8 +113,8 @@ if __name__ == "__main__":
 
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace
-    norm_start = -5
-    norm_end = -2
+    norm_start = -3
+    norm_end = 0
 
     df_list = []
     try:
@@ -168,6 +174,13 @@ if __name__ == "__main__":
         aggregate_store.close()
 
         peaks = pd.concat(df_list)
+
+        # A bit of stupidity to make sure that the animal names are consistent
+        peaks['animal'][peaks['animal'] == 3.2] = 3.0
+        peaks.animal = peaks.animal.astype(int)
+        peaks.day = peaks.day.astype(int)
+        peaks.exp_episode_number = peaks.exp_episode_number.astype(int)
+
         savename = f"peaks_{'_'.join(episodes_to_analyze).lower()}.csv"
         peaks.to_csv(join(paths.preprocessed_data_directory, savename), index=False)
         print('done!')
