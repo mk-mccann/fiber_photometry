@@ -109,7 +109,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
     cbar_range_max = kwargs.get('cmap_lim', np.ceil(np.nanmax(traces)))
     im = ax.imshow(bin_values_corrected, cmap='seismic', vmin=-cbar_range_max, vmax=cbar_range_max)
 
-    x_tick_labels = np.arange(bins[0], bins[-1]+bin_duration, 5)
+    x_tick_labels = np.arange(bins[0], bins[-1] + bin_duration, abs(bins[0]))
 
     if int(x_tick_labels[-1]) != int(bins[-1]):
         x_tick_labels = np.append(x_tick_labels, int(bins[-1]))
