@@ -10,6 +10,7 @@ import functions_aggregation as f_aggr
 from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording, find_nearest
 from functions_preprocessing import remove_nans
 
+
 def plot_peth(episodes, bin_duration, scoring_type,
               f_trace='zscore_Lerner', channel_key=None, bin_function=np.nanmedian,
               index_key='overall_episode_number',
@@ -99,7 +100,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
         else:
             bin_values_corrected.append(values)
 
-    bin_values_corrected = np.array(bin_values_corrected)
+    bin_values_corrected = bin_values# np.array(bin_values_corrected)
 
     # Create the figure
     if ax is None:
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Grooming']
+    episodes_to_analyze = ['Transfer']
 
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
     subset_to_plot = []
@@ -212,7 +213,7 @@ if __name__ == "__main__":
             try:
                 episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
                 episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
-                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, -1)
+                episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
             except ValueError as e:
                 print(e)
                 print('Error in filtering parameters for {}! Change the parameters and re-run.'.format(episode_name))

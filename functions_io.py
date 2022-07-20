@@ -230,9 +230,12 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
                 # load the processed data from one experiment at a time
                 exp = load_preprocessed_data(animal, day)
 
-                # Some error catching - if the behavior data is not in the df, raise an error and go to the next experiment
+                # Some error catching
+                # if the behavior data is not in the df, raise an error and go to the next experiment
                 try:
                     exp = check_preprocessed_df_for_scoring(exp, animal, day)
+                    print(f'Loaded data for Animal {animal}, Day {day}!\n')
+
                 except FileNotFoundError as err:
                     print("Manual scoring needs to be done for this experiment: Animal {} Day {}. \n{}\n".format(
                         animal, day, err))
@@ -245,7 +248,7 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
             # If the selected dataframe is good, add it to the list
             df_list.append(exp)
 
-        # Now create a giant dataframe from all of the experiments
+        # Now create a giant dataframe from all the experiments
         all_exps_df = pd.concat(df_list).reset_index(drop=True)
 
     return all_exps_df
