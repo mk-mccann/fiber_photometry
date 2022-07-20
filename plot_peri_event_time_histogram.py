@@ -156,10 +156,10 @@ if __name__ == "__main__":
     episodes_to_analyze = ['Grooming']
 
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
-    subset_to_plot = [1, 4, 5, 7, 8, 17]
+    subset_to_plot = []
 
     # Limits to the colorbar
-    cmap_lim = 3
+    cmap_lim = 2
 
     # Which fluorescence trace do you want to plot?
     # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
@@ -170,10 +170,10 @@ if __name__ == "__main__":
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    pre_onset_window = -5  # Seconds
+    pre_onset_window = -3  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 7    # Seconds
+    post_onset_window = 8    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
