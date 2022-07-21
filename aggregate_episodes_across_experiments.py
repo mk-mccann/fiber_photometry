@@ -236,7 +236,7 @@ if __name__ == '__main__':
     pre_episode_period = -10
 
     # The period after the end of an episode
-    post_episode_period = 0
+    post_episode_period = 20
 
     # Run the main function
     all_episodes = extract_episodes(all_exps, pre_episode_period, post_episode_period)
@@ -244,6 +244,6 @@ if __name__ == '__main__':
     # Save the dictionary to an .h5 file
     # Note that if there are no episodes of a scoring type in any experiment,
     # they are not saved into this file.
-    output_filename = 'aggregated_episodes_no_post_window.h5'
+    output_filename = 'aggregated_episodes_20_sec.h5'
     f_io.save_pandas_dict_to_h5(all_episodes, output_filename)
     print('Done!')

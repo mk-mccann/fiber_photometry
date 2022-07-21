@@ -117,6 +117,7 @@ def load_preprocessed_data(animal, day, key="preprocessed", base_directory=paths
 
     filename = 'animal{}_day{}_preprocessed.h5'.format(animal, day)
     preprocessed_data = pd.read_hdf(os.path.join(base_directory, filename), key=key)
+    print(f"Loaded {filename}")
     return preprocessed_data
 
 
@@ -227,6 +228,7 @@ def load_all_experiments(base_directory=paths.preprocessed_data_directory):
             day = file.stem.split('_')[1][-1]
 
             try:
+                print(f'Attempting to load data for Animal {animal}, Day {day}!')
                 # load the processed data from one experiment at a time
                 exp = load_preprocessed_data(animal, day)
 

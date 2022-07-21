@@ -100,7 +100,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
         else:
             bin_values_corrected.append(values)
 
-    bin_values_corrected = bin_values# np.array(bin_values_corrected)
+    bin_values_corrected = np.array(bin_values_corrected)
 
     # Create the figure
     if ax is None:
@@ -120,21 +120,27 @@ def plot_peth(episodes, bin_duration, scoring_type,
 
     ax.set_xticks(x_tick_positions)
     ax.set_xticklabels(x_tick_labels)
-    ax.axvline(x=x_tick_positions[x_tick_labels == 0][0], c='k', linestyle='--')
-    ax.set_xlabel('Binned Time (s)')
+    ax.axvline(x=x_tick_positions[x_tick_labels == 0][0], color='orangered') #, linestyle='--')
+    # ax.set_xlabel('Binned Time (s)')
 
     y_tick_positions = np.linspace(0, bin_values_corrected.shape[0] - 1, len(np.arange(0, bin_values_corrected.shape[0], 5)))
     y_tick_labels = y_tick_positions.astype(int) + 1
     ax.set_yticks(y_tick_positions)
     ax.set_yticklabels(y_tick_labels)
-    ax.set_ylabel('Episode')
+    # ax.set_ylabel('Episode')
+    # ax.set_title('PETH - {}'.format(scoring_type))
 
-    ax.set_title('PETH - {}'.format(scoring_type))
+    # Set the tick labels font
+    fontsize = kwargs.get('fontsize', 20.0)
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(fontsize)
 
     if 'fig' in locals():
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
-        fig.colorbar(im, cax=cax, label=f_trace)
+        cbar = fig.colorbar(im, cax=cax)
+        cbar.ax.tick_params(labelsize=fontsize)
 
     plt.tight_layout()
     plt_name = "peth_{}_zscore.png".format(scoring_type.lower().replace(' ', '_'))
@@ -146,7 +152,7 @@ def plot_peth(episodes, bin_duration, scoring_type,
 if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
+    aggregate_data_filename = 'aggregated_episodes_20_sec.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
@@ -154,7 +160,7 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     #episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Transfer']
+    episodes_to_analyze = ['grooming']
 
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
     subset_to_plot = []
@@ -205,7 +211,8 @@ if __name__ == "__main__":
             #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "2"]    # remove animal 1
             # only day 3 experiments excluding animal 1
             #episodes_to_run = all_episodes.loc[(all_episodes["animal"] != 1) & (all_episodes["day"] == 3)]
-            episodes_to_run = all_episodes
+            episodes_to_run = all_episodes.loc[~all_episodes.animal.isin(['3', '4'])]
+            # episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
             # that means the filtering removed all the episodes from the behaviors, and

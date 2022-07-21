@@ -34,8 +34,8 @@ def preprocess_fluorescence(data_df, channel_key=None):
     data = preprocess_fluorescence(data, 'posterior')
     """
 
-    # Drop the first 30 seconds of the experiment (where the weird initial signal decrease happens)
-    data_df = data_df.drop(data_df[data_df.time < 30].index)
+    # find the indices outside the first 30 seconds of the experiment (where the weird initial signal decrease happens)
+    keep_idxs = data_df[data_df.time >= 30].index.to_numpy()[0]
 
     # Define the GCaMP and autofluorescence channels
     if channel_key is None:
@@ -64,8 +64,8 @@ def preprocess_fluorescence(data_df, channel_key=None):
         # auto[shared_motion] = np.interp(shared_motion, data_df.time[interp_values], auto[interp_values])
 
     # Remove jumps in the data with an aggressive percentile filter
-    gcamp = percentile_filter(gcamp, percentile=98, size=25)
-    auto = percentile_filter(auto, percentile=98, size=25)
+    gcamp = percentile_filter(gcamp, percentile=97, size=25)
+    auto = percentile_filter(auto, percentile=97, size=25)
 
 
     # remove slow decay with a high pass filter
@@ -99,13 +99,13 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # dff = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
     # dff = dff * 100
 
-    # z-score whole data set with overall median
-    zdff = fpp.zscore_median(dff)
+    # z-score whole data set with overall median (from 30 sec onwards)
+    zdff = fpp.zscore_median(dff, compute_idx=keep_idxs)
 
     # fitting like in LERNER paper
     controlFit = fpp.lernerFit(auto, gcamp)
     dff_Lerner = (gcamp - controlFit) / controlFit
-    zdff_Lerner = fpp.zscore_median(dff_Lerner)
+    zdff_Lerner = fpp.zscore_median(dff_Lerner, compute_idx=keep_idxs)
 
     # # Remove sections where the signal is lost
     # gcamp[shared_zero] = np.NaN
@@ -180,13 +180,15 @@ if __name__ == "__main__":
         ax.set_xlabel('Time (hh:mm:ss)')
         ax.set_ylabel(fluorescence_axis_labels[f_trace])
         plt.savefig(join(paths.figure_directory, title.lower().replace(' ', '_') + '.png'), format="png")
+        plt.close()
 
         ax = plot_fluorescence_min_sec(data['time'], data['gcamp_raw'])
         title = 'Animal {} Day {} Raw Fluo'.format(animal, day).title().replace('_', ' ')
         ax.set_title(title)
         ax.set_xlabel('Time (hh:mm:ss)')
-        ax.set_ylabel(fluorescence_axis_labels[f_trace])
+        ax.set_ylabel(fluorescence_axis_labels['gcamp_raw'])
         plt.savefig(join(paths.figure_directory, title.lower().replace(' ', '_') + '.png'), format="png")
+        plt.close()
 
         # fig = plt.figure()
         # plt.plot(np.abs(np.diff(data[f_trace])))

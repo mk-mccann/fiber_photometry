@@ -99,7 +99,7 @@ def remove_nans(trace):
     return trace
 
 
-def zscore_median(trace):
+def zscore_median(trace, compute_idx=0):
     """Takes the Z-score of a time series trace, using the median of the trace instead of the mean.
     Ignores any NaNs in the trace during calculation.
 
@@ -113,7 +113,10 @@ def zscore_median(trace):
     Z-scored signal
     """
 
-    return (trace - np.nanmedian(trace)) / np.nanstd(trace)
+    med = np.nanmedian(trace[compute_idx:])
+    stdev = np.nanstd(trace[compute_idx:])
+
+    return (trace - med) / stdev
 
 
 def lernerFit(auto, gcamp, power=1):

@@ -110,7 +110,7 @@ def plot_trace_raster(episodes, scoring_type,
 if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregated_episodesPost_window.h5'
+    aggregate_data_filename = 'aggregated_episodes_20_seconds.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
     # episodes_to_analyze = 'ALL'
-    episodes_to_analyze = ['Transfer']
+    episodes_to_analyze = ['Eating Window']
 
     # Give a subset of trials to plot. If you want to plot them all, leave the list empty []
     subset_to_plot = []
@@ -131,10 +131,10 @@ if __name__ == "__main__":
     episode_duration_cutoff = 0    # Seconds
 
     # -- How long before the onset of an episode do you want to look at?
-    pre_onset_window = -2  # Seconds
+    pre_onset_window = -3  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 4    # Seconds
+    post_onset_window = 10    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -142,8 +142,8 @@ if __name__ == "__main__":
 
     # -- Set the normalization window. This is the period where the baseline is calculated and subtracted from
     # the episode trace
-    norm_start = -5
-    norm_end = -2
+    norm_start = -3
+    norm_end = -0
 
     try:
         aggregate_store = pd.HDFStore(aggregate_data_file)

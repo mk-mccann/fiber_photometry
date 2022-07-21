@@ -11,7 +11,7 @@ from scipy.stats import sem
 
 # For a list of all MPL colors: https://matplotlib.org/stable/gallery/color/named_colors.html
 episode_colors = {'Eating': 'cyan',
-                  'Grooming': 'goldenrod',
+                  'Grooming': '#DAA520',
                   'Digging': 'lime',
                   'Tail Suspension': 'forestgreen',
                   'Transfer': 'forestgreen',
@@ -227,7 +227,7 @@ def color_overlay(x, bool_array, label, ax):
     return labeled_section
 
 
-def plot_mean_episode(time, traces, plot_singles=False, ax=None):
+def plot_mean_episode(time, traces, plot_singles=False, ax=None, **kwargs):
     """Plots the mean trace of a scoring type. PLots mean + SEM.
 
     Parameters
@@ -246,6 +246,10 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None):
     Matplotlib axis object with mean + SEM plotted
     """
 
+    fill_between_color = kwargs.get('fill_between_color', 'cyan')
+    if fill_between_color != 'cyan':
+        fill_between_color = episode_colors[fill_between_color]
+
     if ax is None:
         fig = plt.figure(figsize=(10, 10))
         fig.add_subplot(111)
@@ -259,13 +263,20 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None):
         for trace in traces:
             plt.plot(time, trace, c='gray', alpha=0.5)
 
-    plt.fill_between(time, mean_trace - sem_trace, mean_trace + sem_trace, alpha=0.2)
+    plt.fill_between(time, mean_trace - sem_trace, mean_trace + sem_trace,
+                     alpha=0.3, color=fill_between_color)
     plt.plot(time, mean_trace, c='k', linewidth=2)
-    # plt.ylim([-0.25, 1.5])
+    plt.xlim(time[0], time[-1])
     plt.axvline(0, color="orangered")
-    plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize='large', transform=plt.gca().transAxes)
 
-    plt.xlabel('Time from Behavior Start (s)')
+    # Set the tick labels font
+    fontsize = kwargs.get('fontsize', 20.0)
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontname('Arial')
+        label.set_fontsize(fontsize)
+
+    plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize=fontsize, transform=plt.gca().transAxes)
+
 
     return ax
 
