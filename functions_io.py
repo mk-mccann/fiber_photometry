@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 from warnings import warn
 from pathlib import Path
@@ -59,6 +60,11 @@ def load_behavior_labels(animal, day, base_directory=paths.behavior_scoring_dire
     label_filename = r"ID{}_Day{}.xlsx".format(animal, day)
     x = pd.ExcelFile(os.path.join(base_directory, label_filename), engine='openpyxl')
     behavior_labels = pd.read_excel(x, header=0, dtype=object, engine='openpyxl')
+    if 'Comments' in behavior_labels.columns:
+        behavior_labels = behavior_labels.drop(columns=['Comments'])
+    # replace field that's entirely space (or empty) with NaN
+    behavior_labels = behavior_labels.replace(r'^\s*$', np.nan, regex=True)
+    behavior_labels = behavior_labels.astype(float, copy=True)
     return behavior_labels
 
 

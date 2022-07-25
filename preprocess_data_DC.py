@@ -1,10 +1,10 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.signal import savgol_filter
 from scipy.ndimage import percentile_filter
 from tqdm import tqdm
 from os.path import join
-
 
 # Import custom written functions
 import paths
@@ -34,6 +34,9 @@ def preprocess_fluorescence(data_df, channel_key=None):
     data = preprocess_fluorescence(data, 'posterior')
     """
 
+    # find the indices outside the first 30 seconds of the experiment (where the weird initial signal decrease happens)
+    keep_idxs = data_df[data_df.time >= 30].index.to_numpy()[0]
+
     # Define the GCaMP and autofluorescence channels
     if channel_key is None:
         auto_channel = data_df['auto_raw']
@@ -47,16 +50,24 @@ def preprocess_fluorescence(data_df, channel_key=None):
     gcamp = fpp.remove_nans(gcamp_channel.to_numpy())
     auto = fpp.remove_nans(auto_channel.to_numpy())
 
-    # Remove jumps in the data with an aggressive percentile filter
-    gcamp = percentile_filter(gcamp, percentile=99, size=25)
-    auto = percentile_filter(auto, percentile=99, size=25)
-
     # identify where signal is lost -  we remove this from later traces
-    # gcamp_d0 = fpp.find_lost_signal(gcamp)
-    # auto_d0 = fpp.find_lost_signal(auto)
-    # shared_zero = np.unique(np.concatenate((gcamp_d0, auto_d0))) # identifies the indices if signal is lost in at least one channel
+    gcamp_d0 = fpp.find_large_jumps(gcamp, percentile=0.9)
+    auto_d0 = fpp.find_large_jumps(auto, percentile=0.9)
+    shared_motion = np.unique(np.concatenate((gcamp_d0, auto_d0)))  # identifies the indices if signal is lost in at least one channel
 
-    # # remove slow decay with a high pass filter
+    # Interpolate for now. This will be removed from processed signals later on
+    # if shared_motion.size > 0:
+    #     gcamp[shared_motion] = np.percentile(gcamp, 99)
+    #     auto[shared_motion] = np.percentile(auto, 99)
+    # interp_values = np.delete(np.arange(len(gcamp)), shared_motion)
+    # gcamp[shared_motion] = np.interp(shared_motion, data_df.time[interp_values], gcamp[interp_values])
+    # auto[shared_motion] = np.interp(shared_motion, data_df.time[interp_values], auto[interp_values])
+
+    # Remove jumps in the data with an aggressive percentile filter
+    gcamp = percentile_filter(gcamp, percentile=97, size=25)
+    auto = percentile_filter(auto, percentile=97, size=25)
+
+    # remove slow decay with a high pass filter
     # cutoff = 0.1    # Hz
     # order = 3
     # fs = 40         # Hz
@@ -87,19 +98,27 @@ def preprocess_fluorescence(data_df, channel_key=None):
     # dff = fpp.subtract_baseline_median(fp_times, gcamp, start_time=0, end_time=240)
     # dff = dff * 100
 
-    # z-score whole data set with overall median
-    zdff = fpp.zscore_median(dff)
+    # z-score whole data set with overall median (from 30 sec onwards)
+    zdff = fpp.zscore_median(dff, compute_idx=keep_idxs)
+
+    # fitting like in LERNER paper
+    controlFit = fpp.lernerFit(auto, gcamp)
+    dff_Lerner = (gcamp - controlFit) / controlFit
+    zdff_Lerner = fpp.zscore_median(dff_Lerner, compute_idx=keep_idxs)
 
     # # Remove sections where the signal is lost
     # gcamp[shared_zero] = np.NaN
     # auto[shared_zero] = np.NaN
     # dff[shared_zero] = np.NaN
     # zdff[shared_zero] = np.NaN
-    
-    # fitting like in LERNER paper
-    controlFit = fpp.lernerFit(auto, gcamp)
-    dff_Lerner = (gcamp - controlFit) / controlFit
-    zdff_Lerner = fpp.zscore_median(dff_Lerner)
+
+    # Remove the segments where the signal was lost.
+    # gcamp[shared_motion] = np.nan
+    # auto[shared_motion] = np.nan
+    # dff[shared_motion] = np.nan
+    # zdff[shared_motion] = np.nan
+    # dff_Lerner[shared_motion] = np.nan
+    # zdff_Lerner[shared_motion] = np.nan
 
     # Save the data
     if channel_key is None:
@@ -118,7 +137,6 @@ def preprocess_fluorescence(data_df, channel_key=None):
         data_df['zscore_Lerner_' + channel_key] = zdff_Lerner
 
     return data_df
-
 
 if __name__ == "__main__":
     # Check that output data directories are present

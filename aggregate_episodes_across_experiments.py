@@ -119,7 +119,8 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=0, post_
             _, window_end_time = f_util.find_nearest(exp['time'], ep_start_time + post_episode_window)
         else:
             window_end_time = ep_end_time
-        print(f'Animal {animal}, day {day}, start_time {ep_start_time / 60} {ep_start_time % 60}, end_time {ep_end_time / 60} {ep_end_time % 60}')
+        print(f'Animal {animal}, day {day}, start_time {np.floor(ep_start_time / 60):.0f}:'
+              f'{np.round(ep_start_time % 60):.0f}, end_time {np.floor(ep_end_time / 60):.0f}:{np.round(ep_end_time % 60):.0f}')
 
         # Extract the window of interest
         try:

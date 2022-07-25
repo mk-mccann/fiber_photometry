@@ -1,10 +1,10 @@
+import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from os.path import join
 from scipy.signal import savgol_filter, filtfilt
 from scipy.ndimage import percentile_filter
 from tqdm import tqdm
-import numpy as np
 
 # Import custom written functions
 import paths

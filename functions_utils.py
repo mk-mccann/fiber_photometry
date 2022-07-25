@@ -77,7 +77,7 @@ def get_sec_from_min_sec(time: float):
     """
 
     rounded_time = round(time, 2)
-    split_time = str(rounded_time).split('.')
+    split_time = str("{:.2f}".format(rounded_time)).split('.')
     minutes = int(split_time[0])
     seconds = int(split_time[1][:2])
     return 60 * minutes + seconds
