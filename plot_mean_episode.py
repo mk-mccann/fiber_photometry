@@ -75,32 +75,28 @@ def plot_mean_episode(episodes, scoring_type, f_trace='zscore_Lerner', channel_k
     print("Number of {} episodes = {}".format(scoring_type, num_episodes))
 
     # Plot the mean episode
-    ax = fp.plot_mean_episode(time, traces,
-                              plot_singles=plot_singles, fill_between_color=scoring_type,
-                              fontsize=20.0)
+    fig = fp.plot_mean_episode(time, traces, plot_singles=plot_singles, fill_between_color=scoring_type)
     # plt.ylabel(fp.fluorescence_axis_labels[f_trace])
-    # plt.xlabel('Time from Behavior Start (s)')
-    # plt.title('Mean trace for {}'.format(scoring_type))
-    # plt.ylim(-1.25, 0.5)
-    plt.tight_layout()
+    #plt.ylim(-0.5, 3.5)
+    plt.title('Mean trace for {}'.format(scoring_type))
     plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))
 
-    return ax
+    return fig
 
 
 if __name__ == "__main__":
 
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregated_episodes_20_sec.h5'
+    aggregate_data_filename = 'aggregated_20_sec.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
     # If set to 'ALL', generates means for all episodes individually.
     # Otherwise, put in a list like ['Eating'] or ['Eating', 'Grooming', 'Marble Zone', ...]
     # This is true for single behaviors also!
-    episodes_to_analyze = ['Grooming']
+    episodes_to_analyze = ['Eating']
 
     # -- What is the amount of time an animal needs to spend performing a behavior or
     # being in a zone for it to be considered valid?
@@ -110,7 +106,7 @@ if __name__ == "__main__":
     pre_onset_window = -3  # Seconds
 
     # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = 10    # Seconds
+    post_onset_window = 8    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -134,18 +130,18 @@ if __name__ == "__main__":
             all_episodes = aggregate_store.get(episode_name.lower().replace(' ', '_'))
 
             # -- Remove certain days/animals
-            # episodes_to_run = all_episodes.loc[all_episodes["day"] == "3"]    # select day 3 exps
+            #episodes_to_run = all_episodes.loc[all_episodes["day"] == "3"]    # select day 3 exps
             #episodes_to_run = all_episodes.loc[all_episodes["animal"] != "1"]    # remove animal 1
             # only day 3 experiments excluding animal 1
-            # episodes_to_run = all_episodes.loc[(all_episodes.animal != '3') & (all_episodes.day != '1')]
-            # episodes_to_run = all_episodes.loc[~all_episodes.animal.isin(['3', '4'])]
+            #episodes_to_run = all_episodes.loc[(all_episodes["animal"] == "5") & (all_episodes["day"] == "2")]
+            #episodes_to_run = all_episodes.loc[(all_episodes["zscore_Lerner"] <= 2.0) & (all_episodes["zscore_Lerner"] >= -2.0)]
             episodes_to_run = all_episodes
 
             # Do filtering. The function names are self-explanatory. If a value error is thrown,
             # that means the filtering removed all the episodes from the behaviors, and
             # that you need to change the filtering parameters for that kind of behavior
             try:
-                episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
+                # episodes_to_run = f_aggr.filter_episodes_for_overlap(episodes_to_run)
                 episodes_to_run = f_aggr.filter_episodes_by_duration(episodes_to_run, episode_duration_cutoff)
                 episodes_to_run = f_aggr.filter_first_n_episodes(episodes_to_run, first_n_eps)
             except ValueError as e:
@@ -164,7 +160,7 @@ if __name__ == "__main__":
             # If you wanted to plot for a DC experiment, it would look like
             # plot_individual_behaviors(episodes_to_run, f_trace='zscore', channel_key='anterior))
             if is_DC:
-                channels = ['anterior', 'posterior']
+                channels = ['anterior']
                 for channel in channels:
                     plot_mean_episode(episodes_to_run, episode_name,
                                       plot_singles=False, norm_start=norm_start, norm_end=norm_end,

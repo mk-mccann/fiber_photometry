@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from os.path import join
 from warnings import warn
-from itertools import product
 
 import paths
 import functions_plotting as fp
@@ -83,49 +82,52 @@ def plot_color_code_episodes(data_df, f_trace='zscore_Lerner', channel_key=None)
 
 if __name__ == "__main__":
 
-    animals = [1, 2, 3, 4, 5]
-    days = [1, 2, 3]
-    combinations = list(product(animals, days))
+    animal = 3
+    day = 1
 
     # Check that the figure directory exists
     f_io.check_dir_exists(paths.figure_directory)
 
-    for animal, day in combinations:
+    # Load the preprocessed data
+    data = f_io.load_preprocessed_data(animal, day)
 
-        # Load the preprocessed data
-        data = f_io.load_preprocessed_data(animal, day)
+    # Which fluorescence trace do you want to plot?
+    # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
+    f_trace = 'zscore_Lerner'
 
-        # Which fluorescence trace do you want to plot?
-        # Options are ['auto_raw', 'gcamp_raw', 'auto', 'gcamp', 'dff', 'dff_Lerner', 'zscore', 'zscore_Lerner]
-        f_trace = 'zscore_Lerner'
+    # Some error catching - if the behavior data is not in the df, raise an error and quit
+    try:
+        data = f_io.check_preprocessed_df_for_scoring(data, animal, day)
 
-        # Some error catching - if the behavior data is not in the df, raise an error and quit
-        try:
-            data = f_io.check_preprocessed_df_for_scoring(data, animal, day)
+        # Check if this is a dual-fiber experiment
+        is_DC = check_if_dual_channel_recording(data)
 
-            # Check if this is a dual-fiber experiment
-            is_DC = check_if_dual_channel_recording(data)
-
-            # Plot peri-event time histogram for the individual behaviors (as selected in 'episodes_to_analyze')
-            if is_DC:
-                channels = ['anterior', 'posterior']
-                for channel in channels:
-                    fig, title = plot_color_code_episodes(data, f_trace=f_trace, channel_key=channel)
-                    plt.suptitle(title.format(animal, day))
-                    plt.tight_layout()
-                    plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
-
-            else:
-                fig, title = plot_color_code_episodes(data, f_trace=f_trace)
+        # Plot peri-event time histogram for the individual behaviors (as selected in 'episodes_to_analyze')
+        if is_DC:
+            channels = ['anterior', 'posterior']
+            for channel in channels:
+                fig, title = plot_color_code_episodes(data, f_trace=f_trace, channel_key=channel)
                 plt.suptitle(title.format(animal, day))
                 plt.tight_layout()
                 plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
+        
+        else:
+            fig, title = plot_color_code_episodes(data, f_trace = f_trace)
+            plt.suptitle(title.format(animal,day))
+            plt.tight_layout()
+            plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
-            # Uncomment here to show the plot
-            # plt.show()
+        #else:
+            #fig, title = plot_color_code_episodes(data, f_trace=f_trace)
+            #plt.suptitle(title.format(animal, day))
+            #plt.tight_layout()
+            #plt.savefig(join(paths.figure_directory, title.format(animal, day).replace(' ', '_').lower() + ".png"))
 
-            print('Done!')
+        # Uncomment here to show the plot
+        plt.show()
 
-        except FileNotFoundError as err:
-            message = "Manual scoring needs to be done for this experiment: Animal {} Day {}.".format(animal, day)
-            warn(message)
+        print('Done!')
+        
+    except FileNotFoundError as err:
+        message = "Manual scoring needs to be done for this experiment: Animal {} Day {}.".format(animal, day)
+        warn(message)

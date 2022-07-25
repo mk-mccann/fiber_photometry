@@ -80,7 +80,7 @@ def filter_episodes_for_overlap(episodes, index_key='overall_episode_number'):
         return valid_episodes
 
 
-def select_analysis_window(episodes, pre_window, post_window, time_trace='normalized_time'):
+def select_analysis_window(episodes, pre_window, post_window=-1, time_trace='normalized_time'):
 
     if post_window < 0:
         selection = episodes[(episodes[time_trace] >= pre_window)]

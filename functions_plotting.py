@@ -11,25 +11,25 @@ from scipy.stats import sem
 
 # For a list of all MPL colors: https://matplotlib.org/stable/gallery/color/named_colors.html
 episode_colors = {'Eating': 'cyan',
-                  'Grooming': '#DAA520',
+                  'Grooming': '#FAC205',
                   'Digging': 'lime',
-                  'Tail Suspension': 'forestgreen',
-                  'Transfer': 'forestgreen',
+                  'Tail Suspension': '#800000',
+                  'Transfer': '#008000',
                   'WSW': 'indigo',
                   'Squeezed MZ Edge': 'mediumblue',
-                  'Social Interaction': 'deeppink',
+                  'Social Interaction': '#FF00FF',
                   'Ear Scratch': 'firebrick',
                   'Switch': 'sienna',
                   'Idle': 'silver',
                   'Nesting': 'papayawhip',
                   'Nibbling Floor': 'thistle',
                   'Nibbling Tape': 'aquamarine',
-                  'Shock': 'red',
+                  'Shock': '#FF0000',
                   'Eating Zone': 'b',
                   'Marble Zone': 'g',
                   'Nesting Zone': 'gray',
                   'Social Interaction Zone': 'teal',
-                  'Eating Window': "cyan",
+                  'Eating Window': "#00FFFF",
                   'Air Puff': 'firebrick',
                   'Freezing': 'violet',
                   'Low Activity':'blanchedalmond',
@@ -41,7 +41,8 @@ episode_colors = {'Eating': 'cyan',
                   'Water Spray': 'deepskyblue',
                   'Peanut Jar': 'sienna',
                   'Jump': 'coral',
-                  'Edge Zone': 'brown'
+                  'Edge Zone': 'brown',
+                  "Running": 'brown'
                   }
 
 
@@ -264,7 +265,7 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None, **kwargs):
             plt.plot(time, trace, c='gray', alpha=0.5)
 
     plt.fill_between(time, mean_trace - sem_trace, mean_trace + sem_trace,
-                     alpha=0.3, color=fill_between_color)
+                     alpha=0.5, color=fill_between_color)
     plt.plot(time, mean_trace, c='k', linewidth=2)
     plt.xlim(time[0], time[-1])
     plt.axvline(0, color="orangered")

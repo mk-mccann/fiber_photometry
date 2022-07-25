@@ -84,7 +84,7 @@ def find_peaks(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None
 if __name__ == "__main__":
     # Check if an aggregated episode file exists. If so, load it. If not,
     # throw an error
-    aggregate_data_filename = 'aggregated_episodes_no_post_window.h5'
+    aggregate_data_filename = 'aggregated_whole.h5'
     aggregate_data_file = join(paths.preprocessed_data_directory, aggregate_data_filename)
 
     # -- Which episode(s) do you want to look at?
@@ -103,9 +103,6 @@ if __name__ == "__main__":
 
     # -- How long before the onset of an episode do you want to look at?
     pre_onset_window = -3  # Seconds
-
-    # -- How long after the onset of an episode do you want to look at?
-    post_onset_window = -1    # Seconds
 
     # -- The first n episodes of each behavior to keep. Setting this value to -1 keeps all episodes
     # If you only wanted to keep the first two, use first_n_eps = 2
@@ -150,7 +147,7 @@ if __name__ == "__main__":
                 continue
 
             # Select the amount of time after the onset of an episode to look at
-            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, pre_onset_window, post_onset_window)
+            episodes_to_run = f_aggr.select_analysis_window(episodes_to_run, pre_onset_window)
 
             # select specific episodes from a list
             if len(subset_to_plot) > 0:

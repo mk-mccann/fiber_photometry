@@ -119,6 +119,7 @@ def get_episode_with_start_window(data_df, episodes, pre_episode_window=0, post_
             _, window_end_time = f_util.find_nearest(exp['time'], ep_start_time + post_episode_window)
         else:
             window_end_time = ep_end_time
+        print(f'Animal {animal}, day {day}, start_time {ep_start_time / 60} {ep_start_time % 60}, end_time {ep_end_time / 60} {ep_end_time % 60}')
 
         # Extract the window of interest
         try:
@@ -177,6 +178,7 @@ def extract_episodes(data_df, pre_episode_window, post_episode_window):
 
     # Loop through each of the scoring types you are interested in analyzing in order to extract them.
     for scoring_type in output_dict.keys():
+        print(scoring_type)
         # Finds individual episodes of a scoring type
         episodes_by_idx = get_individual_episode_indices(data_df, scoring_type)
         print(f'{len(episodes_by_idx)} instances of {scoring_type} found!')
@@ -244,6 +246,6 @@ if __name__ == '__main__':
     # Save the dictionary to an .h5 file
     # Note that if there are no episodes of a scoring type in any experiment,
     # they are not saved into this file.
-    output_filename = 'aggregated_episodes_20_sec.h5'
+    output_filename = 'aggregated_20_sec.h5'
     f_io.save_pandas_dict_to_h5(all_episodes, output_filename)
     print('Done!')
