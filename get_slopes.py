@@ -111,15 +111,15 @@ def get_slopes(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None
     # Get the mean trace. This will inform the time window that we look at
     mean_trace = np.nanmean(traces, axis=0)
 
-    # Get the start index. Look at the max(abs()) point in the time preceeding the behavior onset
-    start_index = np.nanargmax(mean_trace[time < 0])
-
-    # Get the ebd index. Look at the max(abs()) point in the time following the behavior onset
-    end_index = np.nanargmax(mean_trace[time >= 0])
-
     fits = get_best_fit_line(traces, time)
     intercepts = fits[0, :]
     slopes = fits[1, :]
+
+    slopes_df = pd.DataFrame(columns=['behavior', 'slope'], dtype=object)
+    slopes_df.slope = slopes
+    slopes_df.loc[:, 'behavior'] = scoring_type
+    filename = join(paths.preprocessed_data_directory, '_'.join([scoring_type.lower().replace(' ', '_'), 'slope']) + '.csv')
+    slopes_df.to_csv(filename, index=False)
 
     fit_mean = get_best_fit_line(mean_trace, time)
     mean_intercept = fit_mean[0]
