@@ -30,6 +30,7 @@ episode_colors = {'Eating': 'cyan',
                   'Nesting Zone': 'gray',
                   'Social Interaction Zone': 'teal',
                   'Eating Window': "#00FFFF",
+                  'Eating Window DC': "#0343DF",
                   'Air Puff': 'firebrick',
                   'Freezing': 'violet',
                   'Low Activity':'blanchedalmond',
@@ -228,7 +229,7 @@ def color_overlay(x, bool_array, label, ax):
     return labeled_section
 
 
-def plot_mean_episode(time, traces, plot_singles=False, ax=None, **kwargs):
+def plot_mean_episode(time, traces, plot_singles=False, ax=None, plot_ep_n=False, **kwargs):
     """Plots the mean trace of a scoring type. PLots mean + SEM.
 
     Parameters
@@ -276,7 +277,8 @@ def plot_mean_episode(time, traces, plot_singles=False, ax=None, **kwargs):
         label.set_fontname('Arial')
         label.set_fontsize(fontsize)
 
-    plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize=fontsize, transform=plt.gca().transAxes)
+    if plot_ep_n:
+        plt.text(0.05, 0.95, "n = " + str(num_episodes), fontsize=fontsize, transform=plt.gca().transAxes)
 
 
     return ax

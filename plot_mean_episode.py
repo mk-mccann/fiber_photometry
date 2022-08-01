@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os.path import join
+from numpy.polynomial import polynomial
 
 import paths
 import functions_aggregation as f_aggr
 import functions_plotting as fp
-from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording
+from functions_utils import list_lists_to_array, remove_baseline, check_if_dual_channel_recording, find_nearest
 
 
 

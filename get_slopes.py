@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 from numpy.polynomial import polynomial
 from os.path import join
 
@@ -129,14 +130,23 @@ def get_slopes(episodes, scoring_type, f_trace='zscore_Lerner', channel_key=None
     print("Number of {} episodes = {}".format(scoring_type, num_episodes))
 
     # Plot the mean episode
-    fig = fp.plot_mean_episode(time, traces, fill_between_color=scoring_type)
+    ax = kwargs.get('ax', None)
+    fill_between_color = kwargs.get('fill_between_color', scoring_type)
+    plot_n = kwargs.get('plot_n', False)
+    ax = fp.plot_mean_episode(time, traces, fill_between_color=fill_between_color, ax=ax, plot_n=plot_n)
     # plt.ylabel(fp.fluorescence_axis_labels[f_trace])
     # plt.ylim(-0.5, 3.5)
-    fig.plot(time, mean_slope * time + mean_intercept)
-    fig.text(0.05, 0.90, f"Slope: {mean_slope:.2f}", fontsize=20, transform=plt.gca().transAxes)
+    ax.plot(time, mean_slope * time + mean_intercept, color=fp.episode_colors[fill_between_color], lw=3,
+            path_effects=[pe.Stroke(linewidth=3, foreground='k'), pe.Normal()])
+    if 'ax' in kwargs:
+        ax.text(0.05, 0.90, f"Slope: {mean_slope:.2f}", fontsize=20, transform=plt.gca().transAxes, color=fp.episode_colors[fill_between_color])
+    else:
+        ax.text(0.05, 0.95, f"Slope: {mean_slope:.2f}", fontsize=20, transform=plt.gca().transAxes, color=fp.episode_colors[fill_between_color])
     plt.title('Mean trace for {}'.format(scoring_type))
     plt_name = "mean_{}_{}.png".format(scoring_type.lower().replace(' ', '_'), f_trace)
     plt.savefig(join(paths.figure_directory, plt_name))
+
+    return ax
 
 
 if __name__ == "__main__":
